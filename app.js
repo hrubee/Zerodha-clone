@@ -1712,24 +1712,46 @@ function initKiteApp() {
     }
   }
 
-  // Symbol Formatter: Superscript ordinal date suffixes (14th -> 14<sup>th</sup>) & Weekly Badge 'w'
+  const COMMODITY_UNDERLYINGS = [
+    'CRUDEOIL', 'NATURALGAS', 'GOLD', 'GOLDM', 'SILVER', 'SILVERM', 'SILVERMIC', 'COPPER', 'ZINC', 'ALUMINIUM', 'LEAD'
+  ];
+
+  function getExchangeForUnderlying(underlying) {
+    const u = (underlying || '').toUpperCase();
+    if (COMMODITY_UNDERLYINGS.includes(u)) return 'MCX';
+    if (u === 'SENSEX') return 'BFO';
+    return 'NFO';
+  }
+
+  // Symbol Formatter: Superscript ordinal date suffixes (14th -> 14<sup>th</sup>) & Weekly Badge 'w' (for options)
   function formatOptionSymbolHTML(sym) {
     if (!sym) return '';
+    const isFut = sym.trim().toUpperCase().endsWith('FUT');
     return sym.replace(/(\d+)(th|st|nd|rd)\b/gi, (match, num, ord) => {
-      return `${num}<sup class="pos-date-ord">${ord.toLowerCase()}</sup> <span class="weekly-badge-w">w</span>`;
+      const badge = isFut ? '' : ` <span class="weekly-badge-w">w</span>`;
+      return `${num}<sup class="pos-date-ord">${ord.toLowerCase()}</sup>${badge}`;
     });
   }
 
-  // Parse Symbol Helper (e.g. 'BANKNIFTY 14th FEB 45300 CE')
+  // Parse Symbol Helper (e.g. 'BANKNIFTY 14th FEB 45300 CE' or 'CRUDEOIL 19th MAR FUT')
   function parseOptionSymbol(sym) {
     if (!sym) return { underlying: 'BANKNIFTY', expiry: '14th FEB', strike: '45300', optionType: 'CE' };
     const parts = sym.trim().split(/\s+/);
-    if (parts.length >= 4) {
-      const underlying = parts[0];
-      const expiry = parts.slice(1, -2).join(' ');
-      const strike = parts[parts.length - 2];
-      const optionType = parts[parts.length - 1];
-      return { underlying, expiry, strike, optionType };
+    if (parts.length >= 3) {
+      const underlying = parts[0].toUpperCase();
+      const lastPart = parts[parts.length - 1].toUpperCase();
+
+      if (lastPart === 'FUT') {
+        const expiry = parts.slice(1, -1).join(' ') || '19th MAR';
+        return { underlying, expiry, strike: 'FUT', optionType: 'FUT' };
+      }
+
+      if (parts.length >= 4 && (lastPart === 'CE' || lastPart === 'PE')) {
+        const expiry = parts.slice(1, -2).join(' ') || '14th FEB';
+        const strike = parts[parts.length - 2];
+        const optionType = lastPart;
+        return { underlying, expiry, strike, optionType };
+      }
     }
     return { underlying: 'BANKNIFTY', expiry: '14th FEB', strike: '45300', optionType: 'CE' };
   }
@@ -1746,17 +1768,39 @@ function initKiteApp() {
       return parseFloat(String(appState.indices?.finnifty?.val || '21250.00').replace(/,/g, '')) || 21250.00;
     } else if (und === 'MIDCPNIFTY') {
       return parseFloat(String(appState.indices?.midcpnifty?.val || '12250.00').replace(/,/g, '')) || 12250.00;
+    } else if (und === 'CRUDEOIL') {
+      return 6280.00;
+    } else if (und === 'NATURALGAS') {
+      return 186.50;
+    } else if (und === 'GOLD' || und === 'GOLDM') {
+      return 72850.00;
+    } else if (und === 'SILVER' || und === 'SILVERM' || und === 'SILVERMIC') {
+      return 84600.00;
+    } else if (und === 'COPPER') {
+      return 828.50;
+    } else if (und === 'ZINC') {
+      return 268.00;
+    } else if (und === 'ALUMINIUM') {
+      return 236.50;
+    } else if (und === 'LEAD') {
+      return 184.00;
     }
     return 23459.55;
   }
 
-  // Realistic Options Pricing Model (Intrinsic + Volatility & Extrinsic Time Value based on Spot & Strike)
+  // Realistic Options & Commodity Pricing Model (Intrinsic + Volatility & Extrinsic Time Value based on Spot & Strike)
   function calculateRealisticOptionLTP(underlying, strike, optType) {
     const und = (underlying || 'BANKNIFTY').toUpperCase();
     const type = (optType || 'CE').toUpperCase();
-    const strikeNum = parseFloat(strike) || 0;
     const spot = getUnderlyingSpot(und);
 
+    if (type === 'FUT' || String(strike).toUpperCase() === 'FUT') {
+      const futJitter = (Math.random() - 0.5) * (spot * 0.001);
+      const futPrice = Math.max(0.05, Math.round((spot + futJitter) * 20) / 20);
+      return futPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    const strikeNum = parseFloat(strike) || 0;
     if (strikeNum <= 0) return '100.00';
 
     let step = 100;
@@ -1776,6 +1820,30 @@ function initKiteApp() {
     } else if (und === 'MIDCPNIFTY') {
       step = 50;
       baseAtmExtrinsic = 85.0;
+    } else if (und === 'CRUDEOIL') {
+      step = 50;
+      baseAtmExtrinsic = 115.0;
+    } else if (und === 'NATURALGAS') {
+      step = 5;
+      baseAtmExtrinsic = 12.5;
+    } else if (und === 'GOLD' || und === 'GOLDM') {
+      step = 500;
+      baseAtmExtrinsic = 680.0;
+    } else if (und === 'SILVER' || und === 'SILVERM' || und === 'SILVERMIC') {
+      step = 1000;
+      baseAtmExtrinsic = 1250.0;
+    } else if (und === 'COPPER') {
+      step = 10;
+      baseAtmExtrinsic = 18.0;
+    } else if (und === 'ZINC') {
+      step = 5;
+      baseAtmExtrinsic = 8.0;
+    } else if (und === 'ALUMINIUM') {
+      step = 5;
+      baseAtmExtrinsic = 6.0;
+    } else if (und === 'LEAD') {
+      step = 5;
+      baseAtmExtrinsic = 5.0;
     }
 
     let intrinsic = 0;
@@ -1851,7 +1919,38 @@ function initKiteApp() {
     return fallbackLtp;
   }
 
-  function getStrikeOptionsHTML(underlying, selectedStrike) {
+  function getUnderlyingOptionsHTML(selectedUnderlying) {
+    const sel = (selectedUnderlying || 'BANKNIFTY').toUpperCase();
+    return `
+      <optgroup label="NSE / BSE Indices (NFO / BFO)">
+        <option value="BANKNIFTY" ${sel === 'BANKNIFTY' ? 'selected' : ''}>BANKNIFTY</option>
+        <option value="NIFTY" ${sel === 'NIFTY' ? 'selected' : ''}>NIFTY</option>
+        <option value="FINNIFTY" ${sel === 'FINNIFTY' ? 'selected' : ''}>FINNIFTY</option>
+        <option value="SENSEX" ${sel === 'SENSEX' ? 'selected' : ''}>SENSEX</option>
+        <option value="MIDCPNIFTY" ${sel === 'MIDCPNIFTY' ? 'selected' : ''}>MIDCPNIFTY</option>
+      </optgroup>
+      <optgroup label="MCX Commodities (MCX)">
+        <option value="CRUDEOIL" ${sel === 'CRUDEOIL' ? 'selected' : ''}>CRUDEOIL</option>
+        <option value="NATURALGAS" ${sel === 'NATURALGAS' ? 'selected' : ''}>NATURALGAS</option>
+        <option value="GOLD" ${sel === 'GOLD' ? 'selected' : ''}>GOLD</option>
+        <option value="GOLDM" ${sel === 'GOLDM' ? 'selected' : ''}>GOLDM (Gold Mini)</option>
+        <option value="SILVER" ${sel === 'SILVER' ? 'selected' : ''}>SILVER</option>
+        <option value="SILVERM" ${sel === 'SILVERM' ? 'selected' : ''}>SILVERM (Silver Mini)</option>
+        <option value="SILVERMIC" ${sel === 'SILVERMIC' ? 'selected' : ''}>SILVERMIC (Silver Micro)</option>
+        <option value="COPPER" ${sel === 'COPPER' ? 'selected' : ''}>COPPER</option>
+        <option value="ZINC" ${sel === 'ZINC' ? 'selected' : ''}>ZINC</option>
+        <option value="ALUMINIUM" ${sel === 'ALUMINIUM' ? 'selected' : ''}>ALUMINIUM</option>
+        <option value="LEAD" ${sel === 'LEAD' ? 'selected' : ''}>LEAD</option>
+      </optgroup>
+    `;
+  }
+
+  function getStrikeOptionsHTML(underlying, selectedStrike, optType) {
+    const type = (optType || 'CE').toUpperCase();
+    if (type === 'FUT' || String(selectedStrike).toUpperCase() === 'FUT') {
+      return '<option value="FUT" selected>FUT (Futures Contract)</option>';
+    }
+
     let start = 42000, end = 58000, step = 100;
     const und = (underlying || 'BANKNIFTY').toUpperCase();
 
@@ -1865,6 +1964,22 @@ function initKiteApp() {
       start = 70000; end = 85000; step = 100;
     } else if (und === 'MIDCPNIFTY') {
       start = 9500; end = 15000; step = 50;
+    } else if (und === 'CRUDEOIL') {
+      start = 4800; end = 7800; step = 50;
+    } else if (und === 'NATURALGAS') {
+      start = 100; end = 320; step = 5;
+    } else if (und === 'GOLD' || und === 'GOLDM') {
+      start = 66000; end = 80000; step = 500;
+    } else if (und === 'SILVER' || und === 'SILVERM' || und === 'SILVERMIC') {
+      start = 72000; end = 98000; step = 1000;
+    } else if (und === 'COPPER') {
+      start = 700; end = 980; step = 10;
+    } else if (und === 'ZINC') {
+      start = 200; end = 350; step = 5;
+    } else if (und === 'ALUMINIUM') {
+      start = 180; end = 300; step = 5;
+    } else if (und === 'LEAD') {
+      start = 150; end = 240; step = 5;
     }
 
     let html = '';
@@ -2154,8 +2269,10 @@ function initKiteApp() {
     adminPositionsForms.innerHTML = '';
     appState.positions.forEach((pos, idx) => {
       const parsed = parseOptionSymbol(pos.symbol);
-      const strikeHtml = getStrikeOptionsHTML(parsed.underlying, parsed.strike);
+      const strikeHtml = getStrikeOptionsHTML(parsed.underlying, parsed.strike, parsed.optionType);
+      const underlyingHtml = getUnderlyingOptionsHTML(parsed.underlying);
       const isGreen = !pos.pnl.includes('-');
+      const detectedExchange = pos.exchange || getExchangeForUnderlying(parsed.underlying);
 
       const box = document.createElement('div');
       box.className = 'admin-card-box';
@@ -2169,6 +2286,7 @@ function initKiteApp() {
           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <strong style="font-size: 14px; color: #0f172a;">Trade Position ${idx + 1}</strong>
             <span style="font-size: 12px; font-weight: 700; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; padding: 2px 10px; border-radius: 6px;" class="pos-badge-symbol">${pos.symbol}</span>
+            <span style="font-size: 11px; font-weight: 700; color: #0369a1; background: #e0f2fe; padding: 2px 8px; border-radius: 4px;" class="pos-badge-exchange">${detectedExchange}</span>
           </div>
           <div style="display: flex; align-items: center; gap: 12px;">
             <span class="pos-live-pnl-pill ${isGreen ? 'green' : 'red'}">${pos.pnl}</span>
@@ -2179,38 +2297,35 @@ function initKiteApp() {
           </div>
         </div>
 
-        <!-- 1. OPTION CONTRACT BUILDER -->
+        <!-- 1. OPTION / COMMODITY CONTRACT BUILDER -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
           <div style="font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px;">
-            <span>🎯 1. Select Option Contract</span>
+            <span>🎯 1. Select Instrument (Indices F&O or MCX Commodities)</span>
             <span style="font-size: 10.5px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 600;">⚡ Live Strike Sync</span>
           </div>
           <div class="pos-grid-builder" style="display: grid; grid-template-columns: 1.2fr 1fr 1.2fr 1fr; gap: 10px;">
             <div>
-              <label class="admin-label" style="font-size: 11px;">Underlying</label>
+              <label class="admin-label" style="font-size: 11px;">Underlying / Commodity</label>
               <select class="admin-input pos-builder-underlying" style="background: #fff; font-size: 12px; padding: 6px; font-weight: 600;">
-                <option value="BANKNIFTY" ${parsed.underlying === 'BANKNIFTY' ? 'selected' : ''}>BANKNIFTY</option>
-                <option value="NIFTY" ${parsed.underlying === 'NIFTY' ? 'selected' : ''}>NIFTY</option>
-                <option value="FINNIFTY" ${parsed.underlying === 'FINNIFTY' ? 'selected' : ''}>FINNIFTY</option>
-                <option value="SENSEX" ${parsed.underlying === 'SENSEX' ? 'selected' : ''}>SENSEX</option>
-                <option value="MIDCPNIFTY" ${parsed.underlying === 'MIDCPNIFTY' ? 'selected' : ''}>MIDCPNIFTY</option>
+                ${underlyingHtml}
               </select>
             </div>
             <div>
               <label class="admin-label" style="font-size: 11px;">Expiry Date / Tag</label>
-              <input type="text" class="admin-input pos-builder-expiry" value="${parsed.expiry}" style="font-size: 12px; padding: 6px;" placeholder="14th FEB">
+              <input type="text" class="admin-input pos-builder-expiry" value="${parsed.expiry}" style="font-size: 12px; padding: 6px;" placeholder="19th MAR">
             </div>
             <div>
-              <label class="admin-label" style="font-size: 11px; font-weight: 700; color: #2563eb;">Strike Price</label>
+              <label class="admin-label" style="font-size: 11px; font-weight: 700; color: #2563eb;">Strike / Contract</label>
               <select class="admin-input pos-builder-strike-select" style="background: #eff6ff; border-color: #93c5fd; font-weight: 700; font-size: 12px; padding: 6px; color: #1d4ed8;">
                 ${strikeHtml}
               </select>
             </div>
             <div>
-              <label class="admin-label" style="font-size: 11px;">Option Type</label>
+              <label class="admin-label" style="font-size: 11px;">Instrument Type</label>
               <select class="admin-input pos-builder-opttype" style="background: #fff; font-size: 12px; padding: 6px; font-weight: 600;">
-                <option value="CE" ${parsed.optionType === 'CE' ? 'selected' : ''}>CE (Call)</option>
-                <option value="PE" ${parsed.optionType === 'PE' ? 'selected' : ''}>PE (Put)</option>
+                <option value="CE" ${parsed.optionType === 'CE' ? 'selected' : ''}>CE (Call Option)</option>
+                <option value="PE" ${parsed.optionType === 'PE' ? 'selected' : ''}>PE (Put Option)</option>
+                <option value="FUT" ${parsed.optionType === 'FUT' ? 'selected' : ''}>FUT (Futures Contract)</option>
               </select>
             </div>
           </div>
@@ -2240,8 +2355,8 @@ function initKiteApp() {
             <div>
               <label class="admin-label" style="font-size: 11px;">Product</label>
               <select class="admin-input pos-input-type" style="background: #fff; font-size: 12px; padding: 6px; font-weight: 600;">
-                <option value="MIS" ${(pos.type || 'MIS') === 'MIS' ? 'selected' : ''}>MIS (Intraday)</option>
-                <option value="NRML" ${pos.type === 'NRML' ? 'selected' : ''}>NRML (Carry Forward)</option>
+                <option value="NRML" ${(pos.type || 'NRML') === 'NRML' ? 'selected' : ''}>NRML (Overnight / Carry)</option>
+                <option value="MIS" ${pos.type === 'MIS' ? 'selected' : ''}>MIS (Intraday)</option>
               </select>
             </div>
           </div>
@@ -2272,7 +2387,7 @@ function initKiteApp() {
 
         <!-- Hidden Raw Elements for Internal Compatibility -->
         <input type="hidden" class="pos-input-symbol" value="${pos.symbol}">
-        <input type="hidden" class="pos-input-exchange" value="${pos.exchange}">
+        <input type="hidden" class="pos-input-exchange" value="${detectedExchange}">
       `;
 
       // Live Builder Sync Event Handlers
@@ -2290,17 +2405,27 @@ function initKiteApp() {
       const autoCalcEl = box.querySelector('.pos-input-autocalc');
       const pillEl = box.querySelector('.pos-live-pnl-pill');
       const badgeSym = box.querySelector('.pos-badge-symbol');
+      const badgeExc = box.querySelector('.pos-badge-exchange');
 
       async function updateCardDetails(autoFetchStrikeLTP = false) {
         const u = undEl.value;
-        const e = expEl.value.trim() || '14th FEB';
+        const e = expEl.value.trim() || (COMMODITY_UNDERLYINGS.includes(u) ? '19th MAR' : '14th FEB');
         const s = strEl.value;
         const o = optEl.value;
 
-        const newSym = `${u} ${e} ${s} ${o}`;
+        let newSym = '';
+        if (o === 'FUT' || s === 'FUT') {
+          newSym = `${u} ${e} FUT`;
+        } else {
+          newSym = `${u} ${e} ${s} ${o}`;
+        }
+
         symEl.value = newSym;
         if (badgeSym) badgeSym.textContent = newSym;
-        excEl.value = (u === 'SENSEX') ? 'BFO' : 'NFO';
+        
+        const detectedExc = getExchangeForUnderlying(u);
+        excEl.value = detectedExc;
+        if (badgeExc) badgeExc.textContent = detectedExc;
 
         if (autoFetchStrikeLTP) {
           const fetchedLtp = await fetchOptionContractLTP(u, s, o, e);
@@ -2330,7 +2455,7 @@ function initKiteApp() {
       }
 
       undEl.addEventListener('change', async () => {
-        strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value);
+        strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl.value);
         await updateCardDetails(true);
       });
       expEl.addEventListener('input', () => updateCardDetails(false));
@@ -2338,6 +2463,7 @@ function initKiteApp() {
         await updateCardDetails(true);
       });
       optEl.addEventListener('change', async () => {
+        strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl.value);
         await updateCardDetails(true);
       });
       sideEl.addEventListener('change', () => updateCardDetails(false));
@@ -2395,6 +2521,47 @@ function initKiteApp() {
     showInputToast('Watchlist item deleted & display updated!', true);
   };
 
+  const adminAddPosCommodityBtn = document.getElementById('admin-add-pos-commodity');
+  if (adminAddPosCommodityBtn) {
+    adminAddPosCommodityBtn.addEventListener('click', (e) => {
+      if (e) e.preventDefault();
+      syncAdminFormsToState();
+
+      const initialLtp = calculateRealisticOptionLTP('CRUDEOIL', '6400', 'CE');
+      const initialEntry = '165.00';
+      const initialQty = '100';
+      const ltpNum = parseFloat(initialLtp.replace(/,/g, '')) || 178.50;
+      const initPnl = (ltpNum - 165.0) * 100;
+      const formattedPnl = (initPnl >= 0 ? '+' : '') + initPnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      appState.positions.push({
+        id: 'pos_' + Date.now(),
+        symbol: 'CRUDEOIL 19th MAR 6400 CE',
+        exchange: 'MCX',
+        side: 'BUY',
+        entryPrice: initialEntry,
+        qty: initialQty,
+        avg: initialEntry,
+        pnl: formattedPnl,
+        ltp: initialLtp,
+        type: 'NRML',
+        autoCalc: true,
+        isGreen: initPnl >= 0
+      });
+      let total = 0;
+      appState.positions.forEach(pos => {
+        let pnlNum = parseFloat(String(pos.pnl).replace(/[^0-9.-]/g, '')) || 0;
+        total += pnlNum;
+      });
+      appState.totalPnl = (total >= 0 ? '+' : '') + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      saveState();
+      populateAdminForms();
+      renderAppUI();
+      showInputToast('Commodity position (CRUDEOIL MCX) added & display updated!', true);
+    });
+  }
+
   if (adminAddPosBtn) {
     adminAddPosBtn.addEventListener('click', (e) => {
       if (e) e.preventDefault();
@@ -2431,7 +2598,7 @@ function initKiteApp() {
       saveState();
       populateAdminForms();
       renderAppUI();
-      showInputToast('New position added & display updated!', true);
+      showInputToast('New position (BANKNIFTY NFO) added & display updated!', true);
     });
   }
 

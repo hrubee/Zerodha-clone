@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=70">
+  <link rel="stylesheet" href="styles.css?v=71">
 </head>
 <body class="page-input-standalone">
 
@@ -67,10 +67,13 @@
 
         <div class="admin-sub-header" style="margin-bottom: 12px;">
           <div>
-            <strong style="font-size: 15px; color: #1e293b;">⚡ Active Options Trades & Positions</strong>
-            <span style="font-size: 12px; color: #64748b; margin-left: 8px;">Select strike, enter buy price & quantity — P&L updates automatically</span>
+            <strong style="font-size: 15px; color: #1e293b;">⚡ Active Positions (Options, Futures & Commodities)</strong>
+            <span style="font-size: 12px; color: #64748b; margin-left: 8px;">Supports NFO/BFO Indices and MCX Commodities</span>
           </div>
-          <button type="button" class="admin-btn-small" id="admin-add-position" style="background: #2563eb; color: #fff; font-weight: 700; padding: 8px 16px; border-radius: 6px; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">+ Add Option Trade</button>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="admin-btn-small" id="admin-add-pos-commodity" style="background: #0284c7; color: #fff; font-weight: 700; padding: 8px 14px; border-radius: 6px; box-shadow: 0 2px 4px rgba(2,132,199,0.2);">+ Add Commodity (MCX)</button>
+            <button type="button" class="admin-btn-small" id="admin-add-position" style="background: #2563eb; color: #fff; font-weight: 700; padding: 8px 14px; border-radius: 6px; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">+ Add Index Option (NFO)</button>
+          </div>
         </div>
 
         <div class="admin-positions-editor-list" id="admin-positions-forms">
@@ -294,6 +297,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=70"></script>
+  <script src="app.js?v=71"></script>
 </body>
 </html>
