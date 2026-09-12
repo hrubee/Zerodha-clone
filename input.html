@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kite Input Control Center - Zerodha Trading Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body.page-input-standalone {
+      background: #f1f5f9;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: #1e293b;
+      min-height: 100vh;
+    }
+    .input-dashboard-header {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .input-dashboard-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .input-dashboard-title h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .input-dashboard-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .broadcast-badge {
+      background: #dcfce7;
+      color: #15803d;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-launch-display {
+      background: #387ed1;
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .btn-launch-display:hover {
+      background: #2b6cb0;
+    }
+    .input-dashboard-container {
+      display: flex;
+      max-width: 1280px;
+      margin: 24px auto;
+      gap: 24px;
+      padding: 0 24px;
+    }
+    .input-dashboard-sidebar {
+      width: 260px;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      height: fit-content;
+      position: sticky;
+      top: 90px;
+    }
+    .sidebar-tab-btn {
+      width: 100%;
+      text-align: left;
+      padding: 12px 16px;
+      margin-bottom: 6px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+    .sidebar-tab-btn:hover {
+      background: #f8fafc;
+      color: #3b82f6;
+    }
+    .sidebar-tab-btn.active {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+    .input-dashboard-content {
+      flex: 1;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      min-height: 600px;
+    }
+    /* Floating Toast Notification */
+    #input-toast-notification {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 14px 22px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      z-index: 9999;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    #input-toast-notification.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    #input-toast-notification.success {
+      background: #15803d;
+      border-left: 5px solid #86efac;
+    }
+  </style>
+</head>
+<body class="page-input-standalone">
+
+  <header class="input-dashboard-header">
+    <div class="input-dashboard-title">
+      <span style="font-size: 24px;">⚙️</span>
+      <div>
+        <h1>Kite Control Dashboard (/input)</h1>
+        <span style="font-size: 12.5px; color: #64748b;">Edit trade inputs, positions & live feed settings — Instant live auto-sync to /display</span>
+      </div>
+    </div>
+    <div class="input-dashboard-actions">
+      <span class="broadcast-badge" id="sync-status-indicator">● Live Sync Active</span>
+      <a href="/display" target="_blank" class="btn-launch-display">📺 Open Display View (/display) ↗</a>
+    </div>
+  </header>
+
+  <main class="input-dashboard-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="input-dashboard-sidebar">
+      <button class="sidebar-tab-btn active" data-atab="positions">📊 Positions & P&L</button>
+      <button class="sidebar-tab-btn" data-atab="dhan">⚡ Dhan API & Live Feed</button>
+      <button class="sidebar-tab-btn" data-atab="indices">📈 Indices & Header</button>
+      <button class="sidebar-tab-btn" data-atab="watchlist">📋 Watchlist Items</button>
+      <button class="sidebar-tab-btn" data-atab="profile">👤 User Profile</button>
+      <button class="sidebar-tab-btn" data-atab="funds">💰 Funds & Margins</button>
+      
+      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+        <button class="admin-btn-save" id="sidebar-quick-save-btn" style="width: 100%; padding: 10px; font-size: 13.5px; margin-bottom: 8px;">💾 Save & Broadcast</button>
+        <span style="font-size: 11px; color: #94a3b8; text-align: center; display: block;">Instant sync is also active on typing</span>
+      </div>
+    </aside>
+
+    <!-- Main Section Content -->
+    <section class="input-dashboard-content">
+      
+      <!-- SECTION 1: OPTIONS TRADE ENTRY & LIVE P&L -->
+      <div class="admin-section active" id="asec-positions">
+        
+        <!-- Live Total P&L Banner -->
+        <div class="trade-summary-banner">
+          <div class="trade-summary-left">
+            <span class="trade-summary-label">Live Aggregated Portfolio Total P&L</span>
+            <span class="trade-summary-val green" id="dashboard-total-pnl-display">+15,57,474.75</span>
+            <span style="font-size: 11.5px; color: #94a3b8;">Automatically calculated: (LTP - Buy Price) × Quantity for all positions</span>
+          </div>
+          <div class="trade-summary-right">
+            <div style="background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 11px; color: #cbd5e1; font-weight: 600;">Manual Override (Optional)</label>
+              <input type="text" id="admin-total-pnl" value="+15,57,474.75" class="admin-input" style="font-size: 13px; padding: 4px 8px; width: 150px; background: #ffffff; color: #0f172a;">
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-sub-header" style="margin-bottom: 12px;">
+          <div>
+            <strong style="font-size: 15px; color: #1e293b;">⚡ Active Options Trades & Positions</strong>
+            <span style="font-size: 12px; color: #64748b; margin-left: 8px;">Select strike, enter buy price & quantity — P&L updates automatically</span>
+          </div>
+          <button type="button" class="admin-btn-small" id="admin-add-position" style="background: #2563eb; color: #fff; font-weight: 700; padding: 8px 16px; border-radius: 6px; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">+ Add Option Trade</button>
+        </div>
+
+        <div class="admin-positions-editor-list" id="admin-positions-forms">
+          <!-- Position Cards injected by JS -->
+        </div>
+      </div>
+
+      <!-- SECTION 2: DHAN API & LIVE FEED CONFIG -->
+      <div class="admin-section" id="asec-dhan">
+        <div class="admin-card-box">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h4 style="margin: 0;">⚡ Dhan HQ API v2 Credentials</h4>
+            <span style="font-size: 11px; font-weight: 700; color: #166534; background: #dcfce7; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 6px;">🔒 Read-Only Feed (Trading Disabled)</span>
+          </div>
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 12px; color: #1e40af; line-height: 1.5;">
+            <strong>🛡️ Safety Guarantee:</strong> This integration strictly reads live market prices & quotes (`/v2/marketfeed/ltp`). <u>No order placement or trading execution endpoints exist or are called.</u>
+          </div>
+          <div class="admin-grid-2">
+            <div>
+              <label class="admin-label">Client ID</label>
+              <input type="text" id="admin-dhan-clientid" value="1104706516" class="admin-input">
+            </div>
+            <div>
+              <label class="admin-label">Access Token (JWT)</label>
+              <input type="password" id="admin-dhan-accesstoken" value="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJ1c2VyUmVnaW9uIjoiUjEiLCJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzg5MDk2NzU3LCJpYXQiOjE3ODkwMTAzNTcsInRva2VuQ29uc3VtZXJUeXBlIjoiU0VMRiIsIndlYmhvb2tVcmwiOiIiLCJkaGFuQ2xpZW50SWQiOiIxMTA0NzA2NTE2In0.Z8uwX1Ug_jMpW5hkpsQoHfD01GGxgIfH787It487lYZeWge7m6FYZLotyhqQsH8N4XylfWiiq6Dz35VwV909pQ" class="admin-input">
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-card-box">
+          <h4>📈 Live Market Feed & Simulation Settings</h4>
+          <div class="admin-grid-2" style="margin-bottom: 12px;">
+            <div>
+              <label class="admin-label">Market Hours Mode</label>
+              <select id="admin-dhan-markethours" class="admin-input" style="background: #fff; font-weight: 600;">
+                <option value="auto" selected>🕒 Auto Market Hours (9:15 AM - 3:30 PM IST, Freeze when Closed)</option>
+                <option value="always">⚡ 24/7 Always Ticking (Continuous Demo Mode)</option>
+                <option value="closed">⏸ Freeze / Market Closed (Static Closing Prices)</option>
+              </select>
+            </div>
+            <div>
+              <label class="admin-label">Feed Execution Mode</label>
+              <select id="admin-dhan-feedmode" class="admin-input" style="background: #fff;">
+                <option value="auto">⚡ Live Dhan API Feed + Fallback</option>
+                <option value="simulation">🎲 Simulation Engine</option>
+              </select>
+            </div>
+          </div>
+          <div class="admin-grid-2">
+            <div>
+              <label class="admin-label">Update Frequency</label>
+              <select id="admin-dhan-interval" class="admin-input" style="background: #fff;">
+                <option value="random" selected>⚡ Dynamic Randomized (&lt; 1.2s)</option>
+                <option value="600">0.6 Seconds (Ultra Fast)</option>
+                <option value="1000">1.0 Second</option>
+                <option value="1200">1.2 Seconds</option>
+              </select>
+            </div>
+            <div>
+              <label class="admin-label">Live Ticker Status</label>
+              <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+                <span id="dhan-ticker-badge" style="padding: 6px 12px; border-radius: 6px; background: #feefc3; color: #b45309; font-weight: 600; font-size: 13px;">⏸ Paused (Static Display)</span>
+                <button type="button" class="admin-btn-secondary" id="admin-dhan-toggle-ticker">Start Ticker</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-card-box" style="border: 1.5px solid #0284c7; background: #f0f9ff;">
+          <h4 style="color: #0369a1; margin-bottom: 6px;">🔒 Read-Only Safety Lock Status</h4>
+          <p style="font-size: 12.5px; color: #0c4a6e; margin: 0; line-height: 1.4;">
+            <strong>STRICT PROTECTION ACTIVE:</strong> Real Dhan HQ order placement APIs (<code>/orders</code>, <code>/orders/slicing</code>) are <strong>100% hard-blocked and disabled</strong> in the codebase. Only public market price feed data (LTP/Quotes) is read for UI demonstration.
+          </p>
+        </div>
+
+        <div class="admin-card-box">
+          <h4>🔑 API Connection Status</h4>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span id="dhan-api-status-text" style="font-size: 13px; color: #4b5563; font-weight: 500;">Ready to connect to Dhan HQ API v2</span>
+            </div>
+            <button type="button" class="admin-btn-small" id="admin-dhan-test-api">⚡ Test Connection</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: INDICES & HEADER EDITOR -->
+      <div class="admin-section" id="asec-indices">
+        <div class="admin-card-box">
+          <h4>NIFTY 50 Header Ticker</h4>
+          <div class="admin-grid-2">
+            <div>
+              <label class="admin-label">Value</label>
+              <input type="text" id="admin-nifty-val" value="23,994.55" class="admin-input">
+            </div>
+            <div>
+              <label class="admin-label">Change</label>
+              <input type="text" id="admin-nifty-change" value="+227.10 (+0.95%)" class="admin-input">
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-card-box">
+          <h4>NIFTY BANK Header Ticker</h4>
+          <div class="admin-grid-2">
+            <div>
+              <label class="admin-label">Value</label>
+              <input type="text" id="admin-banknifty-val" value="57,127.90" class="admin-input">
+            </div>
+            <div>
+              <label class="admin-label">Change</label>
+              <input type="text" id="admin-banknifty-change" value="+434.40 (+0.76%)" class="admin-input">
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-card-box">
+          <h4>SENSEX Drawer Card</h4>
+          <div class="admin-grid-2">
+            <div>
+              <label class="admin-label">Value</label>
+              <input type="text" id="admin-sensex-val" value="76,838.47" class="admin-input">
+            </div>
+            <div>
+              <label class="admin-label">Change</label>
+              <input type="text" id="admin-sensex-change" value="+778.70 (+1.02%)" class="admin-input">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 4: WATCHLIST ITEMS EDITOR -->
+      <div class="admin-section" id="asec-watchlist">
+        <div class="admin-sub-header">
+          <span>Watchlist Items</span>
+          <button type="button" class="admin-btn-small" id="admin-add-wlitem">+ Add Watchlist Item</button>
+        </div>
+        <div class="admin-wl-editor-list" id="admin-wl-forms">
+          <!-- Watchlist form items injected by JS -->
+        </div>
+      </div>
+
+      <!-- SECTION 5: USER PROFILE EDITOR -->
+      <div class="admin-section" id="asec-profile">
+        <div class="admin-form-group">
+          <label class="admin-label">Full Name</label>
+          <input type="text" id="admin-user-fullname" value="Surekha Sandeep Gundre" class="admin-input">
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-label">User ID (e.g. ZP9413)</label>
+          <input type="text" id="admin-user-id" value="ZP9413" class="admin-input">
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-label">User Email</label>
+          <input type="text" id="admin-user-email" value="drsbyenge@rediffmail.com" class="admin-input">
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-label">Available Funds Amount (Profile Card)</label>
+          <input type="text" id="admin-user-funds" value="₹35,50,000.00" class="admin-input">
+        </div>
+      </div>
+
+      <!-- SECTION 6: FUNDS & MARGIN EDITOR -->
+      <div class="admin-section" id="asec-funds">
+        <div class="admin-form-group">
+          <label class="admin-label">Available Margin (Big Amount, e.g. ₹35,50,000.00)</label>
+          <input type="text" id="admin-funds-avail-margin" value="₹35,50,000.00" class="admin-input">
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-label">Available Cash (e.g. 35,50,000.00)</label>
+          <input type="text" id="admin-funds-avail-cash" value="35,50,000.00" class="admin-input">
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-label">Used Margin (e.g. 0.00)</label>
+          <input type="text" id="admin-funds-used-margin" value="0.00" class="admin-input">
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-label">Opening Balance (e.g. 35,50,000.00)</label>
+          <input type="text" id="admin-funds-opening-bal" value="35,50,000.00" class="admin-input">
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div style="display: flex; justify-content: space-between; margin-top: 32px; padding-top: 20px; border-top: 1px solid #e2e8f0; align-items: center;">
+        <button type="button" class="admin-btn-reset" id="admin-reset-defaults">Reset to Video Defaults</button>
+        <button type="button" class="admin-btn-save" id="admin-save-btn" style="padding: 14px 28px; font-size: 15px; font-weight: 700; box-shadow: 0 4px 12px rgba(37,99,235,0.3);">💾 Save & Broadcast Live to Display</button>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Floating Toast Notification -->
+  <div id="input-toast-notification">
+    <span id="toast-icon">✅</span>
+    <span id="toast-message">State saved & broadcasted live!</span>
+  </div>
+
+  <!-- Floating Diagnostic Logs Trigger Button -->
+  <div id="debug-logger-trigger" style="position: fixed; bottom: 20px; left: 20px; z-index: 99999; display: flex; gap: 8px; align-items: center;">
+    <button type="button" id="btn-toggle-debug-logs" style="background: #0f172a; color: #38bdf8; border: 1px solid #334155; padding: 8px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+      <span>🐞</span> <span id="debug-log-title">Sync Diagnostic Logs</span> <span id="debug-log-count" style="background: #1e293b; color: #94a3b8; padding: 2px 6px; border-radius: 10px; font-size: 10.5px;">0 events</span>
+    </button>
+  </div>
+
+  <!-- Slide-out Diagnostic Console Drawer -->
+  <div id="debug-log-drawer" style="position: fixed; bottom: 0; left: 0; width: 100%; max-width: 650px; height: 380px; background: #090d16; border-top: 2px solid #38bdf8; border-right: 1px solid #1e293b; border-radius: 0 12px 0 0; z-index: 100000; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); display: none; flex-direction: column;">
+    <div style="background: #0f172a; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 14px;">⚡</span>
+        <strong style="color: #f8fafc; font-size: 13px;">Live Sync Inspector & Diagnostics</strong>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button type="button" id="btn-run-diagnostics" style="background: #0284c7; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; cursor: pointer;">⚡ Run Health Check</button>
+        <button type="button" id="btn-copy-logs" style="background: #334155; color: #cbd5e1; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; cursor: pointer;">📋 Copy</button>
+        <button type="button" id="btn-clear-logs" style="background: #334155; color: #cbd5e1; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; cursor: pointer;">🧹 Clear</button>
+        <button type="button" id="btn-close-debug-logs" style="background: transparent; color: #94a3b8; border: none; font-size: 16px; cursor: pointer; padding: 0 4px;">✕</button>
+      </div>
+    </div>
+    <div id="debug-log-list" style="flex: 1; overflow-y: auto; background: #090d16; color: #e2e8f0; padding: 6px 0;">
+      <!-- Log items dynamically injected -->
+    </div>
+  </div>
+
+  <script src="app.js?v=44"></script>
+</body>
+</html>

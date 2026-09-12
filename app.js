@@ -1,0 +1,2640 @@
+/**
+ * Zerodha Kite Mobile UI - Replicated from IMG Videos & Admin Control Engine
+ */
+
+function initKiteApp() {
+
+  // Video Presets matching IMG_0961, IMG_0965, IMG_0964, IMG_1029, IMG_1019
+  const videoPresets = {
+    'IMG_0961': {
+      user: { userId: 'ZP9413', email: 'surekha@zerodha.clone', funds: '₹14,28,500.00' },
+      indices: {
+        nifty: { val: '23,459.55', change: '+28.05 (+0.11%)', isGreen: true, prevClose: 23431.50 },
+        banknifty: { val: '57,127.90', change: '+434.40 (+0.76%)', isGreen: true, prevClose: 56693.50 },
+        sensex: { val: '74,855.81', change: '+91.58 (+0.12%)', isGreen: true, prevClose: 74764.23 },
+        vix: { val: '13.82', change: '-0.45 (-3.15%)', isGreen: false }
+      },
+      totalPnl: '+15,57,474.75',
+      holdingsCount: '1',
+      positions: [
+        {
+          id: 'pos_1',
+          symbol: 'SENSEX JUL 4600 CE',
+          exchange: 'BFO',
+          qty: '0',
+          avg: '0.00',
+          pnl: '+7,9043.99',
+          ltp: '811.00',
+          type: 'NRML',
+          isGreen: true
+        },
+        {
+          id: 'pos_2',
+          symbol: 'BANKNIFTY 14th FEB 45300 CE',
+          exchange: 'NFO',
+          qty: '0',
+          avg: '0.00',
+          pnl: '+4,56,287.25',
+          ltp: '224.00',
+          type: 'MIS',
+          isGreen: true
+        }
+      ]
+    },
+    'IMG_0965': {
+      user: { userId: 'FFP105', email: 'surekha@zerodha.clone', funds: '₹12,45,000.00' },
+      indices: {
+        nifty: { val: '23,994.55', change: '+227.10 (+0.95%)', isGreen: true },
+        banknifty: { val: '57,127.90', change: '+434.40 (+0.76%)', isGreen: true },
+        sensex: { val: '76,838.47', change: '+778.70 (+1.02%)', isGreen: true },
+        vix: { val: '13.82', change: '-0.45 (-3.15%)', isGreen: false }
+      },
+      totalPnl: '+15,20,830.50',
+      holdingsCount: '0',
+      positions: [
+        {
+          id: 'pos_1',
+          symbol: 'BANKNIFTY 14th FEB 44900 CE',
+          exchange: 'NFO',
+          qty: '0',
+          avg: '0.00',
+          pnl: '+6,18,678.00',
+          ltp: '675.10',
+          type: 'MIS',
+          isGreen: true
+        },
+        {
+          id: 'pos_2',
+          symbol: 'BANKNIFTY 14th FEB 45300 CE',
+          exchange: 'NFO',
+          qty: '0',
+          avg: '0.00',
+          pnl: '+9,02,152.50',
+          ltp: '282.85',
+          type: 'MIS',
+          isGreen: true
+        }
+      ]
+    },
+    'IMG_0964': {
+      user: { userId: 'FFP105', email: 'surekha@zerodha.clone', funds: '₹12,45,000.00' },
+      indices: {
+        nifty: { val: '23,994.55', change: '+227.10 (+0.95%)', isGreen: true },
+        banknifty: { val: '57,127.90', change: '+434.40 (+0.76%)', isGreen: true },
+        sensex: { val: '76,838.47', change: '+778.70 (+1.02%)', isGreen: true },
+        vix: { val: '13.82', change: '-0.45 (-3.15%)', isGreen: false }
+      },
+      totalPnl: '+14,16,546.00',
+      holdingsCount: '0',
+      positions: [
+        {
+          id: 'pos_1',
+          symbol: 'BANKNIFTY 14th FEB 44900 CE',
+          exchange: 'NFO',
+          qty: '0',
+          avg: '0.00',
+          pnl: '+6,18,678.00',
+          ltp: '613.80',
+          type: 'MIS',
+          isGreen: true
+        },
+        {
+          id: 'pos_2',
+          symbol: 'BANKNIFTY 14th FEB 45300 CE',
+          exchange: 'NFO',
+          qty: '0',
+          avg: '0.00',
+          pnl: '+7,97,868.00',
+          ltp: '231.30',
+          type: 'MIS',
+          isGreen: true
+        }
+      ]
+    },
+    'IMG_1029': {
+      user: { userId: 'ZP9413', email: 'surekha@zerodha.clone', funds: '₹14,28,500.00' },
+      indices: {
+        nifty: { val: '23,994.55', change: '+227.10 (+0.95%)', isGreen: true },
+        banknifty: { val: '57,127.90', change: '+434.40 (+0.76%)', isGreen: true },
+        sensex: { val: '76,838.47', change: '+778.70 (+1.02%)', isGreen: true },
+        vix: { val: '13.82', change: '-0.45 (-3.15%)', isGreen: false }
+      },
+      totalPnl: '+7,12,867.75',
+      holdingsCount: '1',
+      positions: [
+        {
+          id: 'pos_1',
+          symbol: 'BANKNIFTY 21st FEB 47100 PE',
+          exchange: 'NFO',
+          qty: '0',
+          avg: '0.00',
+          pnl: '+3,21,770.25',
+          ltp: '221.95',
+          type: 'MIS',
+          isGreen: true
+        },
+        {
+          id: 'pos_2',
+          symbol: 'NIFTY 22nd FEB 22100 PE',
+          exchange: 'NFO',
+          qty: '0',
+          avg: '0.00',
+          pnl: '+3,91,097.50',
+          ltp: '63.25',
+          type: 'MIS',
+          isGreen: true
+        }
+      ]
+    },
+    'IMG_1019': {
+      user: { userId: 'FFP105', email: 'surekha@zerodha.clone', funds: '₹12,45,000.00' },
+      indices: {
+        nifty: { val: '23,994.55', change: '+227.10 (+0.95%)', isGreen: true },
+        banknifty: { val: '57,127.90', change: '+434.40 (+0.76%)', isGreen: true },
+        sensex: { val: '76,838.47', change: '+778.70 (+1.02%)', isGreen: true },
+        vix: { val: '13.82', change: '-0.45 (-3.15%)', isGreen: false }
+      },
+      totalPnl: '+8,14,994.75',
+      holdingsCount: '0',
+      positions: [
+        {
+          id: 'pos_1',
+          symbol: 'BANKNIFTY 21st FEB 46800 CE',
+          exchange: 'NFO',
+          qty: '0',
+          avg: '0.00',
+          pnl: '-7,271.25',
+          ltp: '210.60',
+          type: 'MIS',
+          isGreen: false
+        },
+        {
+          id: 'pos_2',
+          symbol: 'FINNIFTY 20th FEB 20500 CE',
+          exchange: 'NFO',
+          qty: '0',
+          avg: '0.00',
+          pnl: '+8,22,266.00',
+          ltp: '118.00',
+          type: 'MIS',
+          isGreen: true
+        }
+      ]
+    }
+  };
+
+  // Watchlist items
+  const defaultWatchlist = [
+    { name: 'BANKNIFTY 14th FEB 44700 CE', exchange: 'NFO', price: 780.00, change: 245.50, percent: 45.92, isGreen: true },
+    { name: 'BANKNIFTY 14th FEB 45300 CE', exchange: 'NFO', price: 224.00, change: 98.40, percent: 78.34, isGreen: true },
+    { name: 'SENSEX', exchange: 'INDICES', price: 76838.47, change: 778.70, percent: 1.02, isGreen: true },
+    { name: 'NIFTY 22nd FEB 22100 PE', exchange: 'NFO', price: 63.25, change: -42.10, percent: -39.96, isGreen: false },
+    { name: 'FINNIFTY 20th FEB 20500 CE', exchange: 'NFO', price: 118.00, change: 65.40, percent: 124.33, isGreen: true }
+  ];
+
+  // Default state: load IMG_0961 video scenario
+  const defaultState = {
+    ...JSON.parse(JSON.stringify(videoPresets['IMG_0961'])),
+    watchlist: defaultWatchlist,
+    dhan: {
+      clientId: '93fc0cbb',
+      accessToken: '58d16338-9afe-4253-8a78-2f5cc398d62a',
+      feedMode: 'auto',
+      tickInterval: 1200,
+      isTickerActive: true
+    }
+  };
+
+  // Load state from localStorage or default
+  let appState = JSON.parse(localStorage.getItem('kite_replica_admin_state')) || JSON.parse(JSON.stringify(defaultState));
+  if (!appState.dhan) {
+    appState.dhan = {
+      clientId: '93fc0cbb',
+      accessToken: '58d16338-9afe-4253-8a78-2f5cc398d62a',
+      feedMode: 'auto',
+      tickInterval: 1200,
+      isTickerActive: true
+    };
+  }
+  // Guarantee ticker active
+  // Ensure fundsDetails exists
+  if (!appState.user) appState.user = {};
+  if (!appState.user.fundsDetails) {
+    appState.user.fundsDetails = {
+      availableMargin: appState.user.funds || '₹35,50,000.00',
+      availableCash: '35,50,000.00',
+      usedMargin: '0.00',
+      openingBalance: '35,50,000.00'
+    };
+  }
+
+  let liveTickerTimer = null;
+
+  // ==========================================================================
+  // COMPREHENSIVE LIVE DIAGNOSTICS & SYNC LOGGING ENGINE
+  // ==========================================================================
+  const KiteSyncLogger = {
+    logs: [],
+    maxLogs: 200,
+
+    log(type, action, message, meta = null) {
+      const time = new Date();
+      const timeStr = `${time.toTimeString().split(' ')[0]}.${String(time.getMilliseconds()).padStart(3, '0')}`;
+      const entry = { time: timeStr, type, action, message, meta, id: Date.now() + Math.random() };
+      this.logs.unshift(entry);
+      if (this.logs.length > this.maxLogs) this.logs.pop();
+
+      // Console colorized output
+      const colors = {
+        INFO: 'color: #38bdf8; font-weight: bold;',
+        SYNC: 'color: #4ade80; font-weight: bold;',
+        WARN: 'color: #facc15; font-weight: bold;',
+        ERROR: 'color: #f87171; font-weight: bold;',
+        HTTP: 'color: #c084fc; font-weight: bold;'
+      };
+      console.log(`%c[KiteSync ${entry.time}] [${type}] [${action}]`, colors[type] || 'color: #94a3b8', message, meta || '');
+
+      this.renderToUI();
+    },
+
+    info(action, message, meta) { this.log('INFO', action, message, meta); },
+    sync(action, message, meta) { this.log('SYNC', action, message, meta); },
+    warn(action, message, meta) { this.log('WARN', action, message, meta); },
+    error(action, message, meta) { this.log('ERROR', action, message, meta); },
+    http(action, message, meta) { this.log('HTTP', action, message, meta); },
+
+    renderToUI() {
+      const logList = document.getElementById('debug-log-list');
+      const countBadge = document.getElementById('debug-log-count');
+      if (!logList) return;
+
+      if (countBadge) countBadge.textContent = `${this.logs.length} events`;
+
+      logList.innerHTML = this.logs.map(l => {
+        const typeColors = {
+          INFO: '#38bdf8',
+          SYNC: '#4ade80',
+          WARN: '#facc15',
+          ERROR: '#f87171',
+          HTTP: '#c084fc'
+        };
+        const col = typeColors[l.type] || '#94a3b8';
+        let metaHtml = '';
+        if (l.meta) {
+          metaHtml = `<div style="font-size: 10.5px; color: #94a3b8; background: #020617; padding: 4px 6px; border-radius: 4px; margin-top: 3px; font-family: monospace; white-space: pre-wrap; max-height: 80px; overflow-y: auto;">${typeof l.meta === 'object' ? JSON.stringify(l.meta, null, 2) : l.meta}</div>`;
+        }
+        return `
+          <div style="padding: 6px 12px; border-bottom: 1px solid #1e293b; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11px; line-height: 1.4;">
+            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+              <span style="color: #64748b; font-size: 10px;">${l.time}</span>
+              <span style="color: ${col}; font-weight: 700; background: rgba(255,255,255,0.06); padding: 1px 4px; border-radius: 3px; font-size: 9.5px;">${l.type}</span>
+              <span style="color: #f8fafc; font-weight: 600;">${l.action}:</span>
+              <span style="color: #cbd5e1;">${l.message}</span>
+            </div>
+            ${metaHtml}
+          </div>
+        `;
+      }).join('');
+    },
+
+    clear() {
+      this.logs = [];
+      this.renderToUI();
+    },
+
+    async runDiagnosticTests() {
+      this.info('DIAGNOSTICS', 'Starting full 4-point sync diagnostic health check...');
+      const results = [];
+
+      // Test 1: localStorage
+      try {
+        const testKey = '__kite_diag_test__';
+        localStorage.setItem(testKey, 'ok_' + Date.now());
+        const val = localStorage.getItem(testKey);
+        localStorage.removeItem(testKey);
+        if (val && val.startsWith('ok_')) {
+          results.push({ test: '1. LocalStorage RW', pass: true, detail: 'Operational' });
+          this.sync('TEST_LOCALSTORAGE', 'LocalStorage read/write verified');
+        } else {
+          throw new Error('Readback mismatch');
+        }
+      } catch (e) {
+        results.push({ test: '1. LocalStorage RW', pass: false, detail: e.message });
+        this.error('TEST_LOCALSTORAGE', 'LocalStorage failed: ' + e.message);
+      }
+
+      // Test 2: BroadcastChannel
+      try {
+        if (typeof BroadcastChannel !== 'undefined') {
+          const testChan = new BroadcastChannel('zerodha_clone_sync');
+          testChan.postMessage({ type: 'DIAG_PING', time: Date.now() });
+          results.push({ test: '2. BroadcastChannel', pass: true, detail: 'Active & Channel Open' });
+          this.sync('TEST_BROADCAST', 'BroadcastChannel initialized successfully');
+        } else {
+          results.push({ test: '2. BroadcastChannel', pass: false, detail: 'Not supported in browser' });
+          this.warn('TEST_BROADCAST', 'BroadcastChannel not supported');
+        }
+      } catch (e) {
+        results.push({ test: '2. BroadcastChannel', pass: false, detail: e.message });
+        this.error('TEST_BROADCAST', 'BroadcastChannel failed: ' + e.message);
+      }
+
+      // Test 3: Backend /api/ping
+      try {
+        const t0 = performance.now();
+        const res = await fetch('/api/ping?t=' + Date.now());
+        const t1 = performance.now();
+        if (res.ok) {
+          const pingData = await res.json();
+          const latency = (t1 - t0).toFixed(1);
+          results.push({ test: '3. Backend Server Ping', pass: true, detail: `OK (${latency}ms)` });
+          this.http('TEST_PING', `Backend server reachable in ${latency}ms`, pingData);
+        } else {
+          throw new Error(`HTTP ${res.status}`);
+        }
+      } catch (e) {
+        results.push({ test: '3. Backend Server Ping', pass: false, detail: e.message });
+        this.error('TEST_PING', 'Backend server unreachable: ' + e.message);
+      }
+
+      // Test 4: Backend /api/state
+      try {
+        const t0 = performance.now();
+        const res = await fetch('/api/state?t=' + Date.now());
+        const t1 = performance.now();
+        if (res.ok) {
+          const stateData = await res.json();
+          const latency = (t1 - t0).toFixed(1);
+          results.push({ test: '4. /api/state Endpoint', pass: true, detail: `OK (${latency}ms, Total P&L: ${stateData.totalPnl || 'N/A'})` });
+          this.http('TEST_STATE_API', `State API verified in ${latency}ms`, { totalPnl: stateData.totalPnl, positionsCount: stateData.positions ? stateData.positions.length : 0 });
+        } else {
+          throw new Error(`HTTP ${res.status}`);
+        }
+      } catch (e) {
+        results.push({ test: '4. /api/state Endpoint', pass: false, detail: e.message });
+        this.error('TEST_STATE_API', '/api/state test failed: ' + e.message);
+      }
+
+      const allPass = results.every(r => r.pass);
+      this.log(allPass ? 'SYNC' : 'ERROR', 'HEALTH_SCORECARD', allPass ? '🎉 All 4 diagnostic health tests PASSED!' : '⚠️ Some tests failed', results);
+      alert(allPass ? '✅ Health Check PASSED: All 4 sync channels (LocalStorage, BroadcastChannel, Server Ping, REST State) are active and working!' : '⚠️ Health Check Warning: Check the debug console for details.');
+    }
+  };
+
+  window.KiteSyncLogger = KiteSyncLogger;
+
+  // Setup Debug Drawer Toggle & Action Listeners
+  function setupDebugConsoleUI() {
+    const triggerBtn = document.getElementById('btn-toggle-debug-logs');
+    const drawer = document.getElementById('debug-log-drawer');
+    const closeBtn = document.getElementById('btn-close-debug-logs');
+    const runDiagBtn = document.getElementById('btn-run-diagnostics');
+    const copyBtn = document.getElementById('btn-copy-logs');
+    const clearBtn = document.getElementById('btn-clear-logs');
+
+    if (triggerBtn && drawer) {
+      triggerBtn.addEventListener('click', () => {
+        const isHidden = drawer.style.display === 'none' || !drawer.style.display;
+        drawer.style.display = isHidden ? 'flex' : 'none';
+        if (isHidden) KiteSyncLogger.renderToUI();
+      });
+    }
+
+    if (closeBtn && drawer) {
+      closeBtn.addEventListener('click', () => {
+        drawer.style.display = 'none';
+      });
+    }
+
+    if (runDiagBtn) {
+      runDiagBtn.addEventListener('click', () => {
+        KiteSyncLogger.runDiagnosticTests();
+      });
+    }
+
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        const logText = KiteSyncLogger.logs.map(l => `[${l.time}] [${l.type}] [${l.action}] ${l.message} ${l.meta ? JSON.stringify(l.meta) : ''}`).join('\n');
+        navigator.clipboard.writeText(logText).then(() => {
+          alert('📋 Copied ' + KiteSyncLogger.logs.length + ' log entries to clipboard!');
+        }).catch(err => {
+          prompt('Copy logs manually:', logText);
+        });
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        KiteSyncLogger.clear();
+      });
+    }
+  }
+
+  setupDebugConsoleUI();
+  KiteSyncLogger.info('INIT', 'Kite App Engine initialized. Mode: ' + (document.body.classList.contains('page-input-standalone') ? 'INPUT CONTROL' : 'DISPLAY VIEW'));
+
+  // BroadcastChannel & Storage Event Sync Engine for Live /display & /input Sync
+  const syncChannel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('zerodha_clone_sync') : null;
+
+  function showDisplayToast(message) {
+    // Disabled on /display for 100% clean presentation
+  }
+
+  function showInputToast(message, isSuccess = true) {
+    const toast = document.getElementById('input-toast-notification');
+    const toastMsg = document.getElementById('toast-message');
+    const toastIcon = document.getElementById('toast-icon');
+    if (toast && toastMsg) {
+      toastMsg.textContent = message;
+      if (toastIcon) toastIcon.textContent = isSuccess ? '✅' : 'ℹ️';
+      toast.className = isSuccess ? 'show success' : 'show';
+      clearTimeout(window._toastTimeout);
+      window._toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  }
+
+  function saveState(skipBroadcast = false) {
+    const statePayload = JSON.stringify(appState);
+    localStorage.setItem('kite_replica_admin_state', statePayload);
+    KiteSyncLogger.sync('SAVE_LOCALSTORAGE', `Saved to localStorage (${appState.positions ? appState.positions.length : 0} positions, PnL: ${appState.totalPnl})`);
+
+    if (syncChannel && !skipBroadcast) {
+      try {
+        syncChannel.postMessage({ type: 'STATE_UPDATED', state: appState, timestamp: Date.now() });
+        KiteSyncLogger.sync('BROADCAST_SENT', 'Emitted STATE_UPDATED to BroadcastChannel');
+      } catch (err) {
+        KiteSyncLogger.warn('BROADCAST_WARN', 'Broadcast error: ' + err.message);
+      }
+    }
+
+    // Cross-tab / Cross-browser backend sync
+    try {
+      fetch('/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: statePayload
+      }).then(res => res.json()).then(data => {
+        KiteSyncLogger.http('POST_API_STATE', 'Backend state updated successfully', data);
+      }).catch(err => {
+        KiteSyncLogger.warn('POST_API_WARN', 'Backend POST warning: ' + err.message);
+      });
+    } catch (e) {}
+  }
+
+  // Handle incoming live sync updates
+  function applyIncomingState(newState, sourceMsg = 'Live Sync: Updates Applied!') {
+    if (!newState) return;
+    const oldStr = JSON.stringify(appState);
+    const newStr = JSON.stringify(newState);
+    if (oldStr === newStr) return; // No change
+
+    appState = newState;
+    renderAppUI();
+    KiteSyncLogger.sync('STATE_APPLIED', `Applied new state from ${sourceMsg} (Total PnL: ${appState.totalPnl})`);
+
+    if (document.body.classList.contains('page-input-standalone')) {
+      if (!document.activeElement || document.activeElement.tagName === 'BODY') {
+        populateAdminForms();
+      }
+    }
+  }
+
+  if (syncChannel) {
+    syncChannel.onmessage = (event) => {
+      if (event.data && event.data.type === 'STATE_UPDATED' && event.data.state) {
+        KiteSyncLogger.sync('BROADCAST_RECV', 'Received STATE_UPDATED from BroadcastChannel');
+        applyIncomingState(event.data.state, '⚡ Live Sync: Broadcast Received!');
+      }
+    };
+  }
+
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'kite_replica_admin_state' && e.newValue) {
+      try {
+        const parsed = JSON.parse(e.newValue);
+        KiteSyncLogger.sync('STORAGE_EVENT', 'Received window storage event update');
+        applyIncomingState(parsed, '⚡ Live Sync: Storage Updated!');
+      } catch (err) {
+        KiteSyncLogger.error('STORAGE_PARSE_ERR', err.message);
+      }
+    }
+  });
+
+  // REST Polling Sync Fallback (Runs on Display & on focus)
+  async function checkServerStateSync() {
+    try {
+      const res = await fetch('/api/state?t=' + Date.now(), {
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && (data.totalPnl || data.positions)) {
+          applyIncomingState(data, '⚡ Live Sync: Backend Synced!');
+        }
+      }
+    } catch (err) {
+      KiteSyncLogger.warn('POLL_WARN', 'Failed polling backend: ' + err.message);
+    }
+  }
+
+  // Initial fetch from backend state
+  checkServerStateSync();
+
+  // Poll backend state periodically if on display page (or not standalone input page)
+  if (!document.body.classList.contains('page-input-standalone')) {
+    setInterval(checkServerStateSync, 500);
+  }
+
+  window.addEventListener('focus', () => {
+    KiteSyncLogger.info('WINDOW_FOCUS', 'Window focused - checking server state sync');
+    checkServerStateSync();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      KiteSyncLogger.info('TAB_VISIBLE', 'Tab became visible - checking server state sync');
+      checkServerStateSync();
+    }
+  });
+
+  // DOM Containers
+  const watchlistContainer = document.getElementById('watchlist-items-container');
+  const positionsContainer = document.getElementById('positions-container');
+  const searchInput = document.getElementById('watchlist-search-input');
+  const searchCounter = document.getElementById('search-counter');
+  
+  // Header Elements
+  const valNifty = document.getElementById('val-nifty');
+  const changeNifty = document.getElementById('change-nifty');
+  const valBankNifty = document.getElementById('val-banknifty');
+  const changeBankNifty = document.getElementById('change-banknifty');
+  const valSensex = document.getElementById('val-sensex');
+  const changeSensex = document.getElementById('change-sensex');
+  const totalPnlVal = document.getElementById('total-pnl-val');
+  const positionsCountBadge = document.getElementById('positions-count-badge');
+  const holdingsCountBadge = document.getElementById('holdings-count-badge');
+
+  // Profile Elements
+  const profileUserid = document.getElementById('profile-userid');
+  const profileAvatar = document.getElementById('profile-avatar');
+  const profileEmail = document.getElementById('profile-email');
+  const profileFunds = document.getElementById('profile-funds');
+  const navProfileLabel = document.getElementById('nav-profile-label');
+
+  // Modal Sheet Drawer Elements
+  const modalBackdrop = document.getElementById('modal-backdrop');
+  const modalCloseBtn = document.getElementById('modal-close-btn');
+  const drawerSymbolName = document.getElementById('drawer-symbol-name');
+  const drawerSymbolExchange = document.getElementById('drawer-symbol-exchange');
+  const drawerSymbolPrice = document.getElementById('drawer-symbol-price');
+  const drawerSymbolChange = document.getElementById('drawer-symbol-change');
+
+  // Render Full Application UI
+  function renderAppUI() {
+    // 1. Render Header Indices
+    if (valNifty) valNifty.textContent = appState.indices.nifty.val;
+    if (changeNifty) changeNifty.textContent = appState.indices.nifty.change;
+    if (valBankNifty) valBankNifty.textContent = appState.indices.banknifty.val;
+    if (changeBankNifty) changeBankNifty.textContent = appState.indices.banknifty.change;
+    if (valSensex) valSensex.textContent = appState.indices.sensex.val;
+    if (changeSensex) changeSensex.textContent = appState.indices.sensex.change;
+
+    // Helper to calculate realistic initials
+    function calculateInitials(fullName, userId) {
+      if (fullName && fullName.trim()) {
+        const parts = fullName.trim().split(/\s+/);
+        if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+        if (parts[0].length >= 2) return parts[0].substring(0, 2).toUpperCase();
+      }
+      return (userId || 'SS').substring(0, 2).toUpperCase();
+    }
+
+    // 2. Render Profile
+    const profileFullname = document.getElementById('profile-fullname');
+    if (profileFullname) profileFullname.textContent = appState.user.fullName || 'Surekha Sandeep Gundre';
+    if (profileUserid) profileUserid.textContent = appState.user.userId;
+    if (navProfileLabel) navProfileLabel.textContent = appState.user.userId;
+    if (profileAvatar) profileAvatar.textContent = calculateInitials(appState.user.fullName, appState.user.userId);
+    if (profileEmail) profileEmail.textContent = appState.user.email;
+    if (profileFunds) profileFunds.textContent = appState.user.funds;
+
+    // 3. Render Total P&L & Badges
+    if (totalPnlVal) {
+      totalPnlVal.textContent = appState.totalPnl;
+      const isPos = !appState.totalPnl.includes('-');
+      totalPnlVal.className = `pnl-amount ${isPos ? 'green' : 'red'}`;
+    }
+    if (holdingsCountBadge) {
+      holdingsCountBadge.textContent = appState.holdingsCount || '1';
+    }
+
+    // 4. Render Positions List (Matching IMG videos with weekly badge 'w' and MIS/NRML badges!)
+    if (positionsContainer) {
+      positionsContainer.innerHTML = '';
+      if (positionsCountBadge) positionsCountBadge.textContent = appState.positions.length;
+
+      appState.positions.forEach((pos, idx) => {
+        const card = document.createElement('div');
+        card.className = 'position-item-card';
+        card.dataset.id = pos.id;
+        card.dataset.index = idx;
+
+        const isGreenPnl = !pos.pnl.includes('-');
+        const pnlColorClass = isGreenPnl ? 'green' : 'red';
+        const badgeTypeClass = (pos.type || 'NRML').toLowerCase() === 'mis' ? 'mis' : '';
+
+        // Formatted Symbol Name with Superscript Ordinal Suffix & Weekly Badge 'w'
+        const formattedSymbol = formatOptionSymbolHTML(pos.symbol);
+
+        card.innerHTML = `
+          <div class="pos-row-top">
+            <span class="pos-qty-avg">Qty. <span class="pos-qty-val" style="color: #387ed1; font-weight: 600;">${pos.qty}</span> &nbsp; Avg. ${pos.avg}</span>
+            <span class="pos-type-badge ${badgeTypeClass}">${pos.type || 'NRML'}</span>
+          </div>
+          <div class="pos-row-main">
+            <span class="pos-symbol">${formattedSymbol}</span>
+            <span class="pos-pnl ${pnlColorClass}">${pos.pnl}</span>
+          </div>
+          <div class="pos-row-sub">
+            <span class="pos-exchange">${pos.exchange}</span>
+            <span class="pos-ltp">LTP <span>${pos.ltp}</span></span>
+          </div>
+        `;
+
+        // Click to open detail drawer or edit
+        card.addEventListener('click', (e) => {
+          // If clicked directly on P&L or Symbol, allow quick edit prompt
+          if (e.target.classList.contains('pos-pnl')) {
+            const newPnl = prompt('Edit P&L Amount:', pos.pnl);
+            if (newPnl !== null && newPnl.trim() !== '') {
+              pos.pnl = newPnl.trim();
+              pos.isGreen = !pos.pnl.includes('-');
+              saveState();
+              renderAppUI();
+              return;
+            }
+          }
+          if (e.target.classList.contains('pos-symbol')) {
+            const newSym = prompt('Edit Symbol Name:', pos.symbol);
+            if (newSym !== null && newSym.trim() !== '') {
+              pos.symbol = newSym.trim();
+              saveState();
+              renderAppUI();
+              return;
+            }
+          }
+
+          openInstrumentDrawer({
+            name: pos.symbol.replace(/<[^>]*>?/gm, ''),
+            exchange: pos.exchange,
+            price: parseFloat(pos.ltp.replace(/,/g, '')) || 780.0,
+            change: 10.0,
+            percent: 1.5,
+            isGreen: isGreenPnl
+          });
+        });
+
+        positionsContainer.appendChild(card);
+      });
+    }
+
+    // 5. Render Watchlist
+    renderWatchlist(appState.watchlist);
+
+    // 6. Update Screenshot Overlay Fields
+    updateOverlayFields();
+  }
+
+  // Sync Overlay Text Fields with Current App State
+  // Sync Overlay Text Fields & Render Dynamic Overlay Positions
+  function updateOverlayFields() {
+    const ovPositionsCount = document.getElementById('ov-val-positions-count');
+    if (ovPositionsCount) {
+      ovPositionsCount.textContent = appState.positions ? appState.positions.length : '0';
+    }
+
+    const ovTotalPnl = document.getElementById('ov-val-total-pnl');
+    if (ovTotalPnl) {
+      ovTotalPnl.textContent = appState.totalPnl;
+      ovTotalPnl.style.color = appState.totalPnl.includes('-') ? '#df2029' : 'rgb(111, 174, 101)';
+    }
+
+    const ovPositionsList = document.getElementById('ov-positions-list');
+    if (ovPositionsList) {
+      ovPositionsList.innerHTML = '';
+      if (appState.positions) {
+        appState.positions.forEach((pos, idx) => {
+          const item = document.createElement('div');
+          item.className = 'overlay-field pos-card-overlay-item';
+          item.style.position = 'relative';
+          item.style.width = '100%';
+          item.style.margin = '0';
+          item.style.background = '#ffffff';
+          item.style.padding = '1.45vh 2.1vh';
+          item.style.borderRadius = '0';
+          item.style.borderLeft = 'none';
+          item.style.borderRight = 'none';
+          item.style.borderTop = 'none';
+          item.style.borderBottom = '1px solid #f1f3f6';
+          item.style.boxSizing = 'border-box';
+          item.style.display = 'flex';
+          item.style.flexDirection = 'column';
+          item.style.justifyContent = 'center';
+          item.style.cursor = 'pointer';
+          item.style.boxShadow = 'none';
+
+          const isGreenPnl = !pos.pnl.includes('-');
+          const pnlColor = isGreenPnl ? 'rgb(111, 174, 101)' : '#df2029';
+          const isMis = (pos.type || 'NRML').toLowerCase() === 'mis';
+          const badgeBg = isMis ? 'rgba(217, 119, 6, 0.1)' : 'rgba(167, 139, 250, 0.1)';
+          const badgeColor = isMis ? '#d97706' : '#a78bfa';
+
+          const formattedSymbol = formatOptionSymbolHTML(pos.symbol);
+
+          item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; line-height: 1.3;">
+              <span style="font-size: 1.1vh; color: #94a3b8;">Qty. <span class="pos-qty-val" style="color: #387ed1; font-weight: 600; letter-spacing: 0.8px;">${pos.qty || '0'}</span> &nbsp; Avg. <span style="color: #64748b; letter-spacing: 0.8px;">${pos.avg || '0.00'}</span></span>
+              <span class="pos-type-badge ${isMis ? 'mis' : ''}" style="font-size: calc(1.1vh + 1px); font-weight: 700; background: ${badgeBg}; color: ${badgeColor}; padding: 0.28vh 0.8vh; border-radius: 3px;">${pos.type || 'NRML'}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 0.9vh; line-height: 1.3;">
+              <span style="font-size: calc(1.25vh + 2px); font-weight: 500; color: #5a6578;">${formattedSymbol}</span>
+              <span style="font-size: 1.32vh; font-weight: 600; color: ${pnlColor}; letter-spacing: 1.2px;">${pos.pnl}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 0.85vh; line-height: 1.3;">
+              <span style="font-size: 1.05vh; color: #94a3b8; font-weight: 500;">${pos.exchange || 'NFO'}</span>
+              <span style="font-size: calc(1.1vh + 2px); color: #94a3b8;">LTP <span style="color: #334155; font-weight: 600; margin-left: 6px; letter-spacing: 0;">${pos.ltp}</span></span>
+            </div>
+          `;
+
+          // Quick edit P&L or Symbol on click in overlay mode
+          item.addEventListener('click', () => {
+            const newPnl = prompt(`Edit Position ${idx + 1} P&L:`, pos.pnl);
+            if (newPnl !== null && newPnl.trim() !== '') {
+              pos.pnl = newPnl.trim();
+              pos.isGreen = !pos.pnl.includes('-');
+              saveState();
+              renderAppUI();
+            }
+          });
+
+          ovPositionsList.appendChild(item);
+        });
+      }
+    }
+
+    const ovFullname = document.getElementById('ov-val-fullname');
+    const ovUserid = document.getElementById('ov-val-userid');
+    const ovEmail = document.getElementById('ov-val-email');
+    const ovAvatar = document.getElementById('ov-val-avatar');
+    const ovNavUserid = document.getElementById('ov-val-nav-userid');
+
+    const userName = (appState.user && appState.user.fullName) || 'Vedant Subhash Jamdhade';
+    const userId = (appState.user && appState.user.userId) || 'GOX607';
+    const userEmail = (appState.user && appState.user.email) || 'vjamdhade1217@gmail.com';
+
+    if (ovFullname) ovFullname.textContent = userName;
+    if (ovUserid) ovUserid.textContent = userId;
+    if (ovEmail) ovEmail.textContent = userEmail;
+    if (ovAvatar) {
+      const parts = userName.trim().split(' ');
+      const initials = parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : userId.substring(0, 2).toUpperCase();
+      ovAvatar.textContent = initials || 'VS';
+    }
+    if (ovNavUserid) ovNavUserid.textContent = userId;
+
+    // Sync Live Indices Ticker Overlays (NIFTY 50 & SENSEX)
+    const ovNiftyVal = document.getElementById('ov-val-nifty');
+    const ovNiftyChg = document.getElementById('ov-chg-nifty');
+    if (appState.indices && appState.indices.nifty) {
+      if (ovNiftyVal) {
+        ovNiftyVal.textContent = appState.indices.nifty.val || '23,459.55';
+        ovNiftyVal.className = 'ov-index-val ' + (appState.indices.nifty.isGreen !== false ? 'green' : 'red');
+      }
+      if (ovNiftyChg) {
+        ovNiftyChg.textContent = appState.indices.nifty.change || '+28.05 (+0.11%)';
+      }
+    }
+
+    const ovSensexVal = document.getElementById('ov-val-sensex');
+    const ovSensexChg = document.getElementById('ov-chg-sensex');
+    if (appState.indices && appState.indices.sensex) {
+      if (ovSensexVal) {
+        ovSensexVal.textContent = appState.indices.sensex.val || '74,855.81';
+        ovSensexVal.className = 'ov-index-val ' + (appState.indices.sensex.isGreen !== false ? 'green' : 'red');
+      }
+      if (ovSensexChg) {
+        ovSensexChg.textContent = appState.indices.sensex.change || '+91.58 (+0.12%)';
+      }
+    }
+
+    // Sync Funds Screen Overlays
+    const fundsData = (appState.user && appState.user.fundsDetails) || {
+      availableMargin: appState.user && appState.user.funds ? appState.user.funds : '₹35,50,000.00',
+      availableCash: '35,50,000.00',
+      usedMargin: '0.00',
+      openingBalance: '35,50,000.00'
+    };
+
+    const ovFundsAvailMargin = document.getElementById('ov-val-funds-avail-margin');
+    const ovFundsAvailCash = document.getElementById('ov-val-funds-avail-cash');
+    const ovFundsUsedMargin = document.getElementById('ov-val-funds-used-margin');
+    const ovFundsOpeningBal = document.getElementById('ov-val-funds-opening-bal');
+
+    if (ovFundsAvailMargin) ovFundsAvailMargin.textContent = fundsData.availableMargin || '₹35,50,000.00';
+    if (ovFundsAvailCash) ovFundsAvailCash.textContent = fundsData.availableCash || '35,50,000.00';
+    if (ovFundsUsedMargin) ovFundsUsedMargin.textContent = fundsData.usedMargin || '0.00';
+    if (ovFundsOpeningBal) ovFundsOpeningBal.textContent = fundsData.openingBalance || '35,50,000.00';
+  }
+
+  // Setup Overlay Click Handlers for Quick Inline Editing & Navigation
+  function setupOverlayClickHandlers() {
+    // Navigation: Profile -> Funds Screen
+    const ovClickFunds = document.getElementById('ov-click-funds');
+    if (ovClickFunds) {
+      ovClickFunds.addEventListener('click', (e) => {
+        e.stopPropagation();
+        switchTabDisplay('funds');
+      });
+    }
+
+    const rowFunds = document.getElementById('row-funds');
+    if (rowFunds) {
+      rowFunds.addEventListener('click', () => {
+        switchTabDisplay('funds');
+      });
+    }
+
+    // Navigation: Funds -> Profile Screen (Back Button)
+    const ovFundsBackBtn = document.getElementById('ov-funds-back-btn');
+    if (ovFundsBackBtn) {
+      ovFundsBackBtn.addEventListener('click', () => {
+        switchTabDisplay('profile');
+      });
+    }
+
+    // Funds Available Margin Edit
+    const ovFundsMarginBox = document.getElementById('ov-funds-avail-margin');
+    if (ovFundsMarginBox) {
+      ovFundsMarginBox.addEventListener('click', () => {
+        if (!appState.user) appState.user = {};
+        if (!appState.user.fundsDetails) appState.user.fundsDetails = {};
+        const current = appState.user.fundsDetails.availableMargin || appState.user.funds || '₹35,50,000.00';
+        const val = prompt('Edit Available Margin (e.g. ₹35,50,000.00):', current);
+        if (val !== null && val.trim() !== '') {
+          appState.user.fundsDetails.availableMargin = val.trim();
+          appState.user.funds = val.trim();
+          saveState();
+          renderAppUI();
+        }
+      });
+    }
+
+    // Funds Available Cash Edit
+    const ovFundsCashBox = document.getElementById('ov-funds-avail-cash');
+    if (ovFundsCashBox) {
+      ovFundsCashBox.addEventListener('click', () => {
+        if (!appState.user) appState.user = {};
+        if (!appState.user.fundsDetails) appState.user.fundsDetails = {};
+        const current = appState.user.fundsDetails.availableCash || '35,50,000.00';
+        const val = prompt('Edit Available Cash (e.g. 35,50,000.00):', current);
+        if (val !== null && val.trim() !== '') {
+          appState.user.fundsDetails.availableCash = val.trim();
+          saveState();
+          renderAppUI();
+        }
+      });
+    }
+
+    // Funds Used Margin Edit
+    const ovFundsUsedBox = document.getElementById('ov-funds-used-margin');
+    if (ovFundsUsedBox) {
+      ovFundsUsedBox.addEventListener('click', () => {
+        if (!appState.user) appState.user = {};
+        if (!appState.user.fundsDetails) appState.user.fundsDetails = {};
+        const current = appState.user.fundsDetails.usedMargin || '0.00';
+        const val = prompt('Edit Used Margin (e.g. 0.00):', current);
+        if (val !== null && val.trim() !== '') {
+          appState.user.fundsDetails.usedMargin = val.trim();
+          saveState();
+          renderAppUI();
+        }
+      });
+    }
+
+    // Funds Opening Balance Edit
+    const ovFundsOpenBox = document.getElementById('ov-funds-opening-bal');
+    if (ovFundsOpenBox) {
+      ovFundsOpenBox.addEventListener('click', () => {
+        if (!appState.user) appState.user = {};
+        if (!appState.user.fundsDetails) appState.user.fundsDetails = {};
+        const current = appState.user.fundsDetails.openingBalance || '35,50,000.00';
+        const val = prompt('Edit Opening Balance (e.g. 35,50,000.00):', current);
+        if (val !== null && val.trim() !== '') {
+          appState.user.fundsDetails.openingBalance = val.trim();
+          saveState();
+          renderAppUI();
+        }
+      });
+    }
+
+    const ovIdxNifty = document.getElementById('ov-index-nifty');
+    if (ovIdxNifty) {
+      ovIdxNifty.addEventListener('click', () => {
+        const val = prompt('Edit NIFTY 50 Price (e.g. 23,459.55):', appState.indices && appState.indices.nifty ? appState.indices.nifty.val : '23,459.55');
+        if (val !== null && val.trim() !== '') {
+          if (!appState.indices) appState.indices = {};
+          if (!appState.indices.nifty) appState.indices.nifty = {};
+          appState.indices.nifty.val = val.trim();
+          saveState();
+          renderAppUI();
+        }
+      });
+    }
+
+    const ovIdxSensex = document.getElementById('ov-index-sensex');
+    if (ovIdxSensex) {
+      ovIdxSensex.addEventListener('click', () => {
+        const val = prompt('Edit SENSEX Price (e.g. 74,855.81):', appState.indices && appState.indices.sensex ? appState.indices.sensex.val : '74,855.81');
+        if (val !== null && val.trim() !== '') {
+          if (!appState.indices) appState.indices = {};
+          if (!appState.indices.sensex) appState.indices.sensex = {};
+          appState.indices.sensex.val = val.trim();
+          saveState();
+          renderAppUI();
+        }
+      });
+    }
+
+    const ovPosBadge = document.getElementById('ov-positions-badge');
+    if (ovPosBadge) {
+      ovPosBadge.addEventListener('click', () => {
+        const count = prompt('Edit Positions Count Badge Number:', appState.positions ? appState.positions.length : '2');
+        if (count !== null && count.trim() !== '') {
+          const ovVal = document.getElementById('ov-val-positions-count');
+          if (ovVal) ovVal.textContent = count.trim();
+        }
+      });
+    }
+
+    const ovTotalPnlBox = document.getElementById('ov-total-pnl');
+    if (ovTotalPnlBox) {
+      ovTotalPnlBox.addEventListener('click', () => {
+        const val = prompt('Edit Total P&L Amount:', appState.totalPnl);
+        if (val !== null && val.trim() !== '') {
+          appState.totalPnl = val.trim();
+          saveState();
+          renderAppUI();
+        }
+      });
+    }
+
+    const ovUseridBox = document.getElementById('ov-userid');
+    if (ovUseridBox) {
+      ovUseridBox.addEventListener('click', () => {
+        const val = prompt('Edit User ID:', appState.user.userId);
+        if (val !== null && val.trim() !== '') {
+          appState.user.userId = val.trim();
+          saveState();
+          renderAppUI();
+        }
+      });
+    }
+
+    const ovEmailBox = document.getElementById('ov-email');
+    if (ovEmailBox) {
+      ovEmailBox.addEventListener('click', () => {
+        const val = prompt('Edit Email:', appState.user.email);
+        if (val !== null && val.trim() !== '') {
+          appState.user.email = val.trim();
+          saveState();
+          renderAppUI();
+        }
+      });
+    }
+  }
+
+  setupOverlayClickHandlers();
+
+  // Mode Switcher: Screenshot Overlay Mode vs Native HTML Mode
+  const phoneFrame = document.getElementById('phone-frame');
+  const toggleOverlayBtn = document.getElementById('toggle-overlay-mode-btn');
+
+  if (toggleOverlayBtn && phoneFrame) {
+    toggleOverlayBtn.addEventListener('click', () => {
+      phoneFrame.classList.toggle('overlay-mode-active');
+      const isActive = phoneFrame.classList.contains('overlay-mode-active');
+      toggleOverlayBtn.classList.toggle('active', isActive);
+      toggleOverlayBtn.style.background = isActive ? '#059669' : '#4b5563';
+    });
+  }
+
+  // Quick edit Total P&L on click
+  if (totalPnlVal) {
+    totalPnlVal.style.cursor = 'pointer';
+    totalPnlVal.title = 'Click to Quick Edit Total P&L';
+    totalPnlVal.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const newTotal = prompt('Edit Total P&L Amount:', appState.totalPnl);
+      if (newTotal !== null && newTotal.trim() !== '') {
+        appState.totalPnl = newTotal.trim();
+        saveState();
+        renderAppUI();
+      }
+    });
+  }
+
+  // Render Watchlist Items
+  function renderWatchlist(items) {
+    if (!watchlistContainer) return;
+    watchlistContainer.innerHTML = '';
+    if (searchCounter) searchCounter.textContent = `${items.length}/250`;
+
+    items.forEach((item, idx) => {
+      const card = document.createElement('div');
+      card.className = 'watchlist-item';
+      
+      const changeSign = item.change >= 0 ? '+' : '';
+      const colorClass = item.isGreen ? 'green' : 'red';
+
+      card.innerHTML = `
+        <div class="item-left">
+          <span class="item-name">${item.name}</span>
+          <span class="item-tag">${item.exchange}</span>
+        </div>
+        <div class="item-right">
+          <span class="item-price ${colorClass}">${item.price.toFixed(2)}</span>
+          <span class="item-change ${colorClass}">${changeSign}${item.change.toFixed(2)} (${changeSign}${item.percent.toFixed(2)}%)</span>
+        </div>
+      `;
+
+      card.addEventListener('click', () => openInstrumentDrawer(item));
+      watchlistContainer.appendChild(card);
+    });
+  }
+
+  // Initial App Render
+  renderAppUI();
+
+  // Search filter handler
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      const filtered = appState.watchlist.filter(item => 
+        item.name.toLowerCase().includes(query) || item.exchange.toLowerCase().includes(query)
+      );
+      renderWatchlist(filtered);
+    });
+  }
+
+  // Bottom Navigation Switching Engine (Screens & Fullscreen Overlay Sync)
+  const navTabs = document.querySelectorAll('.nav-tab-item');
+  const screenViews = document.querySelectorAll('.screen-view');
+
+  const getOverlayViewport = () => document.getElementById('screenshot-overlay-viewport') || document.querySelector('.screenshot-overlay-viewport') || document.getElementById('phone-frame');
+  const ovGroupPortfolio = document.getElementById('ov-group-portfolio');
+  const ovGroupProfile = document.getElementById('ov-group-profile');
+
+  function switchTabDisplay(navTarget) {
+    const vp = getOverlayViewport();
+    const ovPortfolio = document.getElementById('ov-group-portfolio');
+    const ovProfile = document.getElementById('ov-group-profile');
+    const ovFunds = document.getElementById('ov-group-funds');
+
+    if (navTarget === 'funds' || navTarget === 'screen-funds') {
+      if (vp) {
+        vp.classList.remove('view-portfolio', 'view-profile');
+        vp.classList.add('view-funds');
+        vp.style.setProperty('background-image', "url('bg_new_funds.png?v=36')", 'important');
+      }
+      if (ovPortfolio) ovPortfolio.style.display = 'none';
+      if (ovProfile) ovProfile.style.display = 'none';
+      if (ovFunds) ovFunds.style.display = 'block';
+    } else if (navTarget === 'profile' || navTarget === 'screen-profile') {
+      if (vp) {
+        vp.classList.remove('view-portfolio', 'view-funds');
+        vp.classList.add('view-profile');
+        vp.style.setProperty('background-image', "url('bg_new_profile.png?v=36')", 'important');
+      }
+      if (ovPortfolio) ovPortfolio.style.display = 'none';
+      if (ovProfile) ovProfile.style.display = 'block';
+      if (ovFunds) ovFunds.style.display = 'none';
+    } else {
+      // Default to portfolio view
+      if (vp) {
+        vp.classList.remove('view-profile', 'view-funds');
+        vp.classList.add('view-portfolio');
+        vp.style.setProperty('background-image', "url('bg_new_portfolio.png?v=36')", 'important');
+      }
+      if (ovPortfolio) ovPortfolio.style.display = 'block';
+      if (ovProfile) ovProfile.style.display = 'none';
+      if (ovFunds) ovFunds.style.display = 'none';
+    }
+  }
+
+  navTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const targetId = tab.getAttribute('data-target');
+      navTabs.forEach(t => t.classList.remove('active'));
+      screenViews.forEach(s => s.classList.remove('active'));
+      tab.classList.add('active');
+      const targetScreen = document.getElementById(targetId);
+      if (targetScreen) targetScreen.classList.add('active');
+
+      // Sync Screenshot Overlay Mode Viewport
+      switchTabDisplay(targetId);
+    });
+  });
+
+  // Expose switchTabDisplay globally
+  window.switchTabDisplay = switchTabDisplay;
+
+  // Bind Overlay Mode Nav Click Zones (.nav-zone)
+  const navZones = document.querySelectorAll('.nav-zone');
+  navZones.forEach(zone => {
+    zone.addEventListener('click', () => {
+      const navTarget = zone.getAttribute('data-nav');
+      switchTabDisplay(navTarget);
+    });
+  });
+
+  // Global delegation for Funds row and Back button
+  document.addEventListener('click', (e) => {
+    const fundsRow = e.target.closest('#ov-click-funds, .funds-clickable-row, #row-funds');
+    if (fundsRow) {
+      e.preventDefault();
+      e.stopPropagation();
+      switchTabDisplay('funds');
+      return;
+    }
+    const backBtn = e.target.closest('#ov-funds-back-btn, .funds-back-btn-clickable');
+    if (backBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      switchTabDisplay('profile');
+      return;
+    }
+  }, true);
+
+  // Check URL param or hash on initial load (e.g. ?tab=profile or #profile)
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialTab = urlParams.get('tab') || urlParams.get('view') || (window.location.hash ? window.location.hash.replace('#', '') : null);
+  if (initialTab) {
+    switchTabDisplay(initialTab);
+  }
+
+  // Indices Dropdown Toggle
+  const toggleIndicesBtn = document.getElementById('toggle-indices-btn');
+  const indicesDrawer = document.getElementById('indices-drawer');
+  if (toggleIndicesBtn && indicesDrawer) {
+    toggleIndicesBtn.addEventListener('click', () => {
+      indicesDrawer.classList.toggle('open');
+      toggleIndicesBtn.classList.toggle('rotated');
+    });
+  }
+
+  // Open Instrument Detail Sheet Drawer
+  function openInstrumentDrawer(item) {
+    if (!drawerSymbolName) return;
+    drawerSymbolName.textContent = item.name;
+    drawerSymbolExchange.textContent = item.exchange;
+    
+    const changeSign = item.change >= 0 ? '+' : '';
+    const colorClass = item.isGreen ? 'green' : 'red';
+
+    drawerSymbolPrice.textContent = item.price.toFixed(2);
+    drawerSymbolPrice.className = `drawer-price-val ${colorClass}`;
+
+    drawerSymbolChange.textContent = `${changeSign}${item.change.toFixed(2)} (${changeSign}${item.percent.toFixed(2)}%)`;
+    drawerSymbolChange.className = `drawer-change-val ${colorClass}`;
+
+    modalBackdrop.classList.add('open');
+  }
+
+  // Close Drawer Modal
+  if (modalCloseBtn) modalCloseBtn.addEventListener('click', () => modalBackdrop.classList.remove('open'));
+  if (modalBackdrop) {
+    modalBackdrop.addEventListener('click', (e) => {
+      if (e.target === modalBackdrop) modalBackdrop.classList.remove('open');
+    });
+  }
+
+  // True Browser Fullscreen Controller (Like a full screen video player)
+  const btnFullscreenToggle = document.getElementById('btn-fullscreen-toggle');
+
+  function isDocFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+  }
+
+  function toggleTrueFullscreen() {
+    if (!isDocFullscreen()) {
+      const docEl = document.documentElement;
+      if (docEl.requestFullscreen) {
+        docEl.requestFullscreen();
+      } else if (docEl.webkitRequestFullscreen) {
+        docEl.webkitRequestFullscreen();
+      } else if (docEl.mozRequestFullScreen) {
+        docEl.mozRequestFullScreen();
+      } else if (docEl.msRequestFullscreen) {
+        docEl.msRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
+  }
+
+  function updateFullscreenUI() {
+    const isFs = isDocFullscreen();
+    if (btnFullscreenToggle) {
+      const enterIcon = btnFullscreenToggle.querySelector('.fs-icon-enter');
+      const exitIcon = btnFullscreenToggle.querySelector('.fs-icon-exit');
+      const label = btnFullscreenToggle.querySelector('.fs-label');
+
+      if (enterIcon) enterIcon.style.display = isFs ? 'none' : 'block';
+      if (exitIcon) exitIcon.style.display = isFs ? 'block' : 'none';
+      if (label) label.textContent = isFs ? 'Exit Full Screen' : 'Full Screen';
+    }
+  }
+
+  if (btnFullscreenToggle) {
+    btnFullscreenToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleTrueFullscreen();
+    });
+  }
+
+  // Keyboard shortcut: Press 'F' to toggle true full screen
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'f' || e.key === 'F') {
+      if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
+        toggleTrueFullscreen();
+      }
+    }
+  });
+
+  // Double-click and Mobile Double-Tap to toggle fullscreen
+  const appWrapper = document.getElementById('app-wrapper');
+  const phoneFrameEl = document.getElementById('phone-frame');
+  const displayTarget = appWrapper || phoneFrameEl || document.body;
+
+  if (displayTarget) {
+    // Desktop double-click
+    displayTarget.addEventListener('dblclick', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON', 'A'].includes(e.target?.tagName)) return;
+      toggleTrueFullscreen();
+    });
+
+    // Mobile / Touch device double-tap (<350ms between taps)
+    let lastTapTime = 0;
+    displayTarget.addEventListener('touchend', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON', 'A'].includes(e.target?.tagName)) return;
+      if (e.target.closest && e.target.closest('.nav-zone')) return;
+      const currentTime = new Date().getTime();
+      const tapInterval = currentTime - lastTapTime;
+      if (tapInterval < 350 && tapInterval > 0) {
+        toggleTrueFullscreen();
+        lastTapTime = 0;
+      } else {
+        lastTapTime = currentTime;
+      }
+    }, { passive: true });
+  }
+
+  document.addEventListener('fullscreenchange', updateFullscreenUI);
+  document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
+  document.addEventListener('mozfullscreenchange', updateFullscreenUI);
+  document.addEventListener('MSFullscreenChange', updateFullscreenUI);
+
+  // ==========================================================================
+  // ADMIN CONTROL PANEL LOGIC & FORM MANAGERS WITH VIDEO PRESETS
+  // ==========================================================================
+
+  const adminModal = document.getElementById('admin-modal');
+  const toggleAdminBtn = document.getElementById('toggle-admin-btn');
+  const adminModalClose = document.getElementById('admin-modal-close');
+  const openAdminFromProfile = document.getElementById('open-admin-from-profile');
+  const adminTabs = document.querySelectorAll('.admin-tab, .sidebar-tab-btn');
+  const adminSections = document.querySelectorAll('.admin-section');
+  const adminSaveBtn = document.getElementById('admin-save-btn');
+  const adminResetBtn = document.getElementById('admin-reset-defaults');
+  
+  const adminPositionsForms = document.getElementById('admin-positions-forms');
+  const adminWlForms = document.getElementById('admin-wl-forms');
+  const adminAddPosBtn = document.getElementById('admin-add-position');
+  const adminAddWlBtn = document.getElementById('admin-add-wlitem');
+  const adminCalcTotalBtn = document.getElementById('admin-calc-total');
+
+  function openAdminPanel() {
+    populateAdminForms();
+    if (adminModal) adminModal.classList.add('open');
+  }
+
+  if (toggleAdminBtn) toggleAdminBtn.addEventListener('click', openAdminPanel);
+  if (openAdminFromProfile) openAdminFromProfile.addEventListener('click', openAdminPanel);
+  if (adminModalClose) adminModalClose.addEventListener('click', () => adminModal.classList.remove('open'));
+
+  // Admin / Sidebar Tab Switcher
+  adminTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const targetSec = tab.getAttribute('data-atab');
+      adminTabs.forEach(t => t.classList.remove('active'));
+      adminSections.forEach(s => s.classList.remove('active'));
+      tab.classList.add('active');
+      const secEl = document.getElementById(`asec-${targetSec}`);
+      if (secEl) secEl.classList.add('active');
+    });
+  });
+
+  // Auto-populate on Standalone Input Dashboard Page is called at the end of initKiteApp
+
+  // ==========================================================================
+  // DHAN HQ API V2 & LIVE MARKET TICKER ENGINE
+  // ==========================================================================
+  // 🔒 SAFETY LOCK: STRICT READ-ONLY MODE GUARANTEE
+  // Real order placement APIs (/orders, /orders/slicing) are strictly prohibited and blocked.
+  const SAFETY_LOCK_READ_ONLY_MODE = true;
+
+  window.placeDhanOrder = function() {
+    console.error('⛔ SAFETY LOCK: Order placement on Dhan API is strictly blocked and disabled.');
+    alert('🔒 Safety Lock: Order placement is strictly prohibited and disabled in this application.');
+    return false;
+  };
+
+  function calculatePosPnl(pos) {
+    const ltpVal = parseFloat(String(pos.ltp).replace(/,/g, '')) || 0;
+    const entryVal = parseFloat(String(pos.entryPrice || pos.avg).replace(/,/g, '')) || 0;
+    const qtyVal = parseFloat(String(pos.qty).replace(/,/g, '')) || 0;
+    
+    // If user provided entry and qty, calculate exact mathematical P&L
+    if (qtyVal > 0 && entryVal > 0) {
+      const side = (pos.side || 'BUY').toUpperCase();
+      const diff = (side === 'BUY') ? (ltpVal - entryVal) : (entryVal - ltpVal);
+      const pnlVal = diff * qtyVal;
+      return (pnlVal >= 0 ? '+' : '') + pnlVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    
+    if (pos.pnl && pos.pnl !== '0.00' && pos.pnl !== '+0.00') return pos.pnl;
+    return '+0.00';
+  }
+
+  let liveTickerTimeout = null;
+
+  function getRandomTickInterval() {
+    const setting = appState.dhan ? appState.dhan.tickInterval : 'random';
+    if (setting && setting !== 'random' && !isNaN(parseInt(setting))) {
+      const fixed = parseInt(setting);
+      // Even if fixed is selected, add a micro jitter +/- 10%
+      const jitter = (Math.random() - 0.5) * 100;
+      return Math.min(1190, Math.max(200, fixed + jitter));
+    }
+    // Random interval between 250ms and 1150ms (strictly under 1.2 sec)
+    return Math.floor(Math.random() * (1150 - 250 + 1)) + 250;
+  }
+
+  function scheduleNextRandomTick() {
+    if (!liveTickerTimer) return;
+    const nextInterval = getRandomTickInterval();
+    liveTickerTimeout = setTimeout(async () => {
+      if (!liveTickerTimer) return;
+      try {
+        await tickLiveMarketData();
+      } catch (err) {
+        console.error('Tick execution error:', err);
+      }
+      scheduleNextRandomTick();
+    }, nextInterval);
+  }
+
+  function startLiveTickerLoop() {
+    stopLiveTickerLoop();
+    if (!appState.dhan) appState.dhan = {};
+    appState.dhan.isTickerActive = true;
+    liveTickerTimer = true;
+
+    // Run first tick immediately on launch so numbers refresh instantly!
+    tickLiveMarketData();
+
+    scheduleNextRandomTick();
+    console.log('⚡ Automatic Randomized Live Ticker Active (Dynamic intervals < 1.2s)');
+    updateTickerBadge();
+  }
+
+  function stopLiveTickerLoop() {
+    if (liveTickerTimeout) {
+      clearTimeout(liveTickerTimeout);
+      liveTickerTimeout = null;
+    }
+    liveTickerTimer = null;
+    updateTickerBadge();
+  }
+
+  function updateTickerBadge() {
+    const badge = document.getElementById('dhan-ticker-badge');
+    const btn = document.getElementById('admin-dhan-toggle-ticker');
+    const forceBtn = document.getElementById('btn-force-tick');
+
+    const marketMode = appState.dhan ? (appState.dhan.marketHoursMode || 'auto') : 'auto';
+    const isOpen = (marketMode === 'always') ? true : (marketMode === 'closed' ? false : isIndianMarketOpen());
+
+    if (badge) {
+      if (liveTickerTimer) {
+        if (!isOpen && marketMode === 'auto') {
+          badge.textContent = '🌙 Market Closed (Prices Frozen)';
+          badge.style.background = '#f1f5f9';
+          badge.style.color = '#475569';
+        } else {
+          badge.textContent = '● Running Live';
+          badge.style.background = '#dcfce7';
+          badge.style.color = '#166534';
+        }
+        if (btn) btn.textContent = 'Pause Ticker';
+      } else {
+        badge.textContent = '⏸ Paused';
+        badge.style.background = '#feefc3';
+        badge.style.color = '#b45309';
+        if (btn) btn.textContent = 'Resume Ticker';
+      }
+    }
+
+    if (forceBtn) {
+      if (liveTickerTimer) {
+        forceBtn.innerHTML = isOpen ? '⚡ Live Feed: Active' : '🌙 Market Closed (Static)';
+        forceBtn.style.background = isOpen ? '#15803d' : '#475569';
+        forceBtn.style.borderColor = isOpen ? '#16a34a' : '#64748b';
+      } else {
+        forceBtn.innerHTML = '⚡ Tick Feed Now';
+        forceBtn.style.background = '#2563eb';
+        forceBtn.style.borderColor = '#3b82f6';
+      }
+    }
+  }
+
+  const forceTickBtn = document.getElementById('btn-force-tick');
+  if (forceTickBtn) {
+    forceTickBtn.addEventListener('click', () => {
+      tickLiveMarketData();
+    });
+  }
+
+
+  let lastDhanFetchTime = 0;
+  let cachedDhanIndices = null;
+
+  async function fetchDhanLiveIndices() {
+    if (!appState.dhan || !appState.dhan.accessToken) return null;
+    const now = Date.now();
+    // Throttle Dhan API calls to max once every 5 seconds to prevent HTTP 429 rate limit
+    if (now - lastDhanFetchTime < 5000 && cachedDhanIndices) {
+      return cachedDhanIndices;
+    }
+    try {
+      const res = await fetch('/api/dhan/ltp', {
+        method: 'POST',
+        headers: {
+          'client-id': appState.dhan.clientId || '1104706516',
+          'access-token': appState.dhan.accessToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          "IDX_I": [13, 25, 51]
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'success' && data.data && data.data.IDX_I) {
+          cachedDhanIndices = data.data.IDX_I;
+          lastDhanFetchTime = now;
+          return data.data.IDX_I;
+        }
+      }
+    } catch (e) {
+      // fallback to cached or internal simulation
+    }
+    return cachedDhanIndices;
+  }
+
+  function isIndianMarketOpen() {
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const ist = new Date(utc + (3600000 * 5.5));
+    const day = ist.getDay(); // 0 = Sun, 6 = Sat
+    if (day === 0 || day === 6) return false;
+    const hours = ist.getHours();
+    const minutes = ist.getMinutes();
+    const totalMinutes = hours * 60 + minutes;
+    // NSE/BSE Market hours: 9:15 AM (555 min) to 3:30 PM (930 min) IST
+    return totalMinutes >= 555 && totalMinutes <= 930;
+  }
+
+  async function tickLiveMarketData() {
+    if (!appState.positions) {
+      appState.positions = [];
+    }
+
+    const marketMode = appState.dhan ? (appState.dhan.marketHoursMode || 'auto') : 'auto';
+    const isOpen = (marketMode === 'always') ? true : (marketMode === 'closed' ? false : isIndianMarketOpen());
+
+    // Attempt real live index quotes from Dhan HQ API if configured and market is open or connected
+    if (isOpen && appState.dhan && appState.dhan.accessToken) {
+      const realIdx = await fetchDhanLiveIndices();
+      if (realIdx) {
+        if (!appState.indices) appState.indices = {};
+        if (realIdx['13'] && realIdx['13'].last_price) {
+          if (!appState.indices.nifty) appState.indices.nifty = {};
+          const niftyLtp = Number(realIdx['13'].last_price);
+          const niftyClose = appState.indices.nifty.prevClose || 23431.50;
+          const chg = niftyLtp - niftyClose;
+          const pct = (chg / niftyClose) * 100;
+          appState.indices.nifty.val = niftyLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          appState.indices.nifty.change = (chg >= 0 ? '+' : '') + chg.toFixed(2) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)';
+          appState.indices.nifty.isGreen = chg >= 0;
+        }
+        if (realIdx['25'] && realIdx['25'].last_price) {
+          if (!appState.indices.banknifty) appState.indices.banknifty = {};
+          const bnLtp = Number(realIdx['25'].last_price);
+          const bnClose = appState.indices.banknifty.prevClose || 56693.50;
+          const chg = bnLtp - bnClose;
+          const pct = (chg / bnClose) * 100;
+          appState.indices.banknifty.val = bnLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          appState.indices.banknifty.change = (chg >= 0 ? '+' : '') + chg.toFixed(2) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)';
+          appState.indices.banknifty.isGreen = chg >= 0;
+        }
+        if (realIdx['51'] && realIdx['51'].last_price) {
+          if (!appState.indices.sensex) appState.indices.sensex = {};
+          const sxLtp = Number(realIdx['51'].last_price);
+          const sxClose = appState.indices.sensex.prevClose || 74764.23;
+          const chg = sxLtp - sxClose;
+          const pct = (chg / sxClose) * 100;
+          appState.indices.sensex.val = sxLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          appState.indices.sensex.change = (chg >= 0 ? '+' : '') + chg.toFixed(2) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)';
+          appState.indices.sensex.isGreen = chg >= 0;
+        }
+      }
+    } else if (isOpen) {
+      // Realistic market fluctuation for indices during demo/offline mode
+      if (appState.indices) {
+        if (appState.indices.nifty) {
+          let curr = parseFloat(String(appState.indices.nifty.val).replace(/,/g, '')) || 23459.55;
+          let delta = (Math.random() - 0.48) * 1.5;
+          let next = Math.max(1000, curr + delta);
+          const niftyClose = appState.indices.nifty.prevClose || 23431.50;
+          const chg = next - niftyClose;
+          const pct = (chg / niftyClose) * 100;
+          appState.indices.nifty.val = next.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          appState.indices.nifty.change = (chg >= 0 ? '+' : '') + chg.toFixed(2) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)';
+          appState.indices.nifty.isGreen = chg >= 0;
+        }
+        if (appState.indices.sensex) {
+          let curr = parseFloat(String(appState.indices.sensex.val).replace(/,/g, '')) || 74855.81;
+          let delta = (Math.random() - 0.48) * 4.5;
+          let next = Math.max(1000, curr + delta);
+          const sxClose = appState.indices.sensex.prevClose || 74764.23;
+          const chg = next - sxClose;
+          const pct = (chg / sxClose) * 100;
+          appState.indices.sensex.val = next.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          appState.indices.sensex.change = (chg >= 0 ? '+' : '') + chg.toFixed(2) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)';
+          appState.indices.sensex.isGreen = chg >= 0;
+        }
+      }
+    }
+
+    let totalPnlSum = 0;
+    if (appState.positions.length > 0) {
+      appState.positions.forEach(pos => {
+        let currentLtp = parseFloat(String(pos.ltp).replace(/,/g, '')) || 100.0;
+        let newLtp = currentLtp;
+
+        const parsed = parseOptionSymbol(pos.symbol);
+        if (isOpen && parsed && parsed.strike && parsed.underlying) {
+          // Dynamic calculation based on current spot & strike
+          const calcLtpStr = calculateRealisticOptionLTP(parsed.underlying, parsed.strike, parsed.optionType);
+          const calcLtpNum = parseFloat(calcLtpStr.replace(/,/g, '')) || currentLtp;
+          const microJitter = (Math.random() - 0.48) * 0.35;
+          newLtp = Math.max(0.05, Math.round((calcLtpNum + microJitter) * 20) / 20);
+          pos.ltp = newLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        } else if (isOpen) {
+          let deltaPercent = (Math.random() - 0.46) * 0.008;
+          newLtp = Math.max(0.05, currentLtp * (1 + deltaPercent));
+          pos.ltp = newLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        const entryVal = parseFloat(String(pos.entryPrice || pos.avg).replace(/,/g, '')) || 0;
+        const qtyVal = parseFloat(String(pos.qty).replace(/,/g, '')) || 0;
+        const side = (pos.side || 'BUY').toUpperCase();
+
+        if (qtyVal > 0 && entryVal > 0) {
+          let diff = (side === 'BUY') ? (newLtp - entryVal) : (entryVal - newLtp);
+          let pnlVal = diff * qtyVal;
+          pos.pnl = (pnlVal >= 0 ? '+' : '') + pnlVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        } else if (isOpen) {
+          let currentPnl = parseFloat(String(pos.pnl).replace(/[^0-9.-]/g, '')) || 0;
+          let pnlDelta = (Math.random() - 0.46) * (currentPnl ? Math.abs(currentPnl) * 0.005 : 50);
+          let newPnl = currentPnl + pnlDelta;
+          pos.pnl = (newPnl >= 0 ? '+' : '') + newPnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        pos.isGreen = !pos.pnl.includes('-');
+
+        let pnlNum = parseFloat(String(pos.pnl).replace(/[^0-9.-]/g, '')) || 0;
+        totalPnlSum += pnlNum;
+      });
+
+      // Update total P&L
+      appState.totalPnl = (totalPnlSum >= 0 ? '+' : '') + totalPnlSum.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      // If on input page, update form inputs without disrupting user typing focus
+      if (adminPositionsForms) {
+        const posCards = adminPositionsForms.querySelectorAll('.admin-card-box');
+        posCards.forEach((card, idx) => {
+          const pos = appState.positions[idx];
+          if (pos) {
+            const ltpInput = card.querySelector('.pos-input-ltp');
+            const pnlInput = card.querySelector('.pos-input-pnl');
+            const pillEl = card.querySelector('.pos-live-pnl-pill');
+            if (ltpInput && document.activeElement !== ltpInput) ltpInput.value = pos.ltp;
+            if (pnlInput && document.activeElement !== pnlInput) pnlInput.value = pos.pnl;
+            if (pillEl) {
+              pillEl.textContent = pos.pnl;
+              pillEl.className = `pos-live-pnl-pill ${pos.isGreen ? 'green' : 'red'}`;
+            }
+          }
+        });
+      }
+    } else {
+      appState.totalPnl = '+0.00';
+    }
+
+    saveState();
+    renderAppUI();
+  }
+
+  async function testDhanApiConnection() {
+    const statusText = document.getElementById('dhan-api-status-text');
+    if (!statusText) return;
+
+    statusText.textContent = '⏳ Testing connection to Dhan HQ API v2...';
+    statusText.style.color = '#3b82f6';
+
+    const clientId = document.getElementById('admin-dhan-clientid')?.value.trim() || appState.dhan?.clientId || '1104706516';
+    const accessToken = document.getElementById('admin-dhan-accesstoken')?.value.trim() || appState.dhan?.accessToken || '';
+
+    try {
+      const res = await fetch('/api/dhan/ltp', {
+        method: 'POST',
+        headers: {
+          'client-id': clientId,
+          'access-token': accessToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          "IDX_I": [13]
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.status === 'success') {
+        const n50Price = data?.data?.IDX_I?.['13']?.last_price || 'Active';
+        statusText.textContent = `✅ Dhan API Connected! Live Nifty 50: ₹${n50Price}`;
+        statusText.style.color = '#10b981';
+      } else if (res.status === 401) {
+        statusText.textContent = '❌ Dhan API 401: Token expired or invalid.';
+        statusText.style.color = '#ef4444';
+      } else {
+        statusText.textContent = '⚠️ Dhan API server responded with status: ' + res.status;
+        statusText.style.color = '#f59e0b';
+      }
+    } catch (err) {
+      statusText.textContent = '❌ Connection Error: ' + err.message;
+      statusText.style.color = '#ef4444';
+    }
+  }
+
+  // Symbol Formatter: Superscript ordinal date suffixes (14th -> 14<sup>th</sup>) & Weekly Badge 'w'
+  function formatOptionSymbolHTML(sym) {
+    if (!sym) return '';
+    return sym.replace(/(\d+)(th|st|nd|rd)\b/gi, (match, num, ord) => {
+      return `${num}<sup class="pos-date-ord">${ord.toLowerCase()}</sup> <span class="weekly-badge-w">w</span>`;
+    });
+  }
+
+  // Parse Symbol Helper (e.g. 'BANKNIFTY 14th FEB 45300 CE')
+  function parseOptionSymbol(sym) {
+    if (!sym) return { underlying: 'BANKNIFTY', expiry: '14th FEB', strike: '45300', optionType: 'CE' };
+    const parts = sym.trim().split(/\s+/);
+    if (parts.length >= 4) {
+      const underlying = parts[0];
+      const expiry = parts.slice(1, -2).join(' ');
+      const strike = parts[parts.length - 2];
+      const optionType = parts[parts.length - 1];
+      return { underlying, expiry, strike, optionType };
+    }
+    return { underlying: 'BANKNIFTY', expiry: '14th FEB', strike: '45300', optionType: 'CE' };
+  }
+
+  function getUnderlyingSpot(underlying) {
+    const und = (underlying || 'BANKNIFTY').toUpperCase();
+    if (und === 'NIFTY') {
+      return parseFloat(String(appState.indices?.nifty?.val || '23459.55').replace(/,/g, '')) || 23459.55;
+    } else if (und === 'BANKNIFTY') {
+      return parseFloat(String(appState.indices?.banknifty?.val || '56471.95').replace(/,/g, '')) || 56471.95;
+    } else if (und === 'SENSEX') {
+      return parseFloat(String(appState.indices?.sensex?.val || '74855.81').replace(/,/g, '')) || 74855.81;
+    } else if (und === 'FINNIFTY') {
+      return parseFloat(String(appState.indices?.finnifty?.val || '21250.00').replace(/,/g, '')) || 21250.00;
+    } else if (und === 'MIDCPNIFTY') {
+      return parseFloat(String(appState.indices?.midcpnifty?.val || '12250.00').replace(/,/g, '')) || 12250.00;
+    }
+    return 23459.55;
+  }
+
+  // Realistic Options Pricing Model (Intrinsic + Volatility & Extrinsic Time Value based on Spot & Strike)
+  function calculateRealisticOptionLTP(underlying, strike, optType) {
+    const und = (underlying || 'BANKNIFTY').toUpperCase();
+    const type = (optType || 'CE').toUpperCase();
+    const strikeNum = parseFloat(strike) || 0;
+    const spot = getUnderlyingSpot(und);
+
+    if (strikeNum <= 0) return '100.00';
+
+    let step = 100;
+    let baseAtmExtrinsic = 340.0;
+    if (und === 'NIFTY') {
+      step = 50;
+      baseAtmExtrinsic = 135.0;
+    } else if (und === 'BANKNIFTY') {
+      step = 100;
+      baseAtmExtrinsic = 340.0;
+    } else if (und === 'FINNIFTY') {
+      step = 50;
+      baseAtmExtrinsic = 125.0;
+    } else if (und === 'SENSEX') {
+      step = 100;
+      baseAtmExtrinsic = 420.0;
+    } else if (und === 'MIDCPNIFTY') {
+      step = 50;
+      baseAtmExtrinsic = 85.0;
+    }
+
+    let intrinsic = 0;
+    if (type === 'CE') {
+      intrinsic = Math.max(0, spot - strikeNum);
+    } else {
+      intrinsic = Math.max(0, strikeNum - spot);
+    }
+
+    // Gaussian time value decay based on distance from ATM in strike steps
+    const stepDist = Math.abs(spot - strikeNum) / step;
+    const extrinsic = baseAtmExtrinsic * Math.exp(-0.5 * Math.pow(stepDist / 4.2, 2));
+
+    let totalLtp = intrinsic + extrinsic;
+    // Round to standard 0.05 tick size
+    totalLtp = Math.max(0.05, Math.round(totalLtp * 20) / 20);
+    return totalLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Real-time Dhan HQ API Option Chain quote lookup with fallback
+  async function fetchOptionContractLTP(underlying, strike, optType, expiry) {
+    const fallbackLtp = calculateRealisticOptionLTP(underlying, strike, optType);
+    if (!appState.dhan || !appState.dhan.accessToken) {
+      return fallbackLtp;
+    }
+
+    const scripMap = {
+      'NIFTY': 13,
+      'BANKNIFTY': 25,
+      'FINNIFTY': 27,
+      'SENSEX': 51,
+      'MIDCPNIFTY': 442
+    };
+    const scripId = scripMap[(underlying || '').toUpperCase()];
+    if (!scripId) return fallbackLtp;
+
+    try {
+      const res = await fetch('/api/dhan/optionchain', {
+        method: 'POST',
+        headers: {
+          'client-id': appState.dhan.clientId || '1104706516',
+          'access-token': appState.dhan.accessToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          "UnderlyingScrip": scripId,
+          "UnderlyingSeg": "IDX_I"
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'success' && data.data && data.data.oc) {
+          const strNum = parseFloat(strike);
+          const optKey = (optType || 'CE').toLowerCase();
+          for (const key in data.data.oc) {
+            const row = data.data.oc[key];
+            if (row && (row.strike_price === strNum || parseFloat(key) === strNum)) {
+              if (row[optKey] && row[optKey].last_price) {
+                const liveLtp = parseFloat(row[optKey].last_price);
+                if (liveLtp > 0) {
+                  return liveLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // fallback to calculated realistic strike LTP
+    }
+
+    return fallbackLtp;
+  }
+
+  function getStrikeOptionsHTML(underlying, selectedStrike) {
+    let start = 42000, end = 58000, step = 100;
+    const und = (underlying || 'BANKNIFTY').toUpperCase();
+
+    if (und === 'NIFTY') {
+      start = 21000; end = 26500; step = 50;
+    } else if (und === 'BANKNIFTY') {
+      start = 42000; end = 58000; step = 100;
+    } else if (und === 'FINNIFTY') {
+      start = 18500; end = 25000; step = 50;
+    } else if (und === 'SENSEX') {
+      start = 70000; end = 85000; step = 100;
+    } else if (und === 'MIDCPNIFTY') {
+      start = 9500; end = 15000; step = 50;
+    }
+
+    let html = '';
+    const selNum = parseFloat(selectedStrike) || 0;
+    let found = false;
+
+    for (let s = start; s <= end; s += step) {
+      const isSel = (s === selNum);
+      if (isSel) found = true;
+      html += `<option value="${s}" ${isSel ? 'selected' : ''}>${s}</option>`;
+    }
+
+    if (!found && selNum > 0) {
+      html = `<option value="${selNum}" selected>${selNum} (Custom Strike)</option>` + html;
+    }
+    return html;
+  }
+
+  // Populate Admin Forms from Current App State
+  function populateAdminForms() {
+    const totalPnlEl = document.getElementById('admin-total-pnl');
+    if (totalPnlEl) totalPnlEl.value = appState.totalPnl;
+
+    const bannerPnl = document.getElementById('dashboard-total-pnl-display');
+    if (bannerPnl) {
+      bannerPnl.textContent = appState.totalPnl;
+      const isPos = !appState.totalPnl.includes('-');
+      bannerPnl.className = `trade-summary-val ${isPos ? 'green' : 'red'}`;
+    }
+
+    renderAdminPositionsEditor();
+
+    const nVal = document.getElementById('admin-nifty-val');
+    if (nVal && appState.indices && appState.indices.nifty) nVal.value = appState.indices.nifty.val;
+    const nChg = document.getElementById('admin-nifty-change');
+    if (nChg && appState.indices && appState.indices.nifty) nChg.value = appState.indices.nifty.change;
+    
+    const bnVal = document.getElementById('admin-banknifty-val');
+    if (bnVal && appState.indices && appState.indices.banknifty) bnVal.value = appState.indices.banknifty.val;
+    const bnChg = document.getElementById('admin-banknifty-change');
+    if (bnChg && appState.indices && appState.indices.banknifty) bnChg.value = appState.indices.banknifty.change;
+    
+    const sxVal = document.getElementById('admin-sensex-val');
+    if (sxVal && appState.indices && appState.indices.sensex) sxVal.value = appState.indices.sensex.val;
+    const sxChg = document.getElementById('admin-sensex-change');
+    if (sxChg && appState.indices && appState.indices.sensex) sxChg.value = appState.indices.sensex.change;
+
+    renderAdminWatchlistEditor();
+
+    const uFull = document.getElementById('admin-user-fullname');
+    if (uFull) uFull.value = (appState.user && appState.user.fullName) || 'Surekha Sandeep Gundre';
+    const uFullName = document.getElementById('admin-user-fullname');
+    if (uFullName && appState.user) uFullName.value = appState.user.fullName || 'Surekha Sandeep Gundre';
+    const uId = document.getElementById('admin-user-id');
+    if (uId && appState.user) uId.value = appState.user.userId;
+    const uEmail = document.getElementById('admin-user-email');
+    if (uEmail && appState.user) uEmail.value = appState.user.email;
+    const uFunds = document.getElementById('admin-user-funds');
+    if (uFunds && appState.user) uFunds.value = appState.user.funds;
+
+    // Funds & Margin Section
+    const fd = (appState.user && appState.user.fundsDetails) || {};
+    const fMargin = document.getElementById('admin-funds-avail-margin');
+    if (fMargin) fMargin.value = fd.availableMargin || (appState.user && appState.user.funds) || '₹35,50,000.00';
+    const fCash = document.getElementById('admin-funds-avail-cash');
+    if (fCash) fCash.value = fd.availableCash || '35,50,000.00';
+    const fUsed = document.getElementById('admin-funds-used-margin');
+    if (fUsed) fUsed.value = fd.usedMargin || '0.00';
+    const fOpen = document.getElementById('admin-funds-opening-bal');
+    if (fOpen) fOpen.value = fd.openingBalance || '35,50,000.00';
+
+    // Dhan config
+    if (document.getElementById('admin-dhan-clientid')) {
+      document.getElementById('admin-dhan-clientid').value = appState.dhan ? appState.dhan.clientId : '93fc0cbb';
+    }
+    if (document.getElementById('admin-dhan-accesstoken')) {
+      document.getElementById('admin-dhan-accesstoken').value = appState.dhan ? appState.dhan.accessToken : '58d16338-9afe-4253-8a78-2f5cc398d62a';
+    }
+    if (document.getElementById('admin-dhan-feedmode')) {
+      document.getElementById('admin-dhan-feedmode').value = appState.dhan ? appState.dhan.feedMode : 'auto';
+    }
+    if (document.getElementById('admin-dhan-markethours')) {
+      document.getElementById('admin-dhan-markethours').value = appState.dhan ? (appState.dhan.marketHoursMode || 'auto') : 'auto';
+    }
+    if (document.getElementById('admin-dhan-interval')) {
+      document.getElementById('admin-dhan-interval').value = appState.dhan ? appState.dhan.tickInterval : 'random';
+    }
+    updateTickerBadge();
+  }
+
+  function syncAdminFormsToState() {
+    let autoSumTotal = 0;
+    let hasPositions = false;
+
+    if (adminPositionsForms) {
+      const posCards = adminPositionsForms.querySelectorAll('.admin-card-box');
+      if (posCards.length > 0) {
+        hasPositions = true;
+        appState.positions = [];
+        posCards.forEach((card, idx) => {
+          const symEl = card.querySelector('.pos-input-symbol');
+          const excEl = card.querySelector('.pos-input-exchange');
+          const sideEl = card.querySelector('.pos-input-side');
+          const entryEl = card.querySelector('.pos-input-entry');
+          const qtyEl = card.querySelector('.pos-input-qty');
+          const ltpEl = card.querySelector('.pos-input-ltp');
+          const typeEl = card.querySelector('.pos-input-type');
+          const autoCalcEl = card.querySelector('.pos-input-autocalc');
+          const pnlEl = card.querySelector('.pos-input-pnl');
+          const pillEl = card.querySelector('.pos-live-pnl-pill');
+
+          if (symEl) {
+            const symbol = symEl.value.trim();
+            const exchange = excEl ? excEl.value.trim() : 'NFO';
+            const side = sideEl ? sideEl.value : 'BUY';
+            const entryPrice = entryEl ? entryEl.value.trim() : '0.00';
+            const qty = qtyEl ? qtyEl.value.trim() : '0';
+            const ltp = ltpEl ? ltpEl.value.trim() : '0.00';
+            const type = typeEl ? typeEl.value.trim() : 'MIS';
+            const autoCalc = autoCalcEl ? autoCalcEl.checked : true;
+            let pnl = pnlEl ? pnlEl.value.trim() : '0.00';
+
+            const posObj = {
+              id: 'pos_' + idx,
+              symbol: symbol,
+              exchange: exchange,
+              side: side,
+              entryPrice: entryPrice,
+              qty: qty,
+              avg: entryPrice || '0.00',
+              ltp: ltp,
+              type: type,
+              autoCalc: autoCalc,
+              pnl: pnl,
+              isGreen: !pnl.includes('-')
+            };
+
+            if (autoCalc) {
+              posObj.pnl = calculatePosPnl(posObj);
+              posObj.isGreen = !posObj.pnl.includes('-');
+              if (pnlEl) pnlEl.value = posObj.pnl;
+              if (pillEl) {
+                pillEl.textContent = posObj.pnl;
+                pillEl.className = `pos-live-pnl-pill ${posObj.isGreen ? 'green' : 'red'}`;
+              }
+            }
+
+            let numPnl = parseFloat(String(posObj.pnl).replace(/[^0-9.-]/g, '')) || 0;
+            autoSumTotal += numPnl;
+
+            appState.positions.push(posObj);
+          }
+        });
+      }
+    }
+
+    const totalPnlEl = document.getElementById('admin-total-pnl');
+    const bannerPnl = document.getElementById('dashboard-total-pnl-display');
+    if (hasPositions && totalPnlEl) {
+      const formattedTotal = (autoSumTotal >= 0 ? '+' : '') + autoSumTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      appState.totalPnl = formattedTotal;
+      totalPnlEl.value = formattedTotal;
+      if (bannerPnl) {
+        bannerPnl.textContent = formattedTotal;
+        bannerPnl.className = `trade-summary-val ${autoSumTotal >= 0 ? 'green' : 'red'}`;
+      }
+    } else if (totalPnlEl && totalPnlEl.value.trim() !== '') {
+      appState.totalPnl = totalPnlEl.value.trim();
+      if (bannerPnl) {
+        bannerPnl.textContent = appState.totalPnl;
+        bannerPnl.className = `trade-summary-val ${!appState.totalPnl.includes('-') ? 'green' : 'red'}`;
+      }
+    }
+
+    if (!appState.indices) appState.indices = {};
+    if (document.getElementById('admin-nifty-val')) {
+      if (!appState.indices.nifty) appState.indices.nifty = {};
+      appState.indices.nifty.val = document.getElementById('admin-nifty-val').value.trim();
+      appState.indices.nifty.change = document.getElementById('admin-nifty-change').value.trim();
+    }
+    if (document.getElementById('admin-banknifty-val')) {
+      if (!appState.indices.banknifty) appState.indices.banknifty = {};
+      appState.indices.banknifty.val = document.getElementById('admin-banknifty-val').value.trim();
+      appState.indices.banknifty.change = document.getElementById('admin-banknifty-change').value.trim();
+    }
+    if (document.getElementById('admin-sensex-val')) {
+      if (!appState.indices.sensex) appState.indices.sensex = {};
+      appState.indices.sensex.val = document.getElementById('admin-sensex-val').value.trim();
+      appState.indices.sensex.change = document.getElementById('admin-sensex-change').value.trim();
+    }
+
+    if (adminWlForms) {
+      const wlCards = adminWlForms.querySelectorAll('.admin-card-box');
+      if (wlCards.length > 0) {
+        appState.watchlist = [];
+        wlCards.forEach((card) => {
+          const nameEl = card.querySelector('.wl-input-name');
+          const excEl = card.querySelector('.wl-input-exchange');
+          const priceEl = card.querySelector('.wl-input-price');
+          const changeEl = card.querySelector('.wl-input-change');
+
+          if (nameEl) {
+            const name = nameEl.value.trim();
+            const exchange = excEl ? excEl.value.trim() : 'NSE';
+            const price = parseFloat(priceEl ? priceEl.value : 0) || 0;
+            const change = parseFloat(changeEl ? changeEl.value : 0) || 0;
+            const percent = price > 0 ? (change / price) * 100 : 0;
+
+            appState.watchlist.push({
+              name: name,
+              exchange: exchange,
+              price: price,
+              change: change,
+              percent: percent,
+              isGreen: change >= 0
+            });
+          }
+        });
+      }
+    }
+
+    if (!appState.user) appState.user = {};
+    if (document.getElementById('admin-user-fullname')) {
+      appState.user.fullName = document.getElementById('admin-user-fullname').value.trim();
+    }
+    if (document.getElementById('admin-user-id')) {
+      appState.user.userId = document.getElementById('admin-user-id').value.trim();
+    }
+    if (document.getElementById('admin-user-email')) {
+      appState.user.email = document.getElementById('admin-user-email').value.trim();
+    }
+    if (document.getElementById('admin-user-funds')) {
+      appState.user.funds = document.getElementById('admin-user-funds').value.trim();
+      if (!appState.user.fundsDetails) appState.user.fundsDetails = {};
+      appState.user.fundsDetails.availableMargin = appState.user.funds;
+    }
+    if (!appState.user.fundsDetails) appState.user.fundsDetails = {};
+    if (document.getElementById('admin-funds-avail-margin')) {
+      appState.user.fundsDetails.availableMargin = document.getElementById('admin-funds-avail-margin').value.trim();
+      appState.user.funds = appState.user.fundsDetails.availableMargin;
+    }
+    if (document.getElementById('admin-funds-avail-cash')) {
+      appState.user.fundsDetails.availableCash = document.getElementById('admin-funds-avail-cash').value.trim();
+    }
+    if (document.getElementById('admin-funds-used-margin')) {
+      appState.user.fundsDetails.usedMargin = document.getElementById('admin-funds-used-margin').value.trim();
+    }
+    if (document.getElementById('admin-funds-opening-bal')) {
+      appState.user.fundsDetails.openingBalance = document.getElementById('admin-funds-opening-bal').value.trim();
+    }
+
+    if (!appState.dhan) appState.dhan = {};
+    if (document.getElementById('admin-dhan-clientid')) {
+      appState.dhan.clientId = document.getElementById('admin-dhan-clientid').value.trim();
+    }
+    if (document.getElementById('admin-dhan-accesstoken')) {
+      appState.dhan.accessToken = document.getElementById('admin-dhan-accesstoken').value.trim();
+    }
+    if (document.getElementById('admin-dhan-feedmode')) {
+      appState.dhan.feedMode = document.getElementById('admin-dhan-feedmode').value;
+    }
+    if (document.getElementById('admin-dhan-markethours')) {
+      appState.dhan.marketHoursMode = document.getElementById('admin-dhan-markethours').value;
+    }
+    if (document.getElementById('admin-dhan-interval')) {
+      appState.dhan.tickInterval = document.getElementById('admin-dhan-interval').value;
+    }
+  }
+
+  function renderAdminPositionsEditor() {
+    if (!adminPositionsForms) return;
+    adminPositionsForms.innerHTML = '';
+    appState.positions.forEach((pos, idx) => {
+      const parsed = parseOptionSymbol(pos.symbol);
+      const strikeHtml = getStrikeOptionsHTML(parsed.underlying, parsed.strike);
+      const isGreen = !pos.pnl.includes('-');
+
+      const box = document.createElement('div');
+      box.className = 'admin-card-box';
+      box.style.border = '1px solid #cbd5e1';
+      box.style.borderRadius = '10px';
+      box.style.padding = '16px';
+      box.style.background = '#ffffff';
+
+      box.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <strong style="font-size: 14px; color: #0f172a;">Trade Position ${idx + 1}</strong>
+            <span style="font-size: 12px; font-weight: 700; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; padding: 2px 10px; border-radius: 6px;" class="pos-badge-symbol">${pos.symbol}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="pos-live-pnl-pill ${isGreen ? 'green' : 'red'}">${pos.pnl}</span>
+            <label style="font-size: 11.5px; font-weight: 600; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+              <input type="checkbox" class="pos-input-autocalc" ${pos.autoCalc !== false ? 'checked' : ''}>
+              Auto P&L
+            </label>
+          </div>
+        </div>
+
+        <!-- 1. OPTION CONTRACT BUILDER -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+          <div style="font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <span>🎯 1. Select Option Contract (Auto-Fetches Strike LTP)</span>
+            <span style="font-size: 10.5px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 600;">⚡ Live Strike Sync</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1.2fr 1fr 1.2fr 1fr; gap: 10px;">
+            <div>
+              <label class="admin-label" style="font-size: 11px;">Underlying</label>
+              <select class="admin-input pos-builder-underlying" style="background: #fff; font-size: 12px; padding: 6px; font-weight: 600;">
+                <option value="BANKNIFTY" ${parsed.underlying === 'BANKNIFTY' ? 'selected' : ''}>BANKNIFTY</option>
+                <option value="NIFTY" ${parsed.underlying === 'NIFTY' ? 'selected' : ''}>NIFTY</option>
+                <option value="FINNIFTY" ${parsed.underlying === 'FINNIFTY' ? 'selected' : ''}>FINNIFTY</option>
+                <option value="SENSEX" ${parsed.underlying === 'SENSEX' ? 'selected' : ''}>SENSEX</option>
+                <option value="MIDCPNIFTY" ${parsed.underlying === 'MIDCPNIFTY' ? 'selected' : ''}>MIDCPNIFTY</option>
+              </select>
+            </div>
+            <div>
+              <label class="admin-label" style="font-size: 11px;">Expiry Date / Tag</label>
+              <input type="text" class="admin-input pos-builder-expiry" value="${parsed.expiry}" style="font-size: 12px; padding: 6px;" placeholder="14th FEB">
+            </div>
+            <div>
+              <label class="admin-label" style="font-size: 11px; font-weight: 700; color: #2563eb;">Strike Price</label>
+              <select class="admin-input pos-builder-strike-select" style="background: #eff6ff; border-color: #93c5fd; font-weight: 700; font-size: 12px; padding: 6px; color: #1d4ed8;">
+                ${strikeHtml}
+              </select>
+            </div>
+            <div>
+              <label class="admin-label" style="font-size: 11px;">Option Type</label>
+              <select class="admin-input pos-builder-opttype" style="background: #fff; font-size: 12px; padding: 6px; font-weight: 600;">
+                <option value="CE" ${parsed.optionType === 'CE' ? 'selected' : ''}>CE (Call)</option>
+                <option value="PE" ${parsed.optionType === 'PE' ? 'selected' : ''}>PE (Put)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. TRADE EXECUTION DETAILS (BUY PRICE & QUANTITY) -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+          <div style="font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 8px;">
+            <span>💰 2. Trade Execution Inputs</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1.2fr 1.2fr 1fr; gap: 10px;">
+            <div>
+              <label class="admin-label" style="font-size: 11px;">Trade Side</label>
+              <select class="admin-input pos-input-side" style="background: #fff; font-size: 12px; padding: 6px; font-weight: 700; color: ${(pos.side || 'BUY') === 'BUY' ? '#166534' : '#991b1b'};">
+                <option value="BUY" ${(pos.side || 'BUY') === 'BUY' ? 'selected' : ''}>BUY (Long)</option>
+                <option value="SELL" ${pos.side === 'SELL' ? 'selected' : ''}>SELL (Short)</option>
+              </select>
+            </div>
+            <div>
+              <label class="admin-label" style="font-size: 11px; font-weight: 700; color: #0f172a;">Buy / Entry Price (₹)</label>
+              <input type="text" class="admin-input pos-input-entry" value="${pos.entryPrice || pos.avg || '0.00'}" style="font-size: 12.5px; font-weight: 600; padding: 6px; background: #fff; border-color: #cbd5e1;" placeholder="200.00">
+            </div>
+            <div>
+              <label class="admin-label" style="font-size: 11px; font-weight: 700; color: #0f172a;">Quantity (Lots / Shares)</label>
+              <input type="text" class="admin-input pos-input-qty" value="${pos.qty || '0'}" style="font-size: 12.5px; font-weight: 600; padding: 6px; background: #fff; border-color: #cbd5e1;" placeholder="100">
+            </div>
+            <div>
+              <label class="admin-label" style="font-size: 11px;">Product</label>
+              <select class="admin-input pos-input-type" style="background: #fff; font-size: 12px; padding: 6px; font-weight: 600;">
+                <option value="MIS" ${(pos.type || 'MIS') === 'MIS' ? 'selected' : ''}>MIS (Intraday)</option>
+                <option value="NRML" ${pos.type === 'NRML' ? 'selected' : ''}>NRML (Carry Forward)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. LIVE MARKET PRICE & REAL-TIME CALCULATED P&L -->
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="font-size: 11.5px; font-weight: 700; color: #166534;">
+              <span>📈 3. Live Strike Price & Auto-Calculated P&L</span>
+            </div>
+            <span style="font-size: 11px; color: #15803d; font-weight: 600;">Formula: (Strike LTP - Entry) × Qty</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1.2fr 1.5fr auto; gap: 12px; align-items: flex-end;">
+            <div>
+              <label class="admin-label" style="font-size: 11px; font-weight: 700; color: #1e293b;">Current Strike LTP (₹)</label>
+              <input type="text" class="admin-input pos-input-ltp" value="${pos.ltp}" style="font-size: 13px; font-weight: 700; padding: 6px; background: #fff; border-color: #86efac; color: #0f172a;">
+            </div>
+            <div>
+              <label class="admin-label" style="font-size: 11px; font-weight: 700; color: #1e293b;">Calculated Position P&L (₹)</label>
+              <input type="text" class="admin-input pos-input-pnl" value="${pos.pnl}" style="font-size: 13px; font-weight: 700; padding: 6px; background: #fff; color: ${isGreen ? '#16a34a' : '#dc2626'}; border-color: #86efac;">
+            </div>
+            <div>
+              <button type="button" class="admin-btn-delete pos-delete-btn" style="padding: 7px 12px; font-size: 12px;">🗑 Delete Trade</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden Raw Elements for Internal Compatibility -->
+        <input type="hidden" class="pos-input-symbol" value="${pos.symbol}">
+        <input type="hidden" class="pos-input-exchange" value="${pos.exchange}">
+      `;
+
+      // Live Builder Sync Event Handlers
+      const undEl = box.querySelector('.pos-builder-underlying');
+      const expEl = box.querySelector('.pos-builder-expiry');
+      const strEl = box.querySelector('.pos-builder-strike-select');
+      const optEl = box.querySelector('.pos-builder-opttype');
+      const symEl = box.querySelector('.pos-input-symbol');
+      const excEl = box.querySelector('.pos-input-exchange');
+      const sideEl = box.querySelector('.pos-input-side');
+      const entryEl = box.querySelector('.pos-input-entry');
+      const qtyEl = box.querySelector('.pos-input-qty');
+      const ltpEl = box.querySelector('.pos-input-ltp');
+      const pnlEl = box.querySelector('.pos-input-pnl');
+      const autoCalcEl = box.querySelector('.pos-input-autocalc');
+      const pillEl = box.querySelector('.pos-live-pnl-pill');
+      const badgeSym = box.querySelector('.pos-badge-symbol');
+
+      async function updateCardDetails(autoFetchStrikeLTP = false) {
+        const u = undEl.value;
+        const e = expEl.value.trim() || '14th FEB';
+        const s = strEl.value;
+        const o = optEl.value;
+
+        const newSym = `${u} ${e} ${s} ${o}`;
+        symEl.value = newSym;
+        if (badgeSym) badgeSym.textContent = newSym;
+        excEl.value = (u === 'SENSEX') ? 'BFO' : 'NFO';
+
+        if (autoFetchStrikeLTP) {
+          const fetchedLtp = await fetchOptionContractLTP(u, s, o, e);
+          ltpEl.value = fetchedLtp;
+        }
+
+        // Auto P&L calculation
+        if (autoCalcEl.checked) {
+          const ltpVal = parseFloat(String(ltpEl.value).replace(/,/g, '')) || 0;
+          const entryVal = parseFloat(String(entryEl.value).replace(/,/g, '')) || 0;
+          const qtyVal = parseFloat(String(qtyEl.value).replace(/,/g, '')) || 0;
+          const side = sideEl.value;
+
+          if (qtyVal > 0 && entryVal > 0) {
+            const diff = (side === 'BUY') ? (ltpVal - entryVal) : (entryVal - ltpVal);
+            const pnlVal = diff * qtyVal;
+            const formattedPnl = (pnlVal >= 0 ? '+' : '') + pnlVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            pnlEl.value = formattedPnl;
+            pillEl.textContent = formattedPnl;
+            pillEl.className = `pos-live-pnl-pill ${pnlVal >= 0 ? 'green' : 'red'}`;
+          }
+        }
+        
+        syncAdminFormsToState();
+        saveState();
+        renderAppUI();
+      }
+
+      undEl.addEventListener('change', async () => {
+        strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value);
+        await updateCardDetails(true);
+      });
+      expEl.addEventListener('input', () => updateCardDetails(false));
+      strEl.addEventListener('change', async () => {
+        await updateCardDetails(true);
+      });
+      optEl.addEventListener('change', async () => {
+        await updateCardDetails(true);
+      });
+      sideEl.addEventListener('change', () => updateCardDetails(false));
+      entryEl.addEventListener('input', () => updateCardDetails(false));
+      qtyEl.addEventListener('input', () => updateCardDetails(false));
+      ltpEl.addEventListener('input', () => updateCardDetails(false));
+      pnlEl.addEventListener('input', () => {
+        syncAdminFormsToState();
+        saveState();
+        renderAppUI();
+      });
+      autoCalcEl.addEventListener('change', () => updateCardDetails(false));
+
+      // Attach Delete Event Listener
+      const delBtn = box.querySelector('.pos-delete-btn');
+      if (delBtn) {
+        delBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          deletePosition(idx);
+        });
+      }
+
+      adminPositionsForms.appendChild(box);
+    });
+  }
+
+  window.deletePosition = function(idx) {
+    syncAdminFormsToState();
+    if (idx >= 0 && idx < appState.positions.length) {
+      appState.positions.splice(idx, 1);
+    }
+    
+    let total = 0;
+    appState.positions.forEach(pos => {
+      let pnlNum = parseFloat(String(pos.pnl).replace(/[^0-9.-]/g, '')) || 0;
+      total += pnlNum;
+    });
+    appState.totalPnl = (total >= 0 ? '+' : '') + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    
+    saveState();
+    populateAdminForms();
+    renderAppUI();
+    showInputToast('Position deleted & display updated!', true);
+  };
+
+  window.deleteWlItem = function(idx) {
+    syncAdminFormsToState();
+    if (idx >= 0 && idx < appState.watchlist.length) {
+      appState.watchlist.splice(idx, 1);
+    }
+    saveState();
+    populateAdminForms();
+    renderAppUI();
+    showInputToast('Watchlist item deleted & display updated!', true);
+  };
+
+  if (adminAddPosBtn) {
+    adminAddPosBtn.addEventListener('click', (e) => {
+      if (e) e.preventDefault();
+      syncAdminFormsToState();
+
+      const initialLtp = calculateRealisticOptionLTP('BANKNIFTY', '56500', 'CE');
+      const initialEntry = '310.00';
+      const initialQty = '100';
+      const ltpNum = parseFloat(initialLtp.replace(/,/g, '')) || 340.0;
+      const initPnl = (ltpNum - 310.0) * 100;
+      const formattedPnl = (initPnl >= 0 ? '+' : '') + initPnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      appState.positions.push({
+        id: 'pos_' + Date.now(),
+        symbol: 'BANKNIFTY 14th FEB 56500 CE',
+        exchange: 'NFO',
+        side: 'BUY',
+        entryPrice: initialEntry,
+        qty: initialQty,
+        avg: initialEntry,
+        pnl: formattedPnl,
+        ltp: initialLtp,
+        type: 'MIS',
+        autoCalc: true,
+        isGreen: initPnl >= 0
+      });
+      let total = 0;
+      appState.positions.forEach(pos => {
+        let pnlNum = parseFloat(String(pos.pnl).replace(/[^0-9.-]/g, '')) || 0;
+        total += pnlNum;
+      });
+      appState.totalPnl = (total >= 0 ? '+' : '') + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      saveState();
+      populateAdminForms();
+      renderAppUI();
+      showInputToast('New position added & display updated!', true);
+    });
+  }
+
+  if (adminCalcTotalBtn) {
+    adminCalcTotalBtn.addEventListener('click', (e) => {
+      if (e) e.preventDefault();
+      syncAdminFormsToState();
+
+      let total = 0;
+      appState.positions.forEach(pos => {
+        let pnlNum = parseFloat(String(pos.pnl).replace(/[^0-9.-]/g, '')) || 0;
+        total += pnlNum;
+      });
+      appState.totalPnl = (total >= 0 ? '+' : '') + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      const totalPnlEl = document.getElementById('admin-total-pnl');
+      if (totalPnlEl) totalPnlEl.value = appState.totalPnl;
+
+      saveState();
+      renderAppUI();
+      showInputToast(`Calculated Total P&L: ${appState.totalPnl}`, true);
+    });
+  }
+
+  function renderAdminWatchlistEditor() {
+    if (!adminWlForms) return;
+    adminWlForms.innerHTML = '';
+    appState.watchlist.forEach((item, idx) => {
+      const box = document.createElement('div');
+      box.className = 'admin-card-box';
+      box.innerHTML = `
+        <div class="admin-grid-2">
+          <div>
+            <label class="admin-label">Instrument Name</label>
+            <input type="text" class="admin-input wl-input-name" value="${item.name}">
+          </div>
+          <div>
+            <label class="admin-label">Exchange</label>
+            <input type="text" class="admin-input wl-input-exchange" value="${item.exchange}">
+          </div>
+        </div>
+        <div class="admin-grid-2">
+          <div>
+            <label class="admin-label">Price (LTP)</label>
+            <input type="number" step="0.01" class="admin-input wl-input-price" value="${item.price}">
+          </div>
+          <div>
+            <label class="admin-label">Change Points</label>
+            <input type="number" step="0.01" class="admin-input wl-input-change" value="${item.change}">
+          </div>
+        </div>
+        <div class="admin-card-actions">
+          <button type="button" class="admin-btn-delete wl-delete-btn">🗑 Delete Item</button>
+        </div>
+      `;
+
+      const delBtn = box.querySelector('.wl-delete-btn');
+      if (delBtn) {
+        delBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          deleteWlItem(idx);
+        });
+      }
+
+      adminWlForms.appendChild(box);
+    });
+  }
+
+  if (adminAddWlBtn) {
+    adminAddWlBtn.addEventListener('click', (e) => {
+      if (e) e.preventDefault();
+      syncAdminFormsToState();
+
+      appState.watchlist.push({
+        name: 'NEW CONTRACT',
+        exchange: 'NSE',
+        price: 500.00,
+        change: 25.00,
+        percent: 5.00,
+        isGreen: true
+      });
+      saveState();
+      populateAdminForms();
+      renderAppUI();
+      showInputToast('Watchlist item added!', true);
+    });
+  }
+
+  // Real-Time Typing & Selection Auto-Sync (Instant Reflection on /display)
+  let autoSyncDebounce = null;
+  const inputContainer = document.querySelector('.input-dashboard-content');
+  if (inputContainer) {
+    const triggerAutoSync = () => {
+      clearTimeout(autoSyncDebounce);
+      autoSyncDebounce = setTimeout(() => {
+        syncAdminFormsToState();
+        saveState();
+        const badge = document.getElementById('sync-status-indicator');
+        if (badge) {
+          badge.textContent = '⚡ Live Synced!';
+          badge.style.background = '#bbf7d0';
+          setTimeout(() => {
+            badge.textContent = '● Live Sync Active';
+            badge.style.background = '#dcfce7';
+          }, 1000);
+        }
+      }, 100);
+    };
+
+    inputContainer.addEventListener('input', triggerAutoSync);
+    inputContainer.addEventListener('change', triggerAutoSync);
+  }
+
+  // Event Listeners for Dhan controls
+  const testApiBtn = document.getElementById('admin-dhan-test-api');
+  if (testApiBtn) testApiBtn.addEventListener('click', testDhanApiConnection);
+
+  const toggleTickerBtn = document.getElementById('admin-dhan-toggle-ticker');
+  if (toggleTickerBtn) {
+    toggleTickerBtn.addEventListener('click', (e) => {
+      if (e) e.preventDefault();
+      if (liveTickerTimer) {
+        stopLiveTickerLoop();
+        if (appState.dhan) appState.dhan.isTickerActive = false;
+        showInputToast('Live Ticker Paused - Static Display Active', false);
+      } else {
+        if (!appState.dhan) appState.dhan = {};
+        appState.dhan.isTickerActive = true;
+        startLiveTickerLoop();
+        showInputToast('Live Ticker Started - Simulated Feed Active', true);
+      }
+      saveState();
+    });
+  }
+
+  // SAVE & APPLY ADMIN CHANGES FUNCTION
+  function handleAdminSave() {
+    syncAdminFormsToState();
+    saveState();
+    renderAppUI();
+    if (adminModal) adminModal.classList.remove('open');
+
+    showInputToast('✅ All changes saved & broadcasted live to /display!', true);
+
+    const saveBtn = document.getElementById('admin-save-btn');
+    if (saveBtn) {
+      const origText = saveBtn.innerHTML;
+      saveBtn.innerHTML = '✅ Saved & Broadcasted Live!';
+      saveBtn.style.background = '#16a34a';
+      setTimeout(() => {
+        saveBtn.innerHTML = origText;
+        saveBtn.style.background = '';
+      }, 2000);
+    }
+    const sideBtn = document.getElementById('sidebar-quick-save-btn');
+    if (sideBtn) {
+      const orig = sideBtn.innerHTML;
+      sideBtn.innerHTML = '✅ Saved Live!';
+      sideBtn.style.background = '#16a34a';
+      setTimeout(() => {
+        sideBtn.innerHTML = orig;
+        sideBtn.style.background = '';
+      }, 1500);
+    }
+  }
+
+  if (adminSaveBtn) {
+    adminSaveBtn.addEventListener('click', (e) => {
+      if (e) e.preventDefault();
+      handleAdminSave();
+    });
+  }
+  const sideQuickSaveBtn = document.getElementById('sidebar-quick-save-btn');
+  if (sideQuickSaveBtn) {
+    sideQuickSaveBtn.addEventListener('click', (e) => {
+      if (e) e.preventDefault();
+      handleAdminSave();
+    });
+  }
+
+  // RESET TO DEFAULTS (IMG_0961 Preset)
+  if (adminResetBtn) {
+    adminResetBtn.addEventListener('click', (e) => {
+      if (e) e.preventDefault();
+      if (confirm('Are you sure you want to reset back to IMG_0961 video defaults?')) {
+        appState = JSON.parse(JSON.stringify(defaultState));
+        saveState();
+        populateAdminForms();
+        renderAppUI();
+        if (adminModal) adminModal.classList.remove('open');
+        showInputToast('Reset to default IMG_0961 state!', true);
+      }
+    });
+  }
+
+  // Live ticker only runs if explicitly activated in state
+  if (appState.dhan && appState.dhan.isTickerActive) {
+    startLiveTickerLoop();
+  } else {
+    updateTickerBadge();
+  }
+
+  // Auto-populate forms on input page after all functions and listeners are ready
+  if (document.body.classList.contains('page-input-standalone')) {
+    populateAdminForms();
+  }
+
+}
+
+// Execute app initialization reliably across all browser readyStates
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initKiteApp);
+} else {
+  initKiteApp();
+}

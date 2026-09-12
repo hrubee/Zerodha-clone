@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kite Display - Zerodha Trading Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=63">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000000 !important;
+      overflow: hidden;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .app-viewport-wrapper {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000000;
+      z-index: 10;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    .display-screen-container {
+      display: block !important;
+      height: 100vh !important;
+      max-height: 100vh !important;
+      width: calc(100vh * (945 / 2048)) !important;
+      max-width: 100vw !important;
+      position: relative !important;
+      overflow: hidden !important;
+      background-image: url('bg_new_portfolio.png?v=36');
+      background-size: 100% 100%;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: #ffffff;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      margin: 0 auto;
+    }
+    .display-screen-container.view-portfolio {
+      background-image: url('bg_new_portfolio.png?v=36') !important;
+      width: calc(100vh * (945 / 2048)) !important;
+    }
+    .display-screen-container.view-profile {
+      background-image: url('bg_new_profile.png?v=36') !important;
+      width: calc(100vh * (945 / 2048)) !important;
+    }
+    .display-screen-container.view-funds {
+      background-image: url('bg_new_funds.png?v=36') !important;
+      width: calc(100vh * (945 / 2048)) !important;
+    }
+  </style>
+</head>
+<body class="page-display">
+
+  <div class="app-viewport-wrapper" id="app-wrapper">
+    <!-- Clean Screenshot Overlay Viewport -->
+    <div class="display-screen-container screenshot-overlay-viewport phone-frame overlay-mode-active view-portfolio" id="phone-frame">
+      
+      <!-- Top Live Indices Ticker Overlay (NIFTY 50 & SENSEX) - Visible on Portfolio & Profile -->
+      <div class="overlay-header-indices" id="ov-header-indices">
+        <!-- NIFTY 50 Ticker Overlay -->
+        <div class="overlay-field ov-index-item" id="ov-index-nifty" style="top: 8.85%; left: 4.13%;">
+          <span class="ov-index-val green" id="ov-val-nifty">23,459.55</span>
+          <span class="ov-index-chg muted" id="ov-chg-nifty">+28.05 (+0.11%)</span>
+        </div>
+
+        <!-- SENSEX Ticker Overlay -->
+        <div class="overlay-field ov-index-item" id="ov-index-sensex" style="top: 8.85%; left: 48.89%;">
+          <span class="ov-index-val green" id="ov-val-sensex">74,855.81</span>
+          <span class="ov-index-chg muted" id="ov-chg-sensex">+91.58 (+0.12%)</span>
+        </div>
+      </div>
+
+      <!-- 1. Portfolio Screen Overlays Group -->
+      <div class="overlay-screen-group" id="ov-group-portfolio" style="display: block;">
+        <!-- Positions Tab Count Blue Circle Badge -->
+        <div class="overlay-field" id="ov-positions-badge" style="top: 14.18%; left: calc(68.62% + 2px); transform: translate(-50%, -50%); width: 2.1vh; height: 2.1vh; border-radius: 50%; background: rgb(145, 174, 237); padding: 0; display: flex; align-items: center; justify-content: center; z-index: 35;">
+          <span id="ov-val-positions-count" style="font-size: 1.05vh; font-weight: 700; color: #ffffff; line-height: 1; display: flex; align-items: center; justify-content: center;">2</span>
+        </div>
+
+        <!-- Total P&L Card Overlay Amount -->
+        <div class="overlay-field" id="ov-total-pnl" style="top: 22.75%; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; background: transparent; padding: 0;">
+          <span id="ov-val-total-pnl" style="font-size: 2.05vh; font-weight: 500; color: rgb(111, 174, 101); letter-spacing: 0.6px;">+15,57,474.75</span>
+        </div>
+
+        <!-- Dynamic Positions List Container for Overlay Mode -->
+        <div id="ov-positions-list" style="position: absolute; top: calc(33.6% + 3px); left: 0; width: 100%; height: 56.4%; overflow-y: auto; pointer-events: auto; z-index: 35; display: flex; flex-direction: column; gap: 0; background: #ffffff;">
+        </div>
+      </div>
+
+      <!-- 2. Profile Screen Overlays Group (new Backgrounds/profile.png) -->
+      <div class="overlay-screen-group" id="ov-group-profile" style="display: none;">
+        <!-- Full Name on Header (light grey background area above card) -->
+        <div class="overlay-field" id="ov-fullname" style="top: 13.2%; left: 4.8%; width: 75%; background: transparent; padding: 2px 4px;">
+          <span id="ov-val-fullname" style="font-size: 1.55vh; font-weight: 600; color: #2d3748; letter-spacing: -0.2px;">Vedant Subhash Jamdhade</span>
+        </div>
+
+        <!-- User ID inside floating card -->
+        <div class="overlay-field" id="ov-userid" style="top: 23.2%; left: 9.8%; width: 40%; background: transparent; padding: 2px 4px;">
+          <span id="ov-val-userid" style="font-size: 1.95vh; font-weight: 400; color: #1a202c; letter-spacing: 0.2px;">GOX607</span>
+        </div>
+
+        <!-- Email inside floating card -->
+        <div class="overlay-field" id="ov-email" style="top: 26.3%; left: 9.8%; width: 55%; background: transparent; padding: 2px 4px;">
+          <span id="ov-val-email" style="font-size: 1.15vh; color: #8e9aaf; font-weight: 400;">vjamdhade1217@gmail.com</span>
+        </div>
+
+        <!-- Avatar Circle Badge inside floating card (Center shifted right to 82.8%) -->
+        <div class="overlay-field" id="ov-avatar" style="top: 26.15%; left: 82.8%; transform: translate(-50%, -50%); width: 9.33vh; height: 9.33vh; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: transparent; padding: 0;">
+          <span id="ov-val-avatar" style="font-size: 3.2vh; font-weight: 600; color: #518ee0; line-height: 1;">VS</span>
+        </div>
+
+        <!-- Interactive Funds Menu Item Click Target (Transitions to Funds Screen only when clicked) -->
+        <div id="ov-click-funds" class="funds-clickable-row" title="Open Funds" style="position: absolute; top: 46.5%; left: 0; width: 100%; height: 8.5%; cursor: pointer; z-index: 50;"></div>
+      </div>
+
+      <!-- 3. Funds Screen Overlays Group (new Backgrounds/funds.png) -->
+      <div class="overlay-screen-group" id="ov-group-funds" style="display: none;">
+        <!-- Top Back Button Click Zone (Returns to Profile Screen) -->
+        <div id="ov-funds-back-btn" class="funds-back-btn-clickable" title="Back to Profile" style="position: absolute; top: 6.0%; left: 1.0%; width: 20%; height: 6.5%; cursor: pointer; z-index: 50;"></div>
+
+        <!-- Available margin (Cash + Collateral) Big Blue Amount -->
+        <div class="overlay-field" id="ov-funds-avail-margin" style="position: absolute; top: calc(17.0% - 5px); left: 50%; transform: translateX(-50%); width: 88%; display: flex; justify-content: center; align-items: center; background: transparent; cursor: pointer; z-index: 36;">
+          <span id="ov-val-funds-avail-margin" style="font-size: 2.65vh; font-weight: 600; color: #1573e8; letter-spacing: 0; line-height: 1;">₹35,50,000.00</span>
+        </div>
+
+        <!-- Available cash number -->
+        <div class="overlay-field" id="ov-funds-avail-cash" style="position: absolute; top: 38.6%; left: 7.0%; width: 44%; display: flex; justify-content: center; align-items: center; background: transparent; cursor: pointer; z-index: 36;">
+          <span id="ov-val-funds-avail-cash" style="font-size: 1.8vh; font-weight: 700; color: #1e293b; letter-spacing: -0.2px; line-height: 1;">35,50,000.00</span>
+        </div>
+
+        <!-- Used margin number -->
+        <div class="overlay-field" id="ov-funds-used-margin" style="position: absolute; top: 38.6%; right: 3.0%; width: 44%; display: flex; justify-content: center; align-items: center; background: transparent; cursor: pointer; z-index: 36;">
+          <span id="ov-val-funds-used-margin" style="font-size: 1.8vh; font-weight: 700; color: #1e293b; letter-spacing: -0.2px; line-height: 1;">0.00</span>
+        </div>
+
+        <!-- Opening balance row right-aligned amount -->
+        <div class="overlay-field" id="ov-funds-opening-bal" style="position: absolute; top: 46.85%; right: 1.2%; width: 45%; display: flex; justify-content: flex-end; align-items: center; background: transparent; cursor: pointer; z-index: 36;">
+          <span id="ov-val-funds-opening-bal" style="font-size: 1.45vh; font-weight: 500; color: #1e293b; letter-spacing: -0.1px; line-height: 1;">35,50,000.00</span>
+        </div>
+      </div>
+
+      <!-- Dynamic Bottom Nav Profile Label (Aligned with Watchlist/Orders/Portfolio/Bids) -->
+      <div class="overlay-field" id="ov-nav-profile-label">
+        <span id="ov-val-nav-userid" style="font-size: 1.12vh; font-weight: 700; color: #4a5568; letter-spacing: -0.2px;">GOX607</span>
+      </div>
+
+      <!-- Interactive Bottom Nav Click Zones -->
+      <div class="nav-click-overlay-bar" id="ov-nav-bar" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 8.5%; display: flex; z-index: 40;">
+        <div class="nav-zone" data-nav="watchlist" style="flex: 1; cursor: pointer;"></div>
+        <div class="nav-zone" data-nav="orders" style="flex: 1; cursor: pointer;"></div>
+        <div class="nav-zone" data-nav="portfolio" style="flex: 1; cursor: pointer;"></div>
+        <div class="nav-zone" data-nav="bids" style="flex: 1; cursor: pointer;"></div>
+        <div class="nav-zone" data-nav="profile" style="flex: 1; cursor: pointer;"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="app.js?v=63"></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+{
+  "user": {
+    "userId": "ZP9413",
+    "email": "surekha@zerodha.clone",
+    "funds": "\u20b914,28,500.00",
+    "fundsDetails": {
+      "availableMargin": "\u20b914,28,500.00",
+      "availableCash": "35,50,000.00",
+      "usedMargin": "0.00",
+      "openingBalance": "35,50,000.00"
+    },
+    "fullName": "Surekha Sandeep Gundre"
+  },
+  "indices": {
+    "nifty": {
+      "val": "23,459.55",
+      "change": "+28.05 (+0.11%)",
+      "isGreen": true,
+      "prevClose": 23431.5
+    },
+    "banknifty": {
+      "val": "57,127.90",
+      "change": "+434.40 (+0.76%)",
+      "isGreen": true,
+      "prevClose": 56693.5
+    },
+    "sensex": {
+      "val": "74,855.81",
+      "change": "+91.58 (+0.12%)",
+      "isGreen": true,
+      "prevClose": 74764.23
+    },
+    "vix": {
+      "val": "13.82",
+      "change": "-0.45 (-3.15%)",
+      "isGreen": false
+    }
+  },
+  "totalPnl": "+79,043.99",
+  "holdingsCount": "1",
+  "positions": [
+    {
+      "id": "pos_0",
+      "symbol": "SENSEX JUL 4600 CE",
+      "exchange": "BFO",
+      "side": "BUY",
+      "entryPrice": "0.00",
+      "qty": "0",
+      "avg": "0.00",
+      "ltp": "811.00",
+      "type": "NRML",
+      "autoCalc": true,
+      "pnl": "+7,9043.99",
+      "isGreen": true
+    }
+  ],
+  "watchlist": [
+    {
+      "name": "BANKNIFTY 14th FEB 44700 CE",
+      "exchange": "NFO",
+      "price": 780,
+      "change": 245.5,
+      "percent": 31.474358974358974,
+      "isGreen": true
+    },
+    {
+      "name": "BANKNIFTY 14th FEB 45300 CE",
+      "exchange": "NFO",
+      "price": 224,
+      "change": 98.4,
+      "percent": 43.92857142857143,
+      "isGreen": true
+    },
+    {
+      "name": "SENSEX",
+      "exchange": "INDICES",
+      "price": 76838.47,
+      "change": 778.7,
+      "percent": 1.013424655644497,
+      "isGreen": true
+    },
+    {
+      "name": "NIFTY 22nd FEB 22100 PE",
+      "exchange": "NFO",
+      "price": 63.25,
+      "change": -42.1,
+      "percent": -66.56126482213439,
+      "isGreen": false
+    },
+    {
+      "name": "FINNIFTY 20th FEB 20500 CE",
+      "exchange": "NFO",
+      "price": 118,
+      "change": 65.4,
+      "percent": 55.42372881355932,
+      "isGreen": true
+    }
+  ],
+  "dhan": {
+    "clientId": "93fc0cbb",
+    "accessToken": "58d16338-9afe-4253-8a78-2f5cc398d62a",
+    "feedMode": "auto",
+    "tickInterval": "1200",
+    "isTickerActive": true,
+    "marketHoursMode": "auto"
+  }
+}
