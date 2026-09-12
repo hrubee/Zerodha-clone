@@ -1723,6 +1723,72 @@ function initKiteApp() {
     return 'NFO';
   }
 
+  const MONTHS_LIST = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+  function getOrdinal(n) {
+    const d = parseInt(n, 10);
+    if (isNaN(d) || d < 1) return '14th';
+    const j = d % 10, k = d % 100;
+    let suffix = 'th';
+    if (j === 1 && k !== 11) suffix = 'st';
+    else if (j === 2 && k !== 12) suffix = 'nd';
+    else if (j === 3 && k !== 13) suffix = 'rd';
+    return d + suffix;
+  }
+
+  function parseExpiryDate(expiryStr) {
+    const str = (expiryStr || '14th FEB').trim();
+    const parts = str.split(/\s+/);
+    let day = '14th';
+    let month = 'FEB';
+
+    if (parts.length >= 2) {
+      day = parts[0];
+      month = parts[1].toUpperCase();
+    } else if (parts.length === 1) {
+      if (MONTHS_LIST.includes(parts[0].toUpperCase())) {
+        month = parts[0].toUpperCase();
+        day = '14th';
+      } else {
+        const numMatch = parts[0].match(/\d+/);
+        if (numMatch) {
+          day = getOrdinal(numMatch[0]);
+        }
+      }
+    }
+
+    const dNum = parseInt(day, 10);
+    if (!isNaN(dNum)) {
+      day = getOrdinal(dNum);
+    }
+    if (!MONTHS_LIST.includes(month)) {
+      month = 'FEB';
+    }
+
+    return { day, month, formatted: `${day} ${month}` };
+  }
+
+  function getExpiryDaysOptionsHTML(selectedDay) {
+    let html = '';
+    const selNum = parseInt(selectedDay, 10) || 14;
+    for (let d = 1; d <= 31; d++) {
+      const ord = getOrdinal(d);
+      const isSel = (d === selNum);
+      html += `<option value="${ord}" ${isSel ? 'selected' : ''}>${ord}</option>`;
+    }
+    return html;
+  }
+
+  function getExpiryMonthsOptionsHTML(selectedMonth) {
+    const sel = (selectedMonth || 'FEB').toUpperCase();
+    let html = '';
+    MONTHS_LIST.forEach(m => {
+      const isSel = (m === sel);
+      html += `<option value="${m}" ${isSel ? 'selected' : ''}>${m}</option>`;
+    });
+    return html;
+  }
+
   // Symbol Formatter: Superscript ordinal date suffixes (14th -> 14<sup>th</sup>) & Weekly Badge 'w' (for options)
   function formatOptionSymbolHTML(sym) {
     if (!sym) return '';
@@ -2269,6 +2335,9 @@ function initKiteApp() {
     adminPositionsForms.innerHTML = '';
     appState.positions.forEach((pos, idx) => {
       const parsed = parseOptionSymbol(pos.symbol);
+      const parsedExpiry = parseExpiryDate(parsed.expiry);
+      const daysHtml = getExpiryDaysOptionsHTML(parsedExpiry.day);
+      const monthsHtml = getExpiryMonthsOptionsHTML(parsedExpiry.month);
       const strikeHtml = getStrikeOptionsHTML(parsed.underlying, parsed.strike, parsed.optionType);
       const underlyingHtml = getUnderlyingOptionsHTML(parsed.underlying);
       const isGreen = !pos.pnl.includes('-');
@@ -2303,7 +2372,7 @@ function initKiteApp() {
             <span>🎯 1. Select Instrument (Indices F&O or MCX Commodities)</span>
             <span style="font-size: 10.5px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 600;">⚡ Live Strike Sync</span>
           </div>
-          <div class="pos-grid-builder" style="display: grid; grid-template-columns: 1.2fr 1fr 1.2fr 1fr; gap: 10px;">
+          <div class="pos-grid-builder" style="display: grid; grid-template-columns: 1.2fr 1.2fr 1.2fr 1fr; gap: 10px;">
             <div>
               <label class="admin-label" style="font-size: 11px;">Underlying / Commodity</label>
               <select class="admin-input pos-builder-underlying" style="background: #fff; font-size: 12px; padding: 6px; font-weight: 600;">
@@ -2311,8 +2380,16 @@ function initKiteApp() {
               </select>
             </div>
             <div>
-              <label class="admin-label" style="font-size: 11px;">Expiry Date / Tag</label>
-              <input type="text" class="admin-input pos-builder-expiry" value="${parsed.expiry}" style="font-size: 12px; padding: 6px;" placeholder="19th MAR">
+              <label class="admin-label" style="font-size: 11px;">Expiry Date (Day & Month)</label>
+              <div style="display: flex; gap: 4px;">
+                <select class="admin-input pos-builder-expiry-day" style="background: #fff; font-size: 12px; padding: 6px 4px; font-weight: 600; flex: 1.1;">
+                  ${daysHtml}
+                </select>
+                <select class="admin-input pos-builder-expiry-month" style="background: #fff; font-size: 12px; padding: 6px 4px; font-weight: 600; flex: 1.2;">
+                  ${monthsHtml}
+                </select>
+              </div>
+              <input type="hidden" class="pos-builder-expiry" value="${parsedExpiry.formatted}">
             </div>
             <div>
               <label class="admin-label" style="font-size: 11px; font-weight: 700; color: #2563eb;">Strike / Contract</label>
@@ -2392,6 +2469,8 @@ function initKiteApp() {
 
       // Live Builder Sync Event Handlers
       const undEl = box.querySelector('.pos-builder-underlying');
+      const expDayEl = box.querySelector('.pos-builder-expiry-day');
+      const expMonthEl = box.querySelector('.pos-builder-expiry-month');
       const expEl = box.querySelector('.pos-builder-expiry');
       const strEl = box.querySelector('.pos-builder-strike-select');
       const optEl = box.querySelector('.pos-builder-opttype');
@@ -2409,7 +2488,11 @@ function initKiteApp() {
 
       async function updateCardDetails(autoFetchStrikeLTP = false) {
         const u = undEl.value;
-        const e = expEl.value.trim() || (COMMODITY_UNDERLYINGS.includes(u) ? '19th MAR' : '14th FEB');
+        const d = expDayEl ? expDayEl.value : '14th';
+        const m = expMonthEl ? expMonthEl.value : 'FEB';
+        const e = `${d} ${m}`;
+        if (expEl) expEl.value = e;
+
         const s = strEl.value;
         const o = optEl.value;
 
@@ -2458,7 +2541,8 @@ function initKiteApp() {
         strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl.value);
         await updateCardDetails(true);
       });
-      expEl.addEventListener('input', () => updateCardDetails(false));
+      if (expDayEl) expDayEl.addEventListener('change', () => updateCardDetails(false));
+      if (expMonthEl) expMonthEl.addEventListener('change', () => updateCardDetails(false));
       strEl.addEventListener('change', async () => {
         await updateCardDetails(true);
       });
