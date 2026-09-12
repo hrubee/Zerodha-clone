@@ -343,7 +343,7 @@ body.page-display {
 #ov-avatar {
   position: absolute !important;
   top: 26.15% !important;
-  left: 82.8% !important;
+  left: calc(82.8% - 3px) !important;
   transform: translate(-50%, -50%) !important;
   width: 9.33vh !important;
   height: 9.33vh !important;
