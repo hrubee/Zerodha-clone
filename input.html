@@ -7,152 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    body.page-input-standalone {
-      background: #f1f5f9;
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      color: #1e293b;
-      min-height: 100vh;
-    }
-    .input-dashboard-header {
-      background: #ffffff;
-      border-bottom: 1px solid #e2e8f0;
-      padding: 16px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .input-dashboard-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .input-dashboard-title h1 {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 700;
-      color: #0f172a;
-    }
-    .input-dashboard-actions {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    .broadcast-badge {
-      background: #dcfce7;
-      color: #15803d;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-    .btn-launch-display {
-      background: #387ed1;
-      color: #ffffff;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 14px;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: background 0.2s;
-    }
-    .btn-launch-display:hover {
-      background: #2b6cb0;
-    }
-    .input-dashboard-container {
-      display: flex;
-      max-width: 1280px;
-      margin: 24px auto;
-      gap: 24px;
-      padding: 0 24px;
-    }
-    .input-dashboard-sidebar {
-      width: 260px;
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      height: fit-content;
-      position: sticky;
-      top: 90px;
-    }
-    .sidebar-tab-btn {
-      width: 100%;
-      text-align: left;
-      padding: 12px 16px;
-      margin-bottom: 6px;
-      background: transparent;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 14px;
-      color: #64748b;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: all 0.2s;
-    }
-    .sidebar-tab-btn:hover {
-      background: #f8fafc;
-      color: #3b82f6;
-    }
-    .sidebar-tab-btn.active {
-      background: #eff6ff;
-      color: #2563eb;
-    }
-    .input-dashboard-content {
-      flex: 1;
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      min-height: 600px;
-    }
-    /* Floating Toast Notification */
-    #input-toast-notification {
-      position: fixed;
-      bottom: 28px;
-      right: 28px;
-      background: #0f172a;
-      color: #ffffff;
-      padding: 14px 22px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      z-index: 9999;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      pointer-events: none;
-    }
-    #input-toast-notification.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    #input-toast-notification.success {
-      background: #15803d;
-      border-left: 5px solid #86efac;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css?v=70">
 </head>
 <body class="page-input-standalone">
 
@@ -161,7 +16,7 @@
       <span style="font-size: 24px;">⚙️</span>
       <div>
         <h1>Kite Control Dashboard (/input)</h1>
-        <span style="font-size: 12.5px; color: #64748b;">Edit trade inputs, positions & live feed settings — Instant live auto-sync to /display</span>
+        <span class="header-subtitle">Edit trade inputs, positions & live feed settings — Instant live auto-sync to /display</span>
       </div>
     </div>
     <div class="input-dashboard-actions">
@@ -174,14 +29,16 @@
     
     <!-- Sidebar Navigation -->
     <aside class="input-dashboard-sidebar">
-      <button class="sidebar-tab-btn active" data-atab="positions">📊 Positions & P&L</button>
-      <button class="sidebar-tab-btn" data-atab="dhan">⚡ Dhan API & Live Feed</button>
-      <button class="sidebar-tab-btn" data-atab="indices">📈 Indices & Header</button>
-      <button class="sidebar-tab-btn" data-atab="watchlist">📋 Watchlist Items</button>
-      <button class="sidebar-tab-btn" data-atab="profile">👤 User Profile</button>
-      <button class="sidebar-tab-btn" data-atab="funds">💰 Funds & Margins</button>
+      <div class="sidebar-tabs-list">
+        <button class="sidebar-tab-btn active" data-atab="positions">📊 Positions & P&L</button>
+        <button class="sidebar-tab-btn" data-atab="dhan">⚡ Dhan API & Live Feed</button>
+        <button class="sidebar-tab-btn" data-atab="indices">📈 Indices & Header</button>
+        <button class="sidebar-tab-btn" data-atab="watchlist">📋 Watchlist Items</button>
+        <button class="sidebar-tab-btn" data-atab="profile">👤 User Profile</button>
+        <button class="sidebar-tab-btn" data-atab="funds">💰 Funds & Margins</button>
+      </div>
       
-      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+      <div class="sidebar-footer-box" style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
         <button class="admin-btn-save" id="sidebar-quick-save-btn" style="width: 100%; padding: 10px; font-size: 13.5px; margin-bottom: 8px;">💾 Save & Broadcast</button>
         <span style="font-size: 11px; color: #94a3b8; text-align: center; display: block;">Instant sync is also active on typing</span>
       </div>
@@ -397,7 +254,7 @@
       </div>
 
       <!-- Footer Buttons -->
-      <div style="display: flex; justify-content: space-between; margin-top: 32px; padding-top: 20px; border-top: 1px solid #e2e8f0; align-items: center;">
+      <div class="input-dashboard-footer" style="display: flex; justify-content: space-between; margin-top: 32px; padding-top: 20px; border-top: 1px solid #e2e8f0; align-items: center;">
         <button type="button" class="admin-btn-reset" id="admin-reset-defaults">Reset to Video Defaults</button>
         <button type="button" class="admin-btn-save" id="admin-save-btn" style="padding: 14px 28px; font-size: 15px; font-weight: 700; box-shadow: 0 4px 12px rgba(37,99,235,0.3);">💾 Save & Broadcast Live to Display</button>
       </div>
@@ -437,6 +294,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=69"></script>
+  <script src="app.js?v=70"></script>
 </body>
 </html>

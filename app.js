@@ -2165,8 +2165,8 @@ function initKiteApp() {
       box.style.background = '#ffffff';
 
       box.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9;">
-          <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="pos-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <strong style="font-size: 14px; color: #0f172a;">Trade Position ${idx + 1}</strong>
             <span style="font-size: 12px; font-weight: 700; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; padding: 2px 10px; border-radius: 6px;" class="pos-badge-symbol">${pos.symbol}</span>
           </div>
@@ -2181,11 +2181,11 @@ function initKiteApp() {
 
         <!-- 1. OPTION CONTRACT BUILDER -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-          <div style="font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-            <span>🎯 1. Select Option Contract (Auto-Fetches Strike LTP)</span>
+          <div style="font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px;">
+            <span>🎯 1. Select Option Contract</span>
             <span style="font-size: 10.5px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 600;">⚡ Live Strike Sync</span>
           </div>
-          <div style="display: grid; grid-template-columns: 1.2fr 1fr 1.2fr 1fr; gap: 10px;">
+          <div class="pos-grid-builder" style="display: grid; grid-template-columns: 1.2fr 1fr 1.2fr 1fr; gap: 10px;">
             <div>
               <label class="admin-label" style="font-size: 11px;">Underlying</label>
               <select class="admin-input pos-builder-underlying" style="background: #fff; font-size: 12px; padding: 6px; font-weight: 600;">
@@ -2221,7 +2221,7 @@ function initKiteApp() {
           <div style="font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 8px;">
             <span>💰 2. Trade Execution Inputs</span>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1.2fr 1.2fr 1fr; gap: 10px;">
+          <div class="pos-grid-exec" style="display: grid; grid-template-columns: 1fr 1.2fr 1.2fr 1fr; gap: 10px;">
             <div>
               <label class="admin-label" style="font-size: 11px;">Trade Side</label>
               <select class="admin-input pos-input-side" style="background: #fff; font-size: 12px; padding: 6px; font-weight: 700; color: ${(pos.side || 'BUY') === 'BUY' ? '#166534' : '#991b1b'};">
@@ -2249,13 +2249,13 @@ function initKiteApp() {
 
         <!-- 3. LIVE MARKET PRICE & REAL-TIME CALCULATED P&L -->
         <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 4px;">
             <div style="font-size: 11.5px; font-weight: 700; color: #166534;">
               <span>📈 3. Live Strike Price & Auto-Calculated P&L</span>
             </div>
             <span style="font-size: 11px; color: #15803d; font-weight: 600;">Formula: (Strike LTP - Entry) × Qty</span>
           </div>
-          <div style="display: grid; grid-template-columns: 1.2fr 1.5fr auto; gap: 12px; align-items: flex-end;">
+          <div class="pos-grid-ltp-pnl" style="display: grid; grid-template-columns: 1.2fr 1.5fr auto; gap: 12px; align-items: flex-end;">
             <div>
               <label class="admin-label" style="font-size: 11px; font-weight: 700; color: #1e293b;">Current Strike LTP (₹)</label>
               <input type="text" class="admin-input pos-input-ltp" value="${pos.ltp}" style="font-size: 13px; font-weight: 700; padding: 6px; background: #fff; border-color: #86efac; color: #0f172a;">

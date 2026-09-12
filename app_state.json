@@ -2,9 +2,9 @@
   "user": {
     "userId": "ZP9413",
     "email": "surekha@zerodha.clone",
-    "funds": "₹14,28,500.00",
+    "funds": "\u20b914.00",
     "fundsDetails": {
-      "availableMargin": "₹14,28,500.00",
+      "availableMargin": "\u20b914.00",
       "availableCash": "35,50,000.00",
       "usedMargin": "0.00",
       "openingBalance": "35,50,000.00"
