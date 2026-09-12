@@ -2007,4 +2007,22 @@ body.page-display {
   pointer-events: none;
 }
 
+/* Once Fullscreen is Active, Completely Hide the Fullscreen Button */
+:fullscreen .floating-fs-btn,
+:-webkit-full-screen .floating-fs-btn,
+:-moz-full-screen .floating-fs-btn,
+:-ms-fullscreen .floating-fs-btn,
+body.is-fullscreen .floating-fs-btn,
+:fullscreen #btn-fullscreen-toggle,
+:-webkit-full-screen #btn-fullscreen-toggle,
+:-moz-full-screen #btn-fullscreen-toggle,
+:-ms-fullscreen #btn-fullscreen-toggle,
+body.is-fullscreen #btn-fullscreen-toggle {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+
 

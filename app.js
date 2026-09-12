@@ -1253,14 +1253,9 @@ function initKiteApp() {
 
   function updateFullscreenUI() {
     const isFs = isDocFullscreen();
+    document.body.classList.toggle('is-fullscreen', isFs);
     if (btnFullscreenToggle) {
-      const enterIcon = btnFullscreenToggle.querySelector('.fs-icon-enter');
-      const exitIcon = btnFullscreenToggle.querySelector('.fs-icon-exit');
-      const label = btnFullscreenToggle.querySelector('.fs-label');
-
-      if (enterIcon) enterIcon.style.display = isFs ? 'none' : 'block';
-      if (exitIcon) exitIcon.style.display = isFs ? 'block' : 'none';
-      if (label) label.textContent = isFs ? 'Exit Full Screen' : 'Full Screen';
+      btnFullscreenToggle.style.setProperty('display', isFs ? 'none' : 'flex', 'important');
     }
   }
 
