@@ -829,22 +829,22 @@ function initKiteApp() {
     }
 
     // Sync Funds Screen Overlays
-    const fundsData = (appState.user && appState.user.fundsDetails) || {
-      availableMargin: appState.user && appState.user.funds ? appState.user.funds : '₹35,50,000.00',
-      availableCash: '35,50,000.00',
-      usedMargin: '0.00',
-      openingBalance: '35,50,000.00'
-    };
+    const availMargin = (appState.user && appState.user.fundsDetails && appState.user.fundsDetails.availableMargin) ||
+                        (appState.user && appState.user.funds) ||
+                        '₹35,50,000.00';
+    const availCash = (appState.user && appState.user.fundsDetails && appState.user.fundsDetails.availableCash) || '35,50,000.00';
+    const usedMargin = (appState.user && appState.user.fundsDetails && appState.user.fundsDetails.usedMargin) || '0.00';
+    const openingBal = (appState.user && appState.user.fundsDetails && appState.user.fundsDetails.openingBalance) || '35,50,000.00';
 
     const ovFundsAvailMargin = document.getElementById('ov-val-funds-avail-margin');
     const ovFundsAvailCash = document.getElementById('ov-val-funds-avail-cash');
     const ovFundsUsedMargin = document.getElementById('ov-val-funds-used-margin');
     const ovFundsOpeningBal = document.getElementById('ov-val-funds-opening-bal');
 
-    if (ovFundsAvailMargin) ovFundsAvailMargin.textContent = fundsData.availableMargin || '₹35,50,000.00';
-    if (ovFundsAvailCash) ovFundsAvailCash.textContent = fundsData.availableCash || '35,50,000.00';
-    if (ovFundsUsedMargin) ovFundsUsedMargin.textContent = fundsData.usedMargin || '0.00';
-    if (ovFundsOpeningBal) ovFundsOpeningBal.textContent = fundsData.openingBalance || '35,50,000.00';
+    if (ovFundsAvailMargin) ovFundsAvailMargin.textContent = availMargin;
+    if (ovFundsAvailCash) ovFundsAvailCash.textContent = availCash;
+    if (ovFundsUsedMargin) ovFundsUsedMargin.textContent = usedMargin;
+    if (ovFundsOpeningBal) ovFundsOpeningBal.textContent = openingBal;
   }
 
   // Setup Overlay Click Handlers for Quick Inline Editing & Navigation
@@ -2096,25 +2096,40 @@ function initKiteApp() {
     if (document.getElementById('admin-user-email')) {
       appState.user.email = document.getElementById('admin-user-email').value.trim();
     }
-    if (document.getElementById('admin-user-funds')) {
-      appState.user.funds = document.getElementById('admin-user-funds').value.trim();
-      if (!appState.user.fundsDetails) appState.user.fundsDetails = {};
-      appState.user.fundsDetails.availableMargin = appState.user.funds;
-    }
+    if (!appState.user) appState.user = {};
     if (!appState.user.fundsDetails) appState.user.fundsDetails = {};
-    if (document.getElementById('admin-funds-avail-margin')) {
-      appState.user.fundsDetails.availableMargin = document.getElementById('admin-funds-avail-margin').value.trim();
-      appState.user.funds = appState.user.fundsDetails.availableMargin;
+
+    const fMarginEl = document.getElementById('admin-funds-avail-margin');
+    const uFundsEl = document.getElementById('admin-user-funds');
+
+    let newMargin = null;
+    if (document.activeElement === fMarginEl && fMarginEl) {
+      newMargin = fMarginEl.value.trim();
+      if (uFundsEl) uFundsEl.value = newMargin;
+    } else if (document.activeElement === uFundsEl && uFundsEl) {
+      newMargin = uFundsEl.value.trim();
+      if (fMarginEl) fMarginEl.value = newMargin;
+    } else if (fMarginEl && fMarginEl.value.trim() !== '') {
+      newMargin = fMarginEl.value.trim();
+      if (uFundsEl) uFundsEl.value = newMargin;
+    } else if (uFundsEl && uFundsEl.value.trim() !== '') {
+      newMargin = uFundsEl.value.trim();
+      if (fMarginEl) fMarginEl.value = newMargin;
     }
-    if (document.getElementById('admin-funds-avail-cash')) {
-      appState.user.fundsDetails.availableCash = document.getElementById('admin-funds-avail-cash').value.trim();
+
+    if (newMargin !== null && newMargin !== '') {
+      appState.user.funds = newMargin;
+      appState.user.fundsDetails.availableMargin = newMargin;
     }
-    if (document.getElementById('admin-funds-used-margin')) {
-      appState.user.fundsDetails.usedMargin = document.getElementById('admin-funds-used-margin').value.trim();
-    }
-    if (document.getElementById('admin-funds-opening-bal')) {
-      appState.user.fundsDetails.openingBalance = document.getElementById('admin-funds-opening-bal').value.trim();
-    }
+
+    const fCashEl = document.getElementById('admin-funds-avail-cash');
+    if (fCashEl) appState.user.fundsDetails.availableCash = fCashEl.value.trim();
+
+    const fUsedEl = document.getElementById('admin-funds-used-margin');
+    if (fUsedEl) appState.user.fundsDetails.usedMargin = fUsedEl.value.trim();
+
+    const fOpenEl = document.getElementById('admin-funds-opening-bal');
+    if (fOpenEl) appState.user.fundsDetails.openingBalance = fOpenEl.value.trim();
 
     if (!appState.dhan) appState.dhan = {};
     if (document.getElementById('admin-dhan-clientid')) {
@@ -2529,6 +2544,17 @@ function initKiteApp() {
 
     inputContainer.addEventListener('input', triggerAutoSync);
     inputContainer.addEventListener('change', triggerAutoSync);
+
+    const fMarginInput = document.getElementById('admin-funds-avail-margin');
+    const uFundsInput = document.getElementById('admin-user-funds');
+    if (fMarginInput && uFundsInput) {
+      fMarginInput.addEventListener('input', () => {
+        uFundsInput.value = fMarginInput.value;
+      });
+      uFundsInput.addEventListener('input', () => {
+        fMarginInput.value = uFundsInput.value;
+      });
+    }
   }
 
   // Event Listeners for Dhan controls

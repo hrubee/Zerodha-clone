@@ -49,7 +49,18 @@ export default function handler(req, res) {
     try {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
       if (body && typeof body === 'object') {
-        inMemoryState = { ...inMemoryState, ...body };
+        inMemoryState = {
+          ...inMemoryState,
+          ...body,
+          user: {
+            ...inMemoryState.user,
+            ...(body.user || {}),
+            fundsDetails: {
+              ...(inMemoryState.user ? inMemoryState.user.fundsDetails : {}),
+              ...((body.user && body.user.fundsDetails) || {})
+            }
+          }
+        };
       }
       return res.status(200).json({ success: true, updated: Date.now() });
     } catch (e) {
