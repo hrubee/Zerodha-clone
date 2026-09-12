@@ -198,6 +198,17 @@ body.page-display {
   line-height: 1.2 !important;
 }
 
+#ov-index-nifty {
+  top: 8.85% !important;
+  left: 4.13% !important;
+}
+
+#ov-index-sensex {
+  top: 8.85% !important;
+  left: 42.12% !important;
+}
+
+
 #ov-positions-badge {
   padding: 0 !important;
   margin: 0 !important;
