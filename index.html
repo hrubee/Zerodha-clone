@@ -3,699 +3,174 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kite - Zerodha's trading platform</title>
+  <title>Kite Display - Zerodha Trading Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=63">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000000 !important;
+      overflow: hidden;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .app-viewport-wrapper {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000000;
+      z-index: 10;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    .display-screen-container {
+      display: block !important;
+      height: 100vh !important;
+      max-height: 100vh !important;
+      width: calc(100vh * (945 / 2048)) !important;
+      max-width: 100vw !important;
+      position: relative !important;
+      overflow: hidden !important;
+      background-image: url('bg_new_portfolio.png?v=36');
+      background-size: 100% 100%;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: #ffffff;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      margin: 0 auto;
+    }
+    .display-screen-container.view-portfolio {
+      background-image: url('bg_new_portfolio.png?v=36') !important;
+      width: calc(100vh * (945 / 2048)) !important;
+    }
+    .display-screen-container.view-profile {
+      background-image: url('bg_new_profile.png?v=36') !important;
+      width: calc(100vh * (945 / 2048)) !important;
+    }
+    .display-screen-container.view-funds {
+      background-image: url('bg_new_funds.png?v=36') !important;
+      width: calc(100vh * (945 / 2048)) !important;
+    }
+  </style>
 </head>
-<body>
-
-  <!-- Mode Toggle Toolbar -->
-  <div class="view-control-bar">
-    <div class="view-control-title">
-      <span class="logo-text">Kite</span> Mobile UI Replica
-    </div>
-    <div class="view-control-actions">
-      <button id="toggle-overlay-mode-btn" class="control-btn active" style="background: #059669; color: #fff; border-color: #10b981;">🖼️ Screenshot Overlay Mode</button>
-      <button id="toggle-admin-btn" class="control-btn admin-btn">⚙️ Admin Control Panel</button>
-      <button id="toggle-frame-btn" class="control-btn">📱 Mobile Frame</button>
-      <button id="toggle-fullscreen-btn" class="control-btn">💻 Full Screen</button>
-    </div>
-  </div>
+<body class="page-display">
 
   <div class="app-viewport-wrapper" id="app-wrapper">
-    <!-- Phone Mockup Container -->
-    <div class="phone-frame overlay-mode-active" id="phone-frame">
+    <!-- Clean Screenshot Overlay Viewport -->
+    <div class="display-screen-container screenshot-overlay-viewport phone-frame overlay-mode-active view-portfolio" id="phone-frame">
       
-      <!-- Screenshot Overlay Mode Viewport -->
-      <div class="screenshot-overlay-viewport" id="screenshot-overlay-viewport" style="background-image: url('bg_portfolio_base.png');">
-        
-        <!-- Portfolio Screen Overlays Group -->
-        <div class="overlay-screen-group" id="ov-group-portfolio" style="display: block;">
-          <!-- Positions Tab Count Blue Circle Badge -->
-          <div class="overlay-field" id="ov-positions-badge" style="top: 13.6%; left: calc(78.2% + 4px); width: 22px; height: 22px; border-radius: 50%; background: rgb(145, 174, 237); padding: 0; display: flex; align-items: center; justify-content: center; z-index: 35;">
-            <span id="ov-val-positions-count" style="font-size: 8px; font-weight: 700; color: #ffffff; line-height: 1; display: flex; align-items: center; justify-content: center;">2</span>
-          </div>
-
-          <!-- Total P&L Card Overlay (Label + 17px Amount) -->
-          <div class="overlay-field" id="ov-total-pnl" style="top: 20.8%; left: 20%; width: 60%; flex-direction: column; align-items: center; justify-content: center; background: #ffffff; padding: 4px 0;">
-            <span class="pnl-label" style="font-size: 12px; color: #8e9aaf; font-weight: 500; margin-bottom: 2px;">Total P&L</span>
-            <span id="ov-val-total-pnl" style="font-size: 17px; font-weight: 500; color: rgb(111, 174, 101); letter-spacing: 0.6px;">+15,57,474.75</span>
-          </div>
-
-          <!-- Dynamic Positions List Container for Overlay Mode -->
-          <div id="ov-positions-list" style="position: absolute; top: 35.8%; left: 0; width: 100%; height: 54%; overflow-y: auto; pointer-events: auto; z-index: 35; display: flex; flex-direction: column; gap: 0; background: #ffffff;">
-          </div>
+      <!-- Top Live Indices Ticker Overlay (NIFTY 50 & SENSEX) - Visible on Portfolio & Profile -->
+      <div class="overlay-header-indices" id="ov-header-indices">
+        <!-- NIFTY 50 Ticker Overlay -->
+        <div class="overlay-field ov-index-item" id="ov-index-nifty" style="top: 8.85%; left: 4.13%;">
+          <span class="ov-index-val green" id="ov-val-nifty">23,459.55</span>
+          <span class="ov-index-chg muted" id="ov-chg-nifty">+28.05 (+0.11%)</span>
         </div>
 
-        <!-- Profile Screen Overlays Group -->
-        <div class="overlay-screen-group" id="ov-group-profile" style="display: none;">
-          <!-- Full Name -->
-          <div class="overlay-field" id="ov-fullname" style="top: 13.8%; left: 4.5%; width: 70%; background: #eeeff2;">
-            <span id="ov-val-fullname" style="font-size: 16px; font-weight: 600; color: #2d3748;">Surekha Sandeep Gundre</span>
-          </div>
-
-          <!-- User ID -->
-          <div class="overlay-field" id="ov-userid" style="top: 24.0%; left: 8.5%; width: 35%; background: #ffffff;">
-            <span id="ov-val-userid" style="font-size: 18px; font-weight: 700; color: #1a202c;">ZP9413</span>
-          </div>
-
-          <!-- Email -->
-          <div class="overlay-field" id="ov-email" style="top: 27.2%; left: 8.5%; width: 60%; background: #ffffff;">
-            <span id="ov-val-email" style="font-size: 12px; color: #a0aec0;">drsbyenge@rediffmail.com</span>
-          </div>
-
-          <!-- Avatar Circle Initials -->
-          <div class="overlay-field" id="ov-avatar" style="top: 26.15%; left: 82.8%; transform: translate(-50%, -50%); width: 9.33vh; height: 9.33vh; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: transparent; padding: 0;">
-            <span id="ov-val-avatar" style="font-size: 3.2vh; font-weight: 600; color: #518ee0; line-height: 1;">VS</span>
-          </div>
-          <!-- Interactive Funds Menu Item Click Target -->
-          <div id="ov-click-funds" class="funds-clickable-row" title="Open Funds" style="position: absolute; top: 46.5%; left: 0; width: 100%; height: 8.5%; cursor: pointer; pointer-events: auto; z-index: 50;"></div>
-        </div>
-
-        <!-- Funds Screen Overlays Group -->
-        <div class="overlay-screen-group" id="ov-group-funds" style="display: none;">
-          <!-- Top Back Button Click Zone -->
-          <div id="ov-funds-back-btn" class="funds-back-btn-clickable" title="Back to Profile" style="position: absolute; top: 6.0%; left: 1.0%; width: 20%; height: 6.5%; cursor: pointer; pointer-events: auto; z-index: 50;"></div>
-
-          <!-- Available margin Big Blue Amount -->
-          <div class="overlay-field" id="ov-funds-avail-margin" style="position: absolute; top: calc(17.0% - 5px); left: 50%; transform: translateX(-50%); width: 88%; display: flex; justify-content: center; align-items: center; background: transparent; cursor: pointer; z-index: 36;">
-            <span id="ov-val-funds-avail-margin" style="font-size: 2.65vh; font-weight: 600; color: #1573e8; letter-spacing: 0; line-height: 1;">₹35,50,000.00</span>
-          </div>
-
-          <!-- Available cash number -->
-          <div class="overlay-field" id="ov-funds-avail-cash" style="position: absolute; top: 38.6%; left: 7.0%; width: 44%; display: flex; justify-content: center; align-items: center; background: transparent; cursor: pointer; z-index: 36;">
-            <span id="ov-val-funds-avail-cash" style="font-size: 1.8vh; font-weight: 700; color: #1e293b; letter-spacing: -0.2px; line-height: 1;">35,50,000.00</span>
-          </div>
-
-          <!-- Used margin number -->
-          <div class="overlay-field" id="ov-funds-used-margin" style="position: absolute; top: 38.6%; right: 3.0%; width: 44%; display: flex; justify-content: center; align-items: center; background: transparent; cursor: pointer; z-index: 36;">
-            <span id="ov-val-funds-used-margin" style="font-size: 1.8vh; font-weight: 700; color: #1e293b; letter-spacing: -0.2px; line-height: 1;">0.00</span>
-          </div>
-
-          <!-- Opening balance row right-aligned amount -->
-          <div class="overlay-field" id="ov-funds-opening-bal" style="position: absolute; top: 46.85%; right: 1.2%; width: 45%; display: flex; justify-content: flex-end; align-items: center; background: transparent; cursor: pointer; z-index: 36;">
-            <span id="ov-val-funds-opening-bal" style="font-size: 1.45vh; font-weight: 500; color: #1e293b; letter-spacing: -0.1px; line-height: 1;">35,50,000.00</span>
-          </div>
-        </div>
-
-        <!-- Dynamic Bottom Nav Profile Label -->
-        <div class="overlay-field" id="ov-nav-profile-label" style="top: 95.8%; left: 80%; width: 20%; justify-content: center; background: #ffffff;">
-          <span id="ov-val-nav-userid" style="font-size: 10px; font-weight: 500; color: #5a6578;">ZP9413</span>
-        </div>
-
-        <!-- Interactive Bottom Nav Click Zones -->
-        <div class="nav-click-overlay-bar" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 8.5%; display: flex; z-index: 40;">
-          <div class="nav-zone" data-nav="watchlist" style="flex: 1; cursor: pointer;"></div>
-          <div class="nav-zone" data-nav="orders" style="flex: 1; cursor: pointer;"></div>
-          <div class="nav-zone" data-nav="portfolio" style="flex: 1; cursor: pointer;"></div>
-          <div class="nav-zone" data-nav="bids" style="flex: 1; cursor: pointer;"></div>
-          <div class="nav-zone" data-nav="profile" style="flex: 1; cursor: pointer;"></div>
-        </div>
-
-      </div>
-      
-      <!-- iOS Top Status Bar with Red Recording Pill -->
-      <div class="ios-status-bar">
-        <div class="status-time-pill">1:26</div>
-        <div class="status-notch">
-          <div class="recording-indicator"></div>
-        </div>
-        <div class="status-icons">
-          <div class="cellular-dots">
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-          </div>
-          <svg class="icon-wifi" viewBox="0 0 16 12" width="16" height="12">
-            <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" fill="currentColor"/>
-            <path d="M4.5 7a5 5 0 017 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M2 4a8.5 8.5 0 0112 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <div class="battery-icon">
-            <div class="battery-level" style="width: 80%;"></div>
-            <span class="battery-text">80</span>
-          </div>
+        <!-- SENSEX Ticker Overlay -->
+        <div class="overlay-field ov-index-item" id="ov-index-sensex" style="top: 8.85%; left: 48.89%;">
+          <span class="ov-index-val green" id="ov-val-sensex">74,855.81</span>
+          <span class="ov-index-chg muted" id="ov-chg-sensex">+91.58 (+0.12%)</span>
         </div>
       </div>
 
-      <!-- App Header: NIFTY 50 & NIFTY BANK Tickers -->
-      <header class="app-header">
-        <div class="index-tickers-row">
-          <div class="index-item" id="ticker-nifty">
-            <span class="index-name" id="label-nifty-name">NIFTY 50</span>
-            <div class="index-prices">
-              <span class="index-val green" id="val-nifty">23,994.55</span>
-              <span class="index-change muted" id="change-nifty">+227.10 (+0.95%)</span>
-            </div>
-          </div>
-          <div class="index-item" id="ticker-banknifty">
-            <span class="index-name" id="label-banknifty-name">NIFTY BANK</span>
-            <div class="index-prices">
-              <span class="index-val green" id="val-banknifty">57,127.90</span>
-              <span class="index-change muted" id="change-banknifty">+434.40 (+0.76%)</span>
-            </div>
-          </div>
-          <button class="header-chevron-btn" id="toggle-indices-btn" title="Toggle Overview">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
+      <!-- 1. Portfolio Screen Overlays Group -->
+      <div class="overlay-screen-group" id="ov-group-portfolio" style="display: block;">
+        <!-- Positions Tab Count Blue Circle Badge -->
+        <div class="overlay-field" id="ov-positions-badge" style="top: 14.18%; left: calc(68.62% + 2px); transform: translate(-50%, -50%); width: 2.1vh; height: 2.1vh; border-radius: 50%; background: rgb(145, 174, 237); padding: 0; display: flex; align-items: center; justify-content: center; z-index: 35;">
+          <span id="ov-val-positions-count" style="font-size: 1.05vh; font-weight: 700; color: #ffffff; line-height: 1; display: flex; align-items: center; justify-content: center;">2</span>
         </div>
 
-        <!-- Expanded Indices Drawer -->
-        <div class="indices-drawer" id="indices-drawer">
-          <div class="drawer-grid">
-            <div class="drawer-card">
-              <span class="drawer-title" id="label-sensex-name">SENSEX</span>
-              <span class="drawer-price green" id="val-sensex">76,838.47</span>
-              <span class="drawer-sub green" id="change-sensex">+778.70 (+1.02%)</span>
-            </div>
-            <div class="drawer-card">
-              <span class="drawer-title">INDIA VIX</span>
-              <span class="drawer-price red" id="val-vix">13.82</span>
-              <span class="drawer-sub red" id="change-vix">-0.45 (-3.15%)</span>
-            </div>
-          </div>
+        <!-- Total P&L Card Overlay Amount -->
+        <div class="overlay-field" id="ov-total-pnl" style="top: 22.75%; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; background: transparent; padding: 0;">
+          <span id="ov-val-total-pnl" style="font-size: 2.05vh; font-weight: 500; color: rgb(111, 174, 101); letter-spacing: 0.6px;">+15,57,474.75</span>
         </div>
-      </header>
 
-      <!-- Main Screen Content Area -->
-      <main class="app-content">
-
-        <!-- SCREEN 1: WATCHLIST -->
-        <section class="screen-view" id="screen-watchlist">
-          <div class="sub-nav-bar">
-            <div class="sub-tabs-scroll">
-              <button class="sub-tab-item active" data-wl="3">Watchlist 3</button>
-              <button class="sub-tab-item" data-wl="4">Watchlist 4</button>
-              <button class="sub-tab-item" data-wl="5">Watchlist 5</button>
-              <button class="sub-tab-item" data-wl="6">Watchlist 6</button>
-              <button class="sub-tab-item" data-wl="7">Watchlist 7</button>
-            </div>
-            <button class="watchlist-manage-btn" title="Manage Watchlists">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7"/>
-                <rect x="14" y="3" width="7" height="7"/>
-                <rect x="14" y="14" width="7" height="7"/>
-                <rect x="3" y="14" width="7" height="7"/>
-              </svg>
-            </button>
-          </div>
-
-          <div class="search-section">
-            <div class="search-input-box">
-              <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#999" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-              <input type="text" id="watchlist-search-input" placeholder="Search & add" value="">
-              <span class="search-counter" id="search-counter">11/250</span>
-              <button class="filter-btn" title="Filter & Sort">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#666" stroke-width="2">
-                  <line x1="4" y1="21" x2="4" y2="14"/>
-                  <line x1="4" y1="10" x2="4" y2="3"/>
-                  <line x1="12" y1="21" x2="12" y2="12"/>
-                  <line x1="12" y1="8" x2="12" y2="3"/>
-                  <line x1="20" y1="21" x2="20" y2="16"/>
-                  <line x1="20" y1="12" x2="20" y2="3"/>
-                  <line x1="1" y1="14" x2="7" y2="14"/>
-                  <line x1="9" y1="8" x2="15" y2="8"/>
-                  <line x1="17" y1="16" x2="23" y2="16"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div class="new-group-row">
-            <button class="new-group-btn">
-              <span class="plus-icon">+</span> New group
-            </button>
-          </div>
-
-          <div class="watchlist-items-list" id="watchlist-items-container">
-            <!-- Watchlist Items injected dynamically -->
-          </div>
-
-          <button class="floating-chart-btn" title="Quick Chart">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#333" stroke-width="2.5">
-              <polyline points="22 6 12 16 8 12 2 18"/>
-            </svg>
-          </button>
-        </section>
-
-        <!-- SCREEN 2: ORDERS -->
-        <section class="screen-view" id="screen-orders">
-          <div class="sub-nav-bar">
-            <div class="sub-tabs-scroll">
-              <button class="sub-tab-item active" data-ord="executed">Executed (2)</button>
-              <button class="sub-tab-item" data-ord="open">Open (0)</button>
-              <button class="sub-tab-item" data-ord="gtt">GTT (0)</button>
-            </div>
-          </div>
-
-          <div class="orders-list">
-            <div class="order-card-item">
-              <div class="order-card-header">
-                <span class="order-badge buy">COMPLETE</span>
-                <span class="order-time">11:15:22</span>
-              </div>
-              <div class="order-card-body">
-                <div class="order-symbol-info">
-                  <span class="order-symbol" id="ord-symbol-1">SENSEX JUL 76300 CE</span>
-                  <span class="order-type-badge">BFO • NRML</span>
-                </div>
-                <div class="order-qty-price">
-                  <span class="order-qty">Qty. 10/10</span>
-                  <span class="order-avg">Avg. ₹712.50</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="order-card-item">
-              <div class="order-card-header">
-                <span class="order-badge sell">COMPLETE</span>
-                <span class="order-time">13:10:45</span>
-              </div>
-              <div class="order-card-body">
-                <div class="order-symbol-info">
-                  <span class="order-symbol" id="ord-symbol-2">NIFTY JUL 23800 CE</span>
-                  <span class="order-type-badge">NFO • NRML</span>
-                </div>
-                <div class="order-qty-price">
-                  <span class="order-qty">Qty. 50/50</span>
-                  <span class="order-avg">Avg. ₹195.00</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- SCREEN 3: PORTFOLIO -->
-        <section class="screen-view active" id="screen-portfolio">
-          <!-- Portfolio Screen Title Row matching IMG videos -->
-          <div class="portfolio-header-row" id="portfolio-title-bar">
-            <span class="portfolio-title-text" id="portfolio-header-title">Portfolio</span>
-            <button class="header-chevron-btn" id="portfolio-chevron-btn" title="Toggle Overview">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#2e384d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </button>
-          </div>
-          <div class="sub-nav-bar portfolio-sub-nav">
-            <div class="sub-tabs-center">
-              <button class="sub-tab-item" data-pf="holdings" id="tab-holdings">
-                Holdings <span class="tab-badge-grey" id="holdings-count-badge">1</span>
-              </button>
-              <button class="sub-tab-item active" data-pf="positions" id="tab-positions">
-                Positions <span class="tab-badge-blue" id="positions-count-badge">2</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Total P&L Card Banner -->
-          <div class="total-pnl-card">
-            <span class="pnl-label">Total P&L</span>
-            <span class="pnl-amount green" id="total-pnl-val">+84,441.00</span>
-          </div>
-
-          <!-- Position Filter & Action Toolbar (Cropped Real Image Assets) -->
-          <div class="positions-toolbar">
-            <div class="toolbar-left">
-              <img src="toolbar_left_group.png" alt="Search, Filter, Group" class="toolbar-crop-img-left">
-            </div>
-            <div class="toolbar-right">
-              <img src="toolbar_analytics.png" alt="Analytics" class="toolbar-crop-img-right">
-            </div>
-          </div>
-
-          <!-- Positions List (Rendered dynamically from app state) -->
-          <div class="positions-list" id="positions-container">
-            <!-- Position Items matching Target UI injected by JS -->
-          </div>
-
-          <!-- Floating Chart Button with Line Chart Trend Icon 📈 -->
-          <button class="floating-chart-btn" title="Positions Chart">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="22 6 12 16 8 12 2 18"/>
-            </svg>
-          </button>
-        </section>
-
-        <!-- SCREEN 4: BIDS -->
-        <section class="screen-view" id="screen-bids">
-          <div class="sub-nav-bar">
-            <div class="sub-tabs-scroll">
-              <button class="sub-tab-item active">IPO (4)</button>
-              <button class="sub-tab-item">Govt. Securities</button>
-              <button class="sub-tab-item">Auctions</button>
-            </div>
-          </div>
-          <div class="bids-list">
-            <div class="bid-card-item">
-              <div class="bid-header">
-                <span class="bid-company">Tata Capital Housing Ltd</span>
-                <span class="bid-badge open">APPLY</span>
-              </div>
-              <div class="bid-details">
-                <span>Price: ₹420 - ₹445</span>
-                <span>Min Qty: 33 Shares</span>
-              </div>
-            </div>
-            <div class="bid-card-item">
-              <div class="bid-header">
-                <span class="bid-company">Ola Electric Mobility</span>
-                <span class="bid-badge closed">CLOSED</span>
-              </div>
-              <div class="bid-details">
-                <span>Price: ₹72 - ₹76</span>
-                <span>Allotment: Finalised</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- SCREEN 5: PROFILE / ACCOUNT (MATCHING IMG_1021.MP4 EXACTLY) -->
-        <section class="screen-view active" id="screen-profile">
-          <div class="account-header-row">
-            <div class="account-header-top">
-              <span class="account-title-text">Account</span>
-              <button class="header-chevron-btn" title="Toggle Account">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#2e384d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </button>
-            </div>
-            <div class="account-user-name-row">
-              <span class="account-fullname-text" id="profile-fullname">Surekha Sandeep Gunder</span>
-              <button class="bell-icon-btn" title="Notifications">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2e384d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div class="account-card-container">
-            <div class="account-card-left">
-              <span class="user-id-text" id="profile-userid">ZP9413</span>
-              <span class="user-email-text" id="profile-email">drsbyenge@rediffmail.com</span>
-            </div>
-            <div class="account-avatar-circle" id="profile-avatar">SS</div>
-          </div>
-
-          <div class="account-menu-group">
-            <div class="menu-section-label">Account</div>
-            
-            <div class="account-menu-row" id="row-funds">
-              <span class="menu-label-text">Funds</span>
-              <span class="menu-icon-right">₹</span>
-            </div>
-
-            <div class="account-menu-row" id="row-appcode">
-              <span class="menu-label-text">App Code</span>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#8c9ba5" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            </div>
-
-            <div class="account-menu-row" id="row-profile">
-              <span class="menu-label-text">Profile</span>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#8c9ba5" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            </div>
-
-            <div class="account-menu-row" id="row-settings">
-              <span class="menu-label-text">Settings</span>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#8c9ba5" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            </div>
-
-            <div class="account-menu-row" id="row-connected">
-              <span class="menu-label-text">Connected apps</span>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#8c9ba5" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            </div>
-
-            <div class="account-menu-row" id="row-logout">
-              <span class="menu-label-text">Logout</span>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#8c9ba5" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            </div>
-
-            <div class="account-menu-row" id="open-admin-from-profile" style="margin-top: 12px; background: #eef2ff; border-radius: 8px;">
-              <span class="menu-label-text" style="color: #3730a3; font-weight: 600;">⚙️ Open Admin Control Panel</span>
-              <span style="font-size: 11px; color: #4338ca; font-weight: 600;">Edit All Data</span>
-            </div>
-          </div>
-        </section>
-
-      </main>
-
-      <!-- Bottom Navigation Bar (Bids & Profile Tabs Only) -->
-      <nav class="bottom-nav-bar">
-        <button class="nav-tab-item" data-target="screen-bids">
-          <img src="vicon_tab_bids.png" alt="Bids" class="nav-crop-img">
-        </button>
-
-        <button class="nav-tab-item active" data-target="screen-profile">
-          <img src="vicon_tab_profile.png" alt="Profile" class="nav-crop-img" id="nav-profile-crop-img">
-        </button>
-      </nav>
-
-      <!-- Order / Instrument Detail Bottom Modal Drawer -->
-      <div class="modal-backdrop" id="modal-backdrop">
-        <div class="bottom-sheet-drawer" id="sheet-drawer">
-          <div class="drawer-handle"></div>
-          <div class="drawer-header-info">
-            <div class="drawer-title-group">
-              <h3 id="drawer-symbol-name">SENSEX JUL 76400 CE</h3>
-              <span id="drawer-symbol-exchange" class="drawer-tag">BFO</span>
-            </div>
-            <div class="drawer-price-group">
-              <span id="drawer-symbol-price" class="drawer-price-val green">740.00</span>
-              <span id="drawer-symbol-change" class="drawer-change-val green">+292.40 (+65.32%)</span>
-            </div>
-          </div>
-
-          <div class="drawer-actions-row">
-            <button class="action-btn buy-btn" id="btn-buy">BUY</button>
-            <button class="action-btn sell-btn" id="btn-sell">SELL</button>
-            <button class="action-icon-btn" title="View Chart">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#387ed1" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            </button>
-            <button class="action-icon-btn" title="Market Depth">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#387ed1" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            </button>
-          </div>
-
-          <div class="market-depth-container">
-            <div class="depth-column">
-              <div class="depth-head"><span>BID</span><span>ORDERS</span><span>QTY</span></div>
-              <div class="depth-row green"><span>739.50</span><span>4</span><span>125</span></div>
-              <div class="depth-row green"><span>739.00</span><span>12</span><span>450</span></div>
-              <div class="depth-row green"><span>738.50</span><span>8</span><span>200</span></div>
-              <div class="depth-foot"><span>Total</span><span>1,425</span></div>
-            </div>
-            <div class="depth-column">
-              <div class="depth-head"><span>OFFER</span><span>ORDERS</span><span>QTY</span></div>
-              <div class="depth-row red"><span>740.00</span><span>2</span><span>50</span></div>
-              <div class="depth-row red"><span>740.50</span><span>9</span><span>310</span></div>
-              <div class="depth-row red"><span>741.00</span><span>15</span><span>600</span></div>
-              <div class="depth-foot"><span>Total</span><span>2,180</span></div>
-            </div>
-          </div>
-
-          <button class="drawer-close-btn" id="modal-close-btn">Close</button>
+        <!-- Dynamic Positions List Container for Overlay Mode -->
+        <div id="ov-positions-list" style="position: absolute; top: calc(33.6% + 3px); left: 0; width: 100%; height: 56.4%; overflow-y: auto; pointer-events: auto; z-index: 35; display: flex; flex-direction: column; gap: 0; background: #ffffff;">
         </div>
+      </div>
+
+      <!-- 2. Profile Screen Overlays Group (new Backgrounds/profile.png) -->
+      <div class="overlay-screen-group" id="ov-group-profile" style="display: none;">
+        <!-- Full Name on Header (light grey background area above card) -->
+        <div class="overlay-field" id="ov-fullname" style="top: 13.2%; left: 4.8%; width: 75%; background: transparent; padding: 2px 4px;">
+          <span id="ov-val-fullname" style="font-size: 1.55vh; font-weight: 600; color: #2d3748; letter-spacing: -0.2px;">Vedant Subhash Jamdhade</span>
+        </div>
+
+        <!-- User ID inside floating card -->
+        <div class="overlay-field" id="ov-userid" style="top: 23.2%; left: 9.8%; width: 40%; background: transparent; padding: 2px 4px;">
+          <span id="ov-val-userid" style="font-size: 1.95vh; font-weight: 400; color: #1a202c; letter-spacing: 0.2px;">GOX607</span>
+        </div>
+
+        <!-- Email inside floating card -->
+        <div class="overlay-field" id="ov-email" style="top: 26.3%; left: 9.8%; width: 55%; background: transparent; padding: 2px 4px;">
+          <span id="ov-val-email" style="font-size: 1.15vh; color: #8e9aaf; font-weight: 400;">vjamdhade1217@gmail.com</span>
+        </div>
+
+        <!-- Avatar Circle Badge inside floating card (Center shifted right to 82.8%) -->
+        <div class="overlay-field" id="ov-avatar" style="top: 26.15%; left: 82.8%; transform: translate(-50%, -50%); width: 9.33vh; height: 9.33vh; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: transparent; padding: 0;">
+          <span id="ov-val-avatar" style="font-size: 3.2vh; font-weight: 600; color: #518ee0; line-height: 1;">VS</span>
+        </div>
+
+        <!-- Interactive Funds Menu Item Click Target (Transitions to Funds Screen only when clicked) -->
+        <div id="ov-click-funds" class="funds-clickable-row" title="Open Funds" style="position: absolute; top: 46.5%; left: 0; width: 100%; height: 8.5%; cursor: pointer; z-index: 50;"></div>
+      </div>
+
+      <!-- 3. Funds Screen Overlays Group (new Backgrounds/funds.png) -->
+      <div class="overlay-screen-group" id="ov-group-funds" style="display: none;">
+        <!-- Top Back Button Click Zone (Returns to Profile Screen) -->
+        <div id="ov-funds-back-btn" class="funds-back-btn-clickable" title="Back to Profile" style="position: absolute; top: 6.0%; left: 1.0%; width: 20%; height: 6.5%; cursor: pointer; z-index: 50;"></div>
+
+        <!-- Available margin (Cash + Collateral) Big Blue Amount -->
+        <div class="overlay-field" id="ov-funds-avail-margin" style="position: absolute; top: calc(17.0% - 5px); left: 50%; transform: translateX(-50%); width: 88%; display: flex; justify-content: center; align-items: center; background: transparent; cursor: pointer; z-index: 36;">
+          <span id="ov-val-funds-avail-margin" style="font-size: 2.65vh; font-weight: 600; color: #1573e8; letter-spacing: 0; line-height: 1;">₹35,50,000.00</span>
+        </div>
+
+        <!-- Available cash number -->
+        <div class="overlay-field" id="ov-funds-avail-cash" style="position: absolute; top: 38.6%; left: 7.0%; width: 44%; display: flex; justify-content: center; align-items: center; background: transparent; cursor: pointer; z-index: 36;">
+          <span id="ov-val-funds-avail-cash" style="font-size: 1.8vh; font-weight: 700; color: #1e293b; letter-spacing: -0.2px; line-height: 1;">35,50,000.00</span>
+        </div>
+
+        <!-- Used margin number -->
+        <div class="overlay-field" id="ov-funds-used-margin" style="position: absolute; top: 38.6%; right: 3.0%; width: 44%; display: flex; justify-content: center; align-items: center; background: transparent; cursor: pointer; z-index: 36;">
+          <span id="ov-val-funds-used-margin" style="font-size: 1.8vh; font-weight: 700; color: #1e293b; letter-spacing: -0.2px; line-height: 1;">0.00</span>
+        </div>
+
+        <!-- Opening balance row right-aligned amount -->
+        <div class="overlay-field" id="ov-funds-opening-bal" style="position: absolute; top: 46.85%; right: 1.2%; width: 45%; display: flex; justify-content: flex-end; align-items: center; background: transparent; cursor: pointer; z-index: 36;">
+          <span id="ov-val-funds-opening-bal" style="font-size: 1.45vh; font-weight: 500; color: #1e293b; letter-spacing: -0.1px; line-height: 1;">35,50,000.00</span>
+        </div>
+      </div>
+
+      <!-- Dynamic Bottom Nav Profile Label (Aligned with Watchlist/Orders/Portfolio/Bids) -->
+      <div class="overlay-field" id="ov-nav-profile-label">
+        <span id="ov-val-nav-userid" style="font-size: 1.12vh; font-weight: 700; color: #4a5568; letter-spacing: -0.2px;">GOX607</span>
+      </div>
+
+      <!-- Interactive Bottom Nav Click Zones -->
+      <div class="nav-click-overlay-bar" id="ov-nav-bar" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 8.5%; display: flex; z-index: 40;">
+        <div class="nav-zone" data-nav="watchlist" style="flex: 1; cursor: pointer;"></div>
+        <div class="nav-zone" data-nav="orders" style="flex: 1; cursor: pointer;"></div>
+        <div class="nav-zone" data-nav="portfolio" style="flex: 1; cursor: pointer;"></div>
+        <div class="nav-zone" data-nav="bids" style="flex: 1; cursor: pointer;"></div>
+        <div class="nav-zone" data-nav="profile" style="flex: 1; cursor: pointer;"></div>
       </div>
 
     </div>
   </div>
 
-  <!-- ADMIN CONTROL PANEL MODAL OVERLAY -->
-  <div class="admin-modal-overlay" id="admin-modal">
-    <div class="admin-modal-container">
-      <div class="admin-modal-header">
-        <div class="admin-title">
-          <span class="admin-icon">⚙️</span>
-          <h2>Admin Control Center</h2>
-        </div>
-        <button class="admin-close-btn" id="admin-modal-close">✕</button>
-      </div>
-
-      <div class="admin-tabs-bar">
-        <button class="admin-tab active" data-atab="positions">Positions & P&L</button>
-        <button class="admin-tab" data-atab="dhan">⚡ Dhan API & Live Feed</button>
-        <button class="admin-tab" data-atab="indices">Indices & Header</button>
-        <button class="admin-tab" data-atab="watchlist">Watchlist Items</button>
-        <button class="admin-tab" data-atab="profile">User Profile</button>
-      </div>
-
-      <div class="admin-modal-body">
-        
-        <!-- SECTION 1: POSITIONS & P&L EDITOR -->
-        <div class="admin-section active" id="asec-positions">
-
-
-          <div class="admin-form-group">
-            <label class="admin-label">Total P&L Amount (₹)</label>
-            <div class="admin-input-row">
-              <input type="text" id="admin-total-pnl" value="+15,57,474.75" class="admin-input">
-              <button class="admin-btn-secondary" id="admin-calc-total">Auto Calculate</button>
-            </div>
-          </div>
-
-          <div class="admin-sub-header">
-            <span>Portfolio Positions List</span>
-            <button class="admin-btn-small" id="admin-add-position">+ Add Position</button>
-          </div>
-
-          <div class="admin-positions-editor-list" id="admin-positions-forms">
-            <!-- Position Editor Form Cards injected by JS -->
-          </div>
-        </div>
-
-        <!-- SECTION 2: DHAN API & LIVE FEED CONFIG -->
-        <div class="admin-section" id="asec-dhan">
-          <div class="admin-card-box">
-            <h4>⚡ Dhan HQ API v2 Credentials</h4>
-            <div class="admin-grid-2">
-              <div>
-                <label class="admin-label">Client ID</label>
-                <input type="text" id="admin-dhan-clientid" value="93fc0cbb" class="admin-input">
-              </div>
-              <div>
-                <label class="admin-label">Access Token</label>
-                <input type="password" id="admin-dhan-accesstoken" value="58d16338-9afe-4253-8a78-2f5cc398d62a" class="admin-input">
-              </div>
-            </div>
-          </div>
-
-          <div class="admin-card-box">
-            <h4>📈 Live Market Feed & Simulation Settings</h4>
-            <div class="admin-form-group">
-              <label class="admin-label">Feed Execution Mode</label>
-              <select id="admin-dhan-feedmode" class="admin-input" style="background: #fff;">
-                <option value="auto">⚡ Live Dhan API Feed + Real-Time Simulation Fallback (Recommended)</option>
-                <option value="simulation">🎲 Real-Time Market Simulation Engine Only</option>
-              </select>
-            </div>
-            <div class="admin-grid-2">
-              <div>
-                <label class="admin-label">Update Frequency</label>
-                <select id="admin-dhan-interval" class="admin-input" style="background: #fff;">
-                  <option value="1000">1.0 Second (Fast Ticker)</option>
-                  <option value="1500" selected>1.5 Seconds (Normal)</option>
-                  <option value="2000">2.0 Seconds</option>
-                  <option value="3000">3.0 Seconds</option>
-                </select>
-              </div>
-              <div>
-                <label class="admin-label">Live Ticker Loop Status</label>
-                <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
-                  <span id="dhan-ticker-badge" style="padding: 6px 12px; border-radius: 6px; background: #dcfce7; color: #166534; font-weight: 600; font-size: 13px;">● Running Live</span>
-                  <button type="button" class="admin-btn-secondary" id="admin-dhan-toggle-ticker">Pause Ticker</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="admin-card-box" style="border: 1.5px solid #0284c7; background: #f0f9ff;">
-            <h4 style="color: #0369a1; margin-bottom: 6px;">🔒 Read-Only Safety Lock Status</h4>
-            <p style="font-size: 12.5px; color: #0c4a6e; margin: 0; line-height: 1.4;">
-              <strong>STRICT PROTECTION ACTIVE:</strong> Real Dhan HQ order placement APIs (<code>/orders</code>, <code>/orders/slicing</code>) are <strong>100% hard-blocked and disabled</strong> in the codebase. Only public market price feed data (LTP/Quotes) is read for UI demonstration.
-            </p>
-          </div>
-
-          <div class="admin-card-box">
-            <h4>🔑 API Connection Status</h4>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <span id="dhan-api-status-text" style="font-size: 13px; color: #4b5563; font-weight: 500;">Ready to connect to Dhan HQ API v2</span>
-              </div>
-              <button type="button" class="admin-btn-small" id="admin-dhan-test-api">⚡ Test Connection</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- SECTION 2: INDICES & HEADER EDITOR -->
-        <div class="admin-section" id="asec-indices">
-          <div class="admin-card-box">
-            <h4>NIFTY 50 Header Ticker</h4>
-            <div class="admin-grid-2">
-              <div>
-                <label class="admin-label">Value</label>
-                <input type="text" id="admin-nifty-val" value="23,994.55" class="admin-input">
-              </div>
-              <div>
-                <label class="admin-label">Change</label>
-                <input type="text" id="admin-nifty-change" value="+227.10 (+0.95%)" class="admin-input">
-              </div>
-            </div>
-          </div>
-
-          <div class="admin-card-box">
-            <h4>NIFTY BANK Header Ticker</h4>
-            <div class="admin-grid-2">
-              <div>
-                <label class="admin-label">Value</label>
-                <input type="text" id="admin-banknifty-val" value="57,127.90" class="admin-input">
-              </div>
-              <div>
-                <label class="admin-label">Change</label>
-                <input type="text" id="admin-banknifty-change" value="+434.40 (+0.76%)" class="admin-input">
-              </div>
-            </div>
-          </div>
-
-          <div class="admin-card-box">
-            <h4>SENSEX Drawer Card</h4>
-            <div class="admin-grid-2">
-              <div>
-                <label class="admin-label">Value</label>
-                <input type="text" id="admin-sensex-val" value="76,838.47" class="admin-input">
-              </div>
-              <div>
-                <label class="admin-label">Change</label>
-                <input type="text" id="admin-sensex-change" value="+778.70 (+1.02%)" class="admin-input">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SECTION 3: WATCHLIST ITEMS EDITOR -->
-        <div class="admin-section" id="asec-watchlist">
-          <div class="admin-sub-header">
-            <span>Watchlist Items</span>
-            <button class="admin-btn-small" id="admin-add-wlitem">+ Add Watchlist Item</button>
-          </div>
-          <div class="admin-wl-editor-list" id="admin-wl-forms">
-            <!-- Watchlist item editor cards injected by JS -->
-          </div>
-        </div>
-
-        <!-- SECTION 4: USER PROFILE EDITOR -->
-        <div class="admin-section" id="asec-profile">
-          <div class="admin-form-group">
-            <label class="admin-label">User ID (e.g. INX706)</label>
-            <input type="text" id="admin-user-id" value="INX706" class="admin-input">
-          </div>
-          <div class="admin-form-group">
-            <label class="admin-label">User Email</label>
-            <input type="text" id="admin-user-email" value="hrushi@zerodha.clone" class="admin-input">
-          </div>
-          <div class="admin-form-group">
-            <label class="admin-label">Available Funds Amount</label>
-            <input type="text" id="admin-user-funds" value="₹1,42,850.00" class="admin-input">
-          </div>
-        </div>
-
-      </div>
-
-      <div class="admin-modal-footer">
-        <button class="admin-btn-reset" id="admin-reset-defaults">Reset to Defaults</button>
-        <button class="admin-btn-save" id="admin-save-btn">Save & Apply Changes</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="app.js"></script>
+  <script src="app.js?v=63"></script>
 </body>
 </html>
