@@ -1969,3 +1969,42 @@ body.page-display {
   border: 1px solid #fecaca;
 }
 
+/* Video-Player Style Floating Fullscreen Button */
+.floating-fs-btn {
+  position: fixed !important;
+  bottom: 18px !important;
+  right: 18px !important;
+  z-index: 99999 !important;
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 50% !important;
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  outline: none !important;
+  opacity: 0.7;
+  padding: 0 !important;
+}
+
+.floating-fs-btn:hover,
+.floating-fs-btn:active {
+  opacity: 1 !important;
+  transform: scale(1.1) !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6) !important;
+}
+
+.floating-fs-btn svg {
+  pointer-events: none;
+}
+
+
