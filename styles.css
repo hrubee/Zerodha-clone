@@ -2831,8 +2831,12 @@ body.page-verified-pnl .app-viewport-wrapper {
 
 .vpnl-trade-detail-item {
   display: flex;
-  gap: 1.3cqw;
+  gap: 1.8cqw;
   align-items: baseline;
+}
+
+.vpnl-trade-detail-item.right {
+  gap: 3.0cqw;
 }
 
 .vpnl-trade-val {
