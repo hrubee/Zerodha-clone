@@ -1105,7 +1105,7 @@ function initKiteApp() {
       if (vp) {
         vp.classList.remove('view-portfolio', 'view-profile');
         vp.classList.add('view-funds');
-        vp.style.setProperty('background-image', "url('bg_new_funds.png?v=36')", 'important');
+        vp.style.setProperty('background-image', "url('bg_new_funds.png?v=72')", 'important');
       }
       if (ovPortfolio) ovPortfolio.style.display = 'none';
       if (ovProfile) ovProfile.style.display = 'none';
@@ -1114,7 +1114,7 @@ function initKiteApp() {
       if (vp) {
         vp.classList.remove('view-portfolio', 'view-funds');
         vp.classList.add('view-profile');
-        vp.style.setProperty('background-image', "url('bg_new_profile.png?v=36')", 'important');
+        vp.style.setProperty('background-image', "url('bg_new_profile.png?v=72')", 'important');
       }
       if (ovPortfolio) ovPortfolio.style.display = 'none';
       if (ovProfile) ovProfile.style.display = 'block';
@@ -1124,7 +1124,7 @@ function initKiteApp() {
       if (vp) {
         vp.classList.remove('view-profile', 'view-funds');
         vp.classList.add('view-portfolio');
-        vp.style.setProperty('background-image', "url('bg_new_portfolio.png?v=36')", 'important');
+        vp.style.setProperty('background-image', "url('bg_new_portfolio.png?v=72')", 'important');
       }
       if (ovPortfolio) ovPortfolio.style.display = 'block';
       if (ovProfile) ovProfile.style.display = 'none';
