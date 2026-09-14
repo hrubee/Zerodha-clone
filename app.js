@@ -1943,12 +1943,38 @@ function initKiteApp() {
 
     let totalPnlSum = 0;
     if (appState.positions.length > 0) {
+      // Pre-fetch Dhan Option Chains for all active underlyings if Dhan credentials present
+      if (appState.dhan && appState.dhan.accessToken && appState.dhan.accessToken.length > 30) {
+        const underlyings = new Set();
+        appState.positions.forEach(pos => {
+          const parsed = parseOptionSymbol(pos.symbol);
+          if (parsed && parsed.underlying) {
+            underlyings.add(parsed.underlying.toUpperCase());
+          }
+        });
+        for (const u of underlyings) {
+          await fetchDhanOptionChain(u);
+        }
+      }
+
       appState.positions.forEach(pos => {
         let currentLtp = parseFloat(String(pos.ltp).replace(/,/g, '')) || 100.0;
         let newLtp = currentLtp;
+        let hasLiveDhanLtp = false;
 
         const parsed = parseOptionSymbol(pos.symbol);
-        if (isOpen && parsed && parsed.strike && parsed.underlying) {
+        if (parsed && parsed.underlying && parsed.strike) {
+          const cachedOc = dhanOptionChainCache[parsed.underlying.toUpperCase()]?.data;
+          const liveDhanPrice = getLtpFromDhanOC(cachedOc, parsed.strike, parsed.optionType);
+          if (liveDhanPrice !== null && liveDhanPrice > 0) {
+            newLtp = liveDhanPrice;
+            hasLiveDhanLtp = true;
+          }
+        }
+
+        if (hasLiveDhanLtp) {
+          pos.ltp = newLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        } else if (isOpen && parsed && parsed.strike && parsed.underlying) {
           // Dynamic calculation based on current spot & strike
           const calcLtpStr = calculateRealisticOptionLTP(parsed.underlying, parsed.strike, parsed.optionType);
           const calcLtpNum = parseFloat(calcLtpStr.replace(/,/g, '')) || currentLtp;
@@ -2269,13 +2295,14 @@ function initKiteApp() {
     return totalLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  // Real-time Dhan HQ API Option Chain quote lookup with fallback
-  async function fetchOptionContractLTP(underlying, strike, optType, expiry) {
-    const fallbackLtp = calculateRealisticOptionLTP(underlying, strike, optType);
-    if (!appState.dhan || !appState.dhan.accessToken) {
-      return fallbackLtp;
-    }
+  // Dhan Option Chain In-Memory Cache
+  const dhanOptionChainCache = {};
 
+  async function fetchDhanOptionChain(underlying) {
+    if (!appState.dhan || !appState.dhan.accessToken || appState.dhan.accessToken.length < 30) {
+      return null;
+    }
+    const und = (underlying || 'BANKNIFTY').toUpperCase();
     const scripMap = {
       'NIFTY': 13,
       'BANKNIFTY': 25,
@@ -2283,8 +2310,14 @@ function initKiteApp() {
       'SENSEX': 51,
       'MIDCPNIFTY': 442
     };
-    const scripId = scripMap[(underlying || '').toUpperCase()];
-    if (!scripId) return fallbackLtp;
+    const scripId = scripMap[und];
+    if (!scripId) return null;
+
+    const now = Date.now();
+    // Cache for 3.5 seconds to throttle and prevent HTTP 429
+    if (dhanOptionChainCache[und] && (now - dhanOptionChainCache[und].timestamp < 3500)) {
+      return dhanOptionChainCache[und].data;
+    }
 
     try {
       const res = await fetch('/api/dhan/optionchain', {
@@ -2303,26 +2336,55 @@ function initKiteApp() {
       if (res.ok) {
         const data = await res.json();
         if (data.status === 'success' && data.data && data.data.oc) {
-          const strNum = parseFloat(strike);
-          const optKey = (optType || 'CE').toLowerCase();
-          for (const key in data.data.oc) {
-            const row = data.data.oc[key];
-            if (row && (row.strike_price === strNum || parseFloat(key) === strNum)) {
-              if (row[optKey] && row[optKey].last_price) {
-                const liveLtp = parseFloat(row[optKey].last_price);
-                if (liveLtp > 0) {
-                  return liveLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                }
-              }
-            }
-          }
+          dhanOptionChainCache[und] = { timestamp: now, data: data.data.oc };
+          return data.data.oc;
         }
       }
     } catch (e) {
-      // fallback to calculated realistic strike LTP
+      console.warn('Dhan Option Chain API fetch failed:', e);
     }
+    return dhanOptionChainCache[und] ? dhanOptionChainCache[und].data : null;
+  }
 
-    return fallbackLtp;
+  function getLtpFromDhanOC(ocData, strike, optType) {
+    if (!ocData) return null;
+    const strNum = parseFloat(strike);
+    const optKey = (optType || 'CE').toLowerCase();
+    for (const key in ocData) {
+      const row = ocData[key];
+      if (row && (row.strike_price === strNum || parseFloat(key) === strNum)) {
+        if (row[optKey] && row[optKey].last_price !== undefined) {
+          const liveLtp = parseFloat(row[optKey].last_price);
+          if (liveLtp > 0) return liveLtp;
+        }
+      }
+    }
+    return null;
+  }
+
+  function getStrikesListFromDhanOC(ocData) {
+    if (!ocData) return [];
+    const strikes = [];
+    for (const key in ocData) {
+      const row = ocData[key];
+      const s = row?.strike_price || parseFloat(key);
+      if (s && !isNaN(s) && !strikes.includes(s)) {
+        strikes.push(s);
+      }
+    }
+    return strikes.sort((a, b) => a - b);
+  }
+
+  // Real-time Dhan HQ API Option Chain quote lookup with fallback
+  async function fetchOptionContractLTP(underlying, strike, optType, expiry) {
+    const oc = await fetchDhanOptionChain(underlying);
+    if (oc) {
+      const livePrice = getLtpFromDhanOC(oc, strike, optType);
+      if (livePrice !== null && livePrice > 0) {
+        return livePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+    }
+    return calculateRealisticOptionLTP(underlying, strike, optType);
   }
 
   function getUnderlyingOptionsHTML(selectedUnderlying) {
@@ -2351,10 +2413,26 @@ function initKiteApp() {
     `;
   }
 
-  function getStrikeOptionsHTML(underlying, selectedStrike, optType) {
+  function getStrikeOptionsHTML(underlying, selectedStrike, optType, dynamicStrikes = null) {
     const type = (optType || 'CE').toUpperCase();
     if (type === 'FUT' || String(selectedStrike).toUpperCase() === 'FUT') {
       return '<option value="FUT" selected>FUT (Futures Contract)</option>';
+    }
+
+    const selNum = parseFloat(selectedStrike) || 0;
+
+    if (dynamicStrikes && Array.isArray(dynamicStrikes) && dynamicStrikes.length > 0) {
+      let html = '';
+      let found = false;
+      dynamicStrikes.forEach(s => {
+        const isSel = (s === selNum);
+        if (isSel) found = true;
+        html += `<option value="${s}" ${isSel ? 'selected' : ''}>${s}</option>`;
+      });
+      if (!found && selNum > 0) {
+        html = `<option value="${selNum}" selected>${selNum} (Custom Strike)</option>` + html;
+      }
+      return html;
     }
 
     let start = 42000, end = 58000, step = 100;
@@ -2389,7 +2467,6 @@ function initKiteApp() {
     }
 
     let html = '';
-    const selNum = parseFloat(selectedStrike) || 0;
     let found = false;
 
     for (let s = start; s <= end; s += step) {
@@ -2788,7 +2865,9 @@ function initKiteApp() {
       const parsedExpiry = parseExpiryDate(parsed.expiry);
       const daysHtml = getExpiryDaysOptionsHTML(parsedExpiry.day);
       const monthsHtml = getExpiryMonthsOptionsHTML(parsedExpiry.month);
-      const strikeHtml = getStrikeOptionsHTML(parsed.underlying, parsed.strike, parsed.optionType);
+      const cachedOc = dhanOptionChainCache[(parsed.underlying || 'BANKNIFTY').toUpperCase()]?.data;
+      const cachedStrikes = getStrikesListFromDhanOC(cachedOc);
+      const strikeHtml = getStrikeOptionsHTML(parsed.underlying, parsed.strike, parsed.optionType, cachedStrikes);
       const underlyingHtml = getUnderlyingOptionsHTML(parsed.underlying);
       const isGreen = !pos.pnl.includes('-');
       const detectedExchange = pos.exchange || getExchangeForUnderlying(parsed.underlying);
@@ -2988,7 +3067,9 @@ function initKiteApp() {
       }
 
       undEl.addEventListener('change', async () => {
-        strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl.value);
+        const oc = await fetchDhanOptionChain(undEl.value);
+        const liveStrikes = getStrikesListFromDhanOC(oc);
+        strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl.value, liveStrikes);
         await updateCardDetails(true);
       });
       if (expDayEl) expDayEl.addEventListener('change', () => updateCardDetails(false));
@@ -2997,7 +3078,9 @@ function initKiteApp() {
         await updateCardDetails(true);
       });
       optEl.addEventListener('change', async () => {
-        strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl.value);
+        const oc = await fetchDhanOptionChain(undEl.value);
+        const liveStrikes = getStrikesListFromDhanOC(oc);
+        strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl.value, liveStrikes);
         await updateCardDetails(true);
       });
       sideEl.addEventListener('change', () => updateCardDetails(false));
