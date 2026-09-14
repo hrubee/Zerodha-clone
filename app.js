@@ -1759,14 +1759,15 @@ function initKiteApp() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          "IDX_I": [13]
+          "IDX_I": [13, 51]
         })
       });
 
       const data = await res.json();
       if (res.ok && data.status === 'success') {
-        const n50Price = data?.data?.IDX_I?.['13']?.last_price || 'Active';
-        statusText.textContent = `✅ Dhan API Connected! Live Nifty 50: ₹${n50Price}`;
+        const n50Price = data?.data?.IDX_I?.['13']?.last_price ? `₹${data.data.IDX_I['13'].last_price}` : 'Active';
+        const sxPrice = data?.data?.IDX_I?.['51']?.last_price ? `₹${data.data.IDX_I['51'].last_price}` : 'Active';
+        statusText.textContent = `✅ Dhan API Connected! Left (NIFTY 50): ${n50Price} | Right (SENSEX): ${sxPrice}`;
         statusText.style.color = '#10b981';
       } else if (res.status === 401) {
         statusText.textContent = '❌ Dhan API 401: Token expired or invalid.';
