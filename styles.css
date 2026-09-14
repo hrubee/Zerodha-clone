@@ -2488,7 +2488,7 @@ body.is-fullscreen .floating-fs-btn,
    ========================================================================== */
 
 body.page-verified-pnl {
-  background: #f8fafc;
+  background: #0f172a;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   margin: 0;
   padding: 0;
@@ -2496,7 +2496,69 @@ body.page-verified-pnl {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  overflow: hidden;
+  min-height: 100dvh;
+  width: 100vw;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile Viewport Container */
+.mobile-viewport {
+  position: relative;
+  width: 100%;
+  max-width: min(100vw, calc(100dvh * (945 / 2048)));
+  aspect-ratio: 945 / 2048;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+  box-sizing: border-box;
+}
+
+/* Desktop View: Sleek Mobile Phone Frame */
+@media (min-width: 601px) {
+  body.page-verified-pnl {
+    padding: 24px 16px;
+    box-sizing: border-box;
+  }
+  .mobile-viewport {
+    max-height: calc(100dvh - 48px);
+    width: calc((100dvh - 48px) * (945 / 2048));
+    max-width: min(92vw, 480px);
+    border-radius: 40px;
+    box-shadow: 
+      0 0 0 10px #1e293b,
+      0 0 0 12px rgba(255, 255, 255, 0.12),
+      0 25px 65px -12px rgba(0, 0, 0, 0.75);
+    overflow: hidden;
+  }
+}
+
+/* Real Mobile View: Edge-to-Edge Full Screen */
+@media (max-width: 600px) {
+  body.page-verified-pnl {
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    align-items: flex-start !important;
+  }
+  .mobile-viewport {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+  .verified-pnl-canvas {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: calc(100vw * (2048 / 945)) !important;
+    border-radius: 0 !important;
+  }
 }
 
 .verified-pnl-canvas {
@@ -2506,6 +2568,18 @@ body.page-verified-pnl {
   height: 100%;
   overflow: hidden;
   background: #ffffff;
+  container-type: inline-size;
+  container-name: vpnl;
+}
+
+.canvas-bg-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* Status Bar on Verified P&L */
@@ -2524,10 +2598,26 @@ body.page-verified-pnl {
   box-sizing: border-box !important;
 }
 
+.vpnl-status-bar .ios-status-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1.8cqw !important;
+}
+
+.vpnl-status-bar .ios-icon-cellular {
+  width: 3.68cqw !important;
+  height: 2.6cqw !important;
+}
+
+.vpnl-status-bar .ios-icon-wifi {
+  width: 3.47cqw !important;
+  height: 2.6cqw !important;
+}
+
 .ios-time-pill {
   background: rgb(215, 44, 38);
-  border-radius: 12px;
-  padding: 2px 9px;
+  border-radius: 2.6cqw;
+  padding: 0.45cqw 2cqw;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2536,7 +2626,7 @@ body.page-verified-pnl {
 
 .ios-time-pill .ios-clock-time {
   color: #ffffff !important;
-  font-size: 1.45vh !important;
+  font-size: 3.14cqw !important;
   font-weight: 700 !important;
   line-height: 1.2 !important;
   letter-spacing: 0.2px !important;
@@ -2545,18 +2635,32 @@ body.page-verified-pnl {
 .vpnl-battery-wrapper {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 1.1cqw;
 }
 
 .vpnl-battery-pct {
-  font-size: 1.35vh;
+  font-size: 2.93cqw;
   font-weight: 600;
   color: #222222;
+  line-height: 1;
 }
 
 .vpnl-battery-icon {
-  width: 2.2vh;
-  height: 1.1vh;
+  width: 4.77cqw !important;
+  height: 2.38cqw !important;
+  border: 0.28cqw solid #333333 !important;
+  border-radius: 0.65cqw !important;
+  padding: 0.2cqw !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.vpnl-battery-icon .ios-battery-fill {
+  height: 100% !important;
+  background: #222222 !important;
+  border-radius: 0.35cqw !important;
 }
 
 /* Overlay Fields for Verified P&L */
@@ -2569,9 +2673,11 @@ body.page-verified-pnl {
   display: flex !important;
   align-items: center !important;
   white-space: nowrap !important;
+  touch-action: manipulation !important;
 }
 
-.vpnl-overlay-field:hover {
+.vpnl-overlay-field:hover,
+.vpnl-overlay-field:active {
   outline: 1.5px dashed rgba(2, 132, 199, 0.45);
   border-radius: 4px;
 }
@@ -2582,7 +2688,7 @@ body.page-verified-pnl {
   left: 0 !important;
   width: 100% !important;
   justify-content: center !important;
-  font-size: 1.62vh !important;
+  font-size: 3.51cqw !important;
   font-weight: 500 !important;
   color: #8c8c8c !important;
   letter-spacing: 0.2px !important;
@@ -2600,7 +2706,7 @@ body.page-verified-pnl {
 }
 
 .vpnl-big-amount {
-  font-size: 2.45vh !important;
+  font-size: 5.31cqw !important;
   font-weight: 600 !important;
   line-height: 1 !important;
   letter-spacing: -0.3px !important;
@@ -2620,7 +2726,7 @@ body.page-verified-pnl {
 .vpnl-charges {
   top: 52.4% !important;
   right: 9.8% !important;
-  font-size: 1.58vh !important;
+  font-size: 3.42cqw !important;
   font-weight: 500 !important;
   color: #383838 !important;
   text-align: right !important;
@@ -2629,7 +2735,7 @@ body.page-verified-pnl {
 .vpnl-other-credits {
   top: 56.1% !important;
   right: 9.8% !important;
-  font-size: 1.58vh !important;
+  font-size: 3.42cqw !important;
   font-weight: 500 !important;
   color: #383838 !important;
   text-align: right !important;
@@ -2638,7 +2744,7 @@ body.page-verified-pnl {
 .vpnl-net-realised {
   top: 59.8% !important;
   right: 9.8% !important;
-  font-size: 1.65vh !important;
+  font-size: 3.58cqw !important;
   font-weight: 600 !important;
   text-align: right !important;
 }
@@ -2647,7 +2753,7 @@ body.page-verified-pnl {
 .vpnl-last-updated {
   top: 72.8% !important;
   left: 24.6% !important;
-  font-size: 1.35vh !important;
+  font-size: 2.93cqw !important;
   font-weight: 500 !important;
   color: #757575 !important;
   letter-spacing: 0.1px !important;
@@ -2664,11 +2770,12 @@ body.page-verified-pnl {
   padding: 0 4.5% !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 1vh !important;
+  gap: 2.1cqw !important;
   z-index: 42 !important;
   pointer-events: auto !important;
   background: #ffffff !important;
   box-sizing: border-box !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 .vpnl-trades-container::-webkit-scrollbar {
@@ -2682,8 +2789,8 @@ body.page-verified-pnl {
 .vpnl-trade-item {
   display: flex;
   flex-direction: column;
-  gap: 0.35vh;
-  padding-bottom: 0.8vh;
+  gap: 0.75cqw;
+  padding-bottom: 1.7cqw;
   border-bottom: 1px solid #f1f5f9;
 }
 
@@ -2698,14 +2805,14 @@ body.page-verified-pnl {
 }
 
 .vpnl-trade-symbol {
-  font-size: 1.75vh;
+  font-size: 3.79cqw;
   font-weight: 700;
   color: #1e293b;
   letter-spacing: 0.2px;
 }
 
 .vpnl-trade-qty {
-  font-size: 1.45vh;
+  font-size: 3.14cqw;
   font-weight: 500;
   color: #64748b;
 }
@@ -2713,17 +2820,17 @@ body.page-verified-pnl {
 .vpnl-trade-realised-row {
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 1.3cqw;
 }
 
 .vpnl-trade-label {
-  font-size: 1.4vh;
+  font-size: 3.03cqw;
   font-weight: 400;
   color: #64748b;
 }
 
 .vpnl-trade-realised-val {
-  font-size: 1.48vh;
+  font-size: 3.2cqw;
   font-weight: 600;
 }
 
@@ -2739,52 +2846,93 @@ body.page-verified-pnl {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 0.15vh;
+  margin-top: 0.3cqw;
 }
 
 .vpnl-trade-detail-item {
   display: flex;
-  gap: 6px;
+  gap: 1.3cqw;
   align-items: baseline;
 }
 
 .vpnl-trade-val {
-  font-size: 1.4vh;
+  font-size: 3.03cqw;
   font-weight: 500;
   color: #334155;
 }
 
-/* Floating Navigation helper */
+/* Floating Quick Navigation & Controls */
 .vpnl-floating-nav {
   position: fixed;
-  bottom: 18px;
-  right: 18px;
+  bottom: max(16px, env(safe-area-inset-bottom, 16px));
+  right: max(16px, env(safe-area-inset-right, 16px));
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
   z-index: 1000;
-  opacity: 0.35;
-  transition: opacity 0.25s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.vpnl-floating-nav:hover {
-  opacity: 1;
+.vpnl-nav-toggle-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, background 0.2s ease;
+  user-select: none;
+  padding: 0;
+}
+
+.vpnl-nav-toggle-btn:hover,
+.vpnl-nav-toggle-btn:active {
+  background: rgba(2, 132, 199, 0.95);
+  transform: scale(1.08);
+}
+
+.vpnl-nav-pills {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  transition: opacity 0.2s ease, transform 0.2s ease, max-width 0.25s ease;
+  max-width: 250px;
+  overflow: hidden;
+}
+
+.vpnl-nav-pills.hidden {
+  opacity: 0;
+  pointer-events: none;
+  max-width: 0;
+  transform: translateX(10px);
 }
 
 .vpnl-nav-link {
-  padding: 6px 14px;
-  background: rgba(15, 23, 42, 0.85);
+  padding: 7px 13px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: #ffffff;
   text-decoration: none;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
   transition: background 0.15s ease, transform 0.15s ease;
 }
 
-.vpnl-nav-link:hover {
+.vpnl-nav-link:hover,
+.vpnl-nav-link:active {
   background: rgba(2, 132, 199, 0.95);
   transform: translateY(-1px);
 }

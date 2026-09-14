@@ -124,12 +124,15 @@
   </div>
 
   <!-- Quick Floating Action for Navigation to Kite App & Input Panel -->
-  <div class="vpnl-floating-nav">
-    <a href="/display" class="vpnl-nav-link" title="Open Kite Portfolio">📱 Kite App</a>
-    <a href="/input" class="vpnl-nav-link" title="Open Admin Control Panel">⚙️ Admin</a>
+  <div class="vpnl-floating-nav" id="vpnl-floating-nav">
+    <div class="vpnl-nav-pills" id="vpnl-nav-pills">
+      <a href="/display" class="vpnl-nav-link" title="Open Kite Portfolio">📱 Kite</a>
+      <a href="/input" class="vpnl-nav-link" title="Open Admin Control Panel">⚙️ Edit</a>
+    </div>
+    <button type="button" class="vpnl-nav-toggle-btn" id="vpnl-nav-toggle" title="Toggle quick navigation buttons">✕</button>
   </div>
 
   <!-- Scripts -->
-  <script src="app.js?v=80"></script>
+  <script src="app.js?v=81"></script>
 </body>
 </html>
