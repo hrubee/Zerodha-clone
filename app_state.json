@@ -43,7 +43,7 @@
       "isGreen": false
     }
   },
-  "totalPnl": "+3,35,738.43",
+  "totalPnl": "+3,44,984.28",
   "holdingsCount": "1",
   "positions": [
     {
@@ -54,10 +54,10 @@
       "entryPrice": "0.00",
       "qty": "0",
       "avg": "0.00",
-      "ltp": "70,255.80",
+      "ltp": "70,255.70",
       "type": "NRML",
       "autoCalc": true,
-      "pnl": "+1,21,728.43",
+      "pnl": "+1,30,979.28",
       "isGreen": true
     },
     {
@@ -68,10 +68,10 @@
       "entryPrice": "310.00",
       "qty": "100",
       "avg": "310.00",
-      "ltp": "2,450.10",
+      "ltp": "2,450.05",
       "type": "MIS",
       "autoCalc": true,
-      "pnl": "+2,14,010.00",
+      "pnl": "+2,14,005.00",
       "isGreen": true
     }
   ],
