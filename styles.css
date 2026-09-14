@@ -2793,7 +2793,7 @@ body.page-verified-pnl .app-viewport-wrapper {
 }
 
 .vpnl-trade-label {
-  font-size: 3.75cqw;
+  font-size: 3.25cqw;
   font-weight: 400;
   color: #64748b;
 }
@@ -2803,12 +2803,12 @@ body.page-verified-pnl .app-viewport-wrapper {
 }
 
 .vpnl-trade-realised-val {
-  font-size: 4.15cqw;
+  font-size: 3.65cqw;
   font-weight: 600;
 }
 
 .vpnl-trade-realised-val .vpnl-trade-pct {
-  font-size: 3.14cqw;
+  font-size: 2.64cqw;
   font-weight: 400;
   margin-left: 0.6cqw;
 }
@@ -2840,7 +2840,7 @@ body.page-verified-pnl .app-viewport-wrapper {
 }
 
 .vpnl-trade-val {
-  font-size: 3.75cqw;
+  font-size: 3.25cqw;
   font-weight: 500;
   color: #334155;
 }
