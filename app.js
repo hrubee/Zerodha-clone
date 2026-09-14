@@ -859,6 +859,7 @@ function initKiteApp() {
         const item = document.createElement('div');
         item.className = 'vpnl-trade-item';
         const isPos = t.isGreen !== undefined ? t.isGreen : !String(t.realised).includes('-');
+        const formattedRealised = String(t.realised).replace(/\(([^)]+)\)/g, '<span class="vpnl-trade-pct">($1)</span>');
         item.innerHTML = `
           <div class="vpnl-trade-header">
             <span class="vpnl-trade-symbol">${t.symbol}</span>
@@ -866,7 +867,7 @@ function initKiteApp() {
           </div>
           <div class="vpnl-trade-realised-row">
             <span class="vpnl-trade-label">Realised</span>
-            <span class="vpnl-trade-realised-val ${isPos ? 'green' : 'red'}">${t.realised}</span>
+            <span class="vpnl-trade-realised-val ${isPos ? 'green' : 'red'}">${formattedRealised}</span>
           </div>
           <div class="vpnl-trade-details-row">
             <div class="vpnl-trade-detail-item">

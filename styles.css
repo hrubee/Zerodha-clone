@@ -2803,6 +2803,12 @@ body.page-verified-pnl .app-viewport-wrapper {
   font-weight: 600;
 }
 
+.vpnl-trade-realised-val .vpnl-trade-pct {
+  font-size: 3.14cqw;
+  font-weight: 400;
+  margin-left: 0.6cqw;
+}
+
 .vpnl-trade-realised-val.green {
   color: #16a34a;
 }
