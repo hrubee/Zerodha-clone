@@ -2793,13 +2793,13 @@ body.page-verified-pnl .app-viewport-wrapper {
 }
 
 .vpnl-trade-label {
-  font-size: 3.45cqw;
+  font-size: 3.75cqw;
   font-weight: 400;
   color: #64748b;
 }
 
 .vpnl-trade-realised-val {
-  font-size: 3.75cqw;
+  font-size: 4.15cqw;
   font-weight: 600;
 }
 
@@ -2826,7 +2826,7 @@ body.page-verified-pnl .app-viewport-wrapper {
 }
 
 .vpnl-trade-val {
-  font-size: 3.45cqw;
+  font-size: 3.75cqw;
   font-weight: 500;
   color: #334155;
 }
