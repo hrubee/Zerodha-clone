@@ -2641,7 +2641,7 @@ body.page-verified-pnl .app-viewport-wrapper {
 
 /* Date Range */
 .vpnl-date-range {
-  top: 26.0% !important;
+  top: 26.1% !important;
   left: 0 !important;
   width: 100% !important;
   justify-content: center !important;
@@ -2664,7 +2664,7 @@ body.page-verified-pnl .app-viewport-wrapper {
 
 .vpnl-big-amount {
   font-size: 5.31cqw !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1 !important;
   letter-spacing: -0.3px !important;
 }
@@ -2702,14 +2702,14 @@ body.page-verified-pnl .app-viewport-wrapper {
   top: 59.8% !important;
   right: 9.8% !important;
   font-size: 3.58cqw !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
   text-align: right !important;
 }
 
 /* Metadata: Last updated */
 .vpnl-last-updated {
   top: 72.2% !important;
-  left: 32.55% !important;
+  left: 33.6% !important;
   font-size: 3.45cqw !important;
   font-weight: 500 !important;
   color: #757575 !important;
