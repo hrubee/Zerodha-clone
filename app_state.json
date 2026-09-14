@@ -43,7 +43,7 @@
       "isGreen": false
     }
   },
-  "totalPnl": "+95,378.94",
+  "totalPnl": "+3,35,738.43",
   "holdingsCount": "1",
   "positions": [
     {
@@ -57,7 +57,21 @@
       "ltp": "70,255.80",
       "type": "NRML",
       "autoCalc": true,
-      "pnl": "+95,378.94",
+      "pnl": "+1,21,728.43",
+      "isGreen": true
+    },
+    {
+      "id": "pos_1",
+      "symbol": "MIDCPNIFTY 14th FEB 9800 CE",
+      "exchange": "NFO",
+      "side": "BUY",
+      "entryPrice": "310.00",
+      "qty": "100",
+      "avg": "310.00",
+      "ltp": "2,450.10",
+      "type": "MIS",
+      "autoCalc": true,
+      "pnl": "+2,14,010.00",
       "isGreen": true
     }
   ],

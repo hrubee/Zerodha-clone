@@ -4,3 +4,5 @@ __pycache__/
 .gemini/
 scratch_frames/
 scratch_new_update_frames/
+scratch_*.png
+pnl.MP4
