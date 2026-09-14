@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Console &bull; Zerodha</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23387ed1'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=80">
+</head>
+<body class="page-verified-pnl">
+
+  <!-- Mobile Viewport Container matching iPhone Aspect Ratio -->
+  <div class="mobile-viewport" id="verified-viewport">
+    
+    <!-- Canvas Frame with Template Background -->
+    <div class="canvas-frame verified-pnl-canvas">
+      <!-- Background Image -->
+      <img src="bg_verified_pnl.png?v=80" alt="Zerodha Console P&L" class="canvas-bg-img" id="vpnl-bg-img">
+
+      <!-- 1. Top iPhone iOS Status Bar Overlay -->
+      <div class="ios-status-bar vpnl-status-bar" id="ios-status-bar">
+        <!-- Clock (Left) with Red Active Call Pill Style -->
+        <div class="ios-status-left">
+          <div class="ios-time-pill" id="vpnl-time-pill">
+            <span class="ios-clock-time" id="ios-live-clock">10:16</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Notch Spacer -->
+        <div class="ios-notch-spacer"></div>
+
+        <!-- Status Indicators (Right) -->
+        <div class="ios-status-right">
+          <!-- Cellular Signal 4 Dots -->
+          <svg class="ios-icon-cellular" viewBox="0 0 18 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="2" cy="5" r="1.5" fill="#333333"/>
+            <circle cx="6.5" cy="5" r="1.5" fill="#333333"/>
+            <circle cx="11" cy="5" r="1.5" fill="#333333"/>
+            <circle cx="15.5" cy="5" r="1.5" fill="#333333"/>
+          </svg>
+
+          <!-- Wi-Fi Icon -->
+          <svg class="ios-icon-wifi" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 11.5C8.55228 11.5 9 11.0523 9 10.5C9 9.94772 8.55228 9.5 8 9.5C7.44772 9.5 7 9.94772 7 10.5C7 11.0523 7.44772 11.5 8 11.5Z" fill="#333333"/>
+            <path d="M4.5 7.5C5.45 6.55 6.67 6 8 6C9.33 6 10.55 6.55 11.5 7.5" stroke="#333333" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M2 4.5C3.65 2.85 5.75 2 8 2C10.25 2 12.35 2.85 14 4.5" stroke="#333333" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+
+          <!-- Battery Percentage & Icon -->
+          <div class="vpnl-battery-wrapper">
+            <span class="vpnl-battery-pct" id="ios-battery-pct-text">90</span>
+            <div class="ios-icon-battery vpnl-battery-icon" id="ios-battery-box">
+              <div class="ios-battery-fill" id="ios-battery-fill-level" style="width: 90%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Date Range Filter Overlay -->
+      <div class="vpnl-overlay-field vpnl-date-range" id="ov-vpnl-date-range" title="Click to edit date range">
+        <span id="vpnl-val-date-range">2026-07-01  —  2026-09-12</span>
+      </div>
+
+      <!-- 3. P&L Summary Card Overlays -->
+      <!-- Realised P&L (Large) -->
+      <div class="vpnl-overlay-field vpnl-realised-pnl" id="ov-vpnl-realised" title="Click to edit Realised P&L">
+        <span class="vpnl-big-amount red" id="vpnl-val-realised">-1.18L</span>
+      </div>
+
+      <!-- Unrealised P&L (Large) -->
+      <div class="vpnl-overlay-field vpnl-unrealised-pnl" id="ov-vpnl-unrealised" title="Click to edit Unrealised P&L">
+        <span class="vpnl-big-amount red" id="vpnl-val-unrealised">-5.85k</span>
+      </div>
+
+      <!-- Charges & Taxes -->
+      <div class="vpnl-overlay-field vpnl-charges" id="ov-vpnl-charges" title="Click to edit Charges & taxes">
+        <span id="vpnl-val-charges">37.66k</span>
+      </div>
+
+      <!-- Other Credits & Debits -->
+      <div class="vpnl-overlay-field vpnl-other-credits" id="ov-vpnl-other" title="Click to edit Other credits & debits">
+        <span id="vpnl-val-other">-59</span>
+      </div>
+
+      <!-- Net Realised P&L -->
+      <div class="vpnl-overlay-field vpnl-net-realised" id="ov-vpnl-net" title="Click to edit Net realised P&L">
+        <span class="vpnl-net-amount red" id="vpnl-val-net">-1.55L</span>
+      </div>
+
+      <!-- 4. Metadata Overlay: Last Updated Date -->
+      <div class="vpnl-overlay-field vpnl-last-updated" id="ov-vpnl-last-updated" title="Click to edit Last updated date">
+        <span id="vpnl-val-last-updated">2026-09-11</span>
+      </div>
+
+      <!-- 5. Trades / Breakdown Items Dynamic List -->
+      <div class="vpnl-trades-container" id="vpnl-trades-list">
+        <!-- Dynamic Trade Item Row -->
+        <div class="vpnl-trade-item">
+          <div class="vpnl-trade-header">
+            <span class="vpnl-trade-symbol">BANKNIFTY26AUG57700CE</span>
+            <span class="vpnl-trade-qty">Qty. 120</span>
+          </div>
+          <div class="vpnl-trade-realised-row">
+            <span class="vpnl-trade-label">Realised</span>
+            <span class="vpnl-trade-realised-val green">+1,647.00 (+4.96%)</span>
+          </div>
+          <div class="vpnl-trade-details-row">
+            <div class="vpnl-trade-detail-item">
+              <span class="vpnl-trade-label">Buy avg.</span>
+              <span class="vpnl-trade-val">276.98</span>
+            </div>
+            <div class="vpnl-trade-detail-item right">
+              <span class="vpnl-trade-label">Buy value</span>
+              <span class="vpnl-trade-val">33,237.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Quick Floating Action for Navigation to Kite App & Input Panel -->
+  <div class="vpnl-floating-nav">
+    <a href="/display" class="vpnl-nav-link" title="Open Kite Portfolio">📱 Kite App</a>
+    <a href="/input" class="vpnl-nav-link" title="Open Admin Control Panel">⚙️ Admin</a>
+  </div>
+
+  <!-- Scripts -->
+  <script src="app.js?v=80"></script>
+</body>
+</html>

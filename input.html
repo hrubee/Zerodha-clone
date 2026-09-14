@@ -21,7 +21,8 @@
     </div>
     <div class="input-dashboard-actions">
       <span class="broadcast-badge" id="sync-status-indicator">● Live Sync Active</span>
-      <a href="/display" target="_blank" class="btn-launch-display">📺 Open Display View (/display) ↗</a>
+      <a href="/display" target="_blank" class="btn-launch-display">📺 Kite Display (/display) ↗</a>
+      <a href="/verified-pnl" target="_blank" class="btn-launch-display" style="background: #0284c7;">📜 Verified P&L (/verified-pnl) ↗</a>
     </div>
   </header>
 
@@ -31,6 +32,7 @@
     <aside class="input-dashboard-sidebar">
       <div class="sidebar-tabs-list">
         <button class="sidebar-tab-btn active" data-atab="positions">📊 Positions & P&L</button>
+        <button class="sidebar-tab-btn" data-atab="verified-pnl">📜 Verified P&L Report</button>
         <button class="sidebar-tab-btn" data-atab="dhan">⚡ Dhan API & Live Feed</button>
         <button class="sidebar-tab-btn" data-atab="indices">📈 Indices & Header</button>
         <button class="sidebar-tab-btn" data-atab="watchlist">📋 Watchlist Items</button>
@@ -305,6 +307,76 @@
         <div class="admin-form-group">
           <label class="admin-label">Opening Balance (e.g. 35,50,000.00)</label>
           <input type="text" id="admin-funds-opening-bal" value="35,50,000.00" class="admin-input">
+        </div>
+      </div>
+
+      <!-- SECTION 7: VERIFIED P&L REPORT EDITOR -->
+      <div class="admin-section" id="asec-verified-pnl">
+        <div class="trade-summary-banner" style="background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);">
+          <div class="trade-summary-left">
+            <span class="trade-summary-label">Zerodha Console Verified P&L Report</span>
+            <span class="trade-summary-val" id="admin-vpnl-title" style="color: #ffffff;">console.zerodha.com</span>
+            <span style="font-size: 11.5px; color: #bae6fd;">Replicating Chrome browser mobile report with live editable fields</span>
+          </div>
+          <div class="trade-summary-right">
+            <a href="/verified-pnl" target="_blank" style="background: #ffffff; color: #0284c7; padding: 8px 14px; border-radius: 6px; font-weight: 700; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+              <span>📜 View Page</span> ↗
+            </a>
+          </div>
+        </div>
+
+        <div class="admin-card-box">
+          <h4>📅 Report Period & Metadata</h4>
+          <div class="admin-grid-2">
+            <div>
+              <label class="admin-label">Date Range (e.g. 2026-07-01  —  2026-09-12)</label>
+              <input type="text" id="admin-vpnl-daterange" value="2026-07-01  —  2026-09-12" class="admin-input">
+            </div>
+            <div>
+              <label class="admin-label">Last Updated Date (e.g. 2026-09-11)</label>
+              <input type="text" id="admin-vpnl-lastupdated" value="2026-09-11" class="admin-input">
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-card-box">
+          <h4>📊 Summary Metrics (L = Lakhs, k = Thousands)</h4>
+          <div class="admin-grid-2" style="margin-bottom: 12px;">
+            <div>
+              <label class="admin-label">Realised P&L (e.g. -1.18L or +2.45L)</label>
+              <input type="text" id="admin-vpnl-realised" value="-1.18L" class="admin-input" style="font-weight: 700; color: #dc2626;">
+            </div>
+            <div>
+              <label class="admin-label">Unrealised P&L (e.g. -5.85k or +10.2k)</label>
+              <input type="text" id="admin-vpnl-unrealised" value="-5.85k" class="admin-input" style="font-weight: 700; color: #dc2626;">
+            </div>
+          </div>
+          <div class="admin-grid-2" style="margin-bottom: 12px;">
+            <div>
+              <label class="admin-label">Charges & taxes (e.g. 37.66k)</label>
+              <input type="text" id="admin-vpnl-charges" value="37.66k" class="admin-input">
+            </div>
+            <div>
+              <label class="admin-label">Other credits & debits (e.g. -59)</label>
+              <input type="text" id="admin-vpnl-other" value="-59" class="admin-input">
+            </div>
+          </div>
+          <div>
+            <label class="admin-label">Net realised P&L (e.g. -1.55L or +1.80L)</label>
+            <input type="text" id="admin-vpnl-net" value="-1.55L" class="admin-input" style="font-weight: 700; color: #dc2626;">
+          </div>
+        </div>
+
+        <div class="admin-sub-header" style="margin: 20px 0 12px 0;">
+          <div>
+            <strong style="font-size: 15px; color: #1e293b;">⚡ Verified Trades & Breakdown Items</strong>
+            <span style="font-size: 12px; color: #64748b; margin-left: 8px;">Rendered on the verified report below Page 1/5</span>
+          </div>
+          <button type="button" class="admin-btn-small" id="admin-add-vpnl-trade" style="background: #0284c7; color: #fff; font-weight: 700; padding: 8px 14px; border-radius: 6px;">+ Add Trade Item</button>
+        </div>
+
+        <div class="admin-positions-editor-list" id="admin-vpnl-trades-forms">
+          <!-- Trade item cards dynamically injected by JS -->
         </div>
       </div>
 

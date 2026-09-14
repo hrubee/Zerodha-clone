@@ -20,22 +20,22 @@
   },
   "indices": {
     "nifty": {
-      "val": "23,459.55",
-      "change": "+28.05 (+0.11%)",
-      "isGreen": true,
-      "prevClose": 23431.5
+      "val": "23,398.56",
+      "change": "-79.24 (-0.34%)",
+      "isGreen": false,
+      "prevClose": 23477.8
     },
     "banknifty": {
-      "val": "57,127.90",
-      "change": "+434.40 (+0.76%)",
+      "val": "56,607.60",
+      "change": "+135.65 (+0.24%)",
       "isGreen": true,
-      "prevClose": 56693.5
+      "prevClose": 56471.95
     },
     "sensex": {
-      "val": "74,855.81",
-      "change": "+91.58 (+0.12%)",
-      "isGreen": true,
-      "prevClose": 74764.23
+      "val": "74,783.87",
+      "change": "-118.72 (-0.16%)",
+      "isGreen": false,
+      "prevClose": 74902.59
     },
     "vix": {
       "val": "13.82",
@@ -43,7 +43,7 @@
       "isGreen": false
     }
   },
-  "totalPnl": "+3,44,984.28",
+  "totalPnl": "+3,79,561.14",
   "holdingsCount": "1",
   "positions": [
     {
@@ -54,10 +54,10 @@
       "entryPrice": "0.00",
       "qty": "0",
       "avg": "0.00",
-      "ltp": "70,255.70",
+      "ltp": "70,183.75",
       "type": "NRML",
       "autoCalc": true,
-      "pnl": "+1,30,979.28",
+      "pnl": "+1,65,576.14",
       "isGreen": true
     },
     {
@@ -68,10 +68,10 @@
       "entryPrice": "310.00",
       "qty": "100",
       "avg": "310.00",
-      "ltp": "2,450.05",
+      "ltp": "2,449.85",
       "type": "MIS",
       "autoCalc": true,
-      "pnl": "+2,14,005.00",
+      "pnl": "+2,13,985.00",
       "isGreen": true
     }
   ],
@@ -124,5 +124,28 @@
     "tickInterval": "1200",
     "isTickerActive": true,
     "marketHoursMode": "auto"
+  },
+  "verifiedPnl": {
+    "dateRange": "2026-07-01  \u2014  2026-09-12",
+    "realisedPnl": "-1.18L",
+    "isRealisedGreen": false,
+    "unrealisedPnl": "-5.85k",
+    "isUnrealisedGreen": false,
+    "chargesTaxes": "37.66k",
+    "otherCreditsDebits": "-59",
+    "netRealisedPnl": "-1.55L",
+    "isNetGreen": false,
+    "lastUpdated": "2026-09-11",
+    "trades": [
+      {
+        "id": "vtrade_0",
+        "symbol": "BANKNIFTY26AUG57700CE",
+        "qty": "120",
+        "realised": "+1,647.00 (+4.96%)",
+        "isGreen": true,
+        "buyAvg": "276.98",
+        "buyValue": "33,237.00"
+      }
+    ]
   }
 }

@@ -90,6 +90,8 @@ class RouteHandler(http.server.SimpleHTTPRequestHandler):
             self.path = '/display.html'
         elif clean_path in ['/input', '/input.html']:
             self.path = '/input.html'
+        elif clean_path in ['/verified-pnl', '/verified-pnl.html']:
+            self.path = '/verified-pnl.html'
         elif clean_path == '':
             self.path = '/display.html'
             
@@ -103,6 +105,16 @@ class RouteHandler(http.server.SimpleHTTPRequestHandler):
             
             try:
                 state_obj = json.loads(post_data.decode('utf-8'))
+                existing = {}
+                if os.path.exists(STATE_FILE):
+                    try:
+                        with open(STATE_FILE, 'r', encoding='utf-8') as ef:
+                            existing = json.load(ef)
+                    except Exception:
+                        pass
+                if 'verifiedPnl' not in state_obj and 'verifiedPnl' in existing:
+                    state_obj['verifiedPnl'] = existing['verifiedPnl']
+
                 with open(STATE_FILE, 'w', encoding='utf-8') as f:
                     json.dump(state_obj, f, indent=2)
                 

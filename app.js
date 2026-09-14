@@ -192,6 +192,30 @@ function initKiteApp() {
     { name: 'FINNIFTY 20th FEB 20500 CE', exchange: 'NFO', price: 118.00, change: 65.40, percent: 124.33, isGreen: true }
   ];
 
+  const defaultVerifiedPnl = {
+    dateRange: '2026-07-01  —  2026-09-12',
+    realisedPnl: '-1.18L',
+    isRealisedGreen: false,
+    unrealisedPnl: '-5.85k',
+    isUnrealisedGreen: false,
+    chargesTaxes: '37.66k',
+    otherCreditsDebits: '-59',
+    netRealisedPnl: '-1.55L',
+    isNetGreen: false,
+    lastUpdated: '2026-09-11',
+    trades: [
+      {
+        id: 'vtrade_0',
+        symbol: 'BANKNIFTY26AUG57700CE',
+        qty: '120',
+        realised: '+1,647.00 (+4.96%)',
+        isGreen: true,
+        buyAvg: '276.98',
+        buyValue: '33,237.00'
+      }
+    ]
+  };
+
   // Default state: load IMG_0961 video scenario
   const defaultState = {
     ...JSON.parse(JSON.stringify(videoPresets['IMG_0961'])),
@@ -209,7 +233,8 @@ function initKiteApp() {
       batteryLevel: 98,
       showBatteryPct: false,
       is24Hour: false
-    }
+    },
+    verifiedPnl: defaultVerifiedPnl
   };
 
   // Load state from localStorage or default
@@ -231,6 +256,9 @@ function initKiteApp() {
       showBatteryPct: false,
       is24Hour: false
     };
+  }
+  if (!appState.verifiedPnl) {
+    appState.verifiedPnl = JSON.parse(JSON.stringify(defaultVerifiedPnl));
   }
   // Guarantee ticker active
   // Ensure fundsDetails exists
@@ -720,11 +748,14 @@ function initKiteApp() {
 
     // 6. Update Screenshot Overlay Fields
     updateOverlayFields();
+
+    // 7. Render Verified P&L Report Overlays
+    renderVerifiedPnlUI();
   }
 
   // Update iPhone iOS Status Bar with live Indian Standard Time (IST, Asia/Kolkata) & battery
   function updateLiveStatusBarTime() {
-    const timeEl = document.getElementById('ov-ios-time');
+    const timeEl = document.getElementById('ov-ios-time') || document.getElementById('ios-live-clock');
     if (!timeEl) return;
 
     const sb = (appState && appState.statusBar) ? appState.statusBar : { mode: 'live', is24Hour: false, batteryLevel: 98, showBatteryPct: false };
@@ -740,8 +771,8 @@ function initKiteApp() {
           hour12: !sb.is24Hour
         }).formatToParts(new Date());
 
-        const hour = parts.find(p => p.type === 'hour')?.value || '9';
-        const minute = parts.find(p => p.type === 'minute')?.value || '41';
+        const hour = parts.find(p => p.type === 'hour')?.value || '10';
+        const minute = parts.find(p => p.type === 'minute')?.value || '16';
         timeEl.textContent = `${hour}:${minute}`;
       } catch (e) {
         // Fallback calculation for IST (UTC+5:30)
@@ -755,21 +786,198 @@ function initKiteApp() {
       }
     }
 
-    const batteryFill = document.getElementById('ov-ios-battery-fill');
-    const batteryPct = document.getElementById('ov-ios-battery-pct');
-    const level = (sb.batteryLevel !== undefined) ? parseInt(sb.batteryLevel, 10) : 98;
+    const batteryFill = document.getElementById('ov-ios-battery-fill') || document.getElementById('ios-battery-fill-level');
+    const batteryPct = document.getElementById('ov-ios-battery-pct') || document.getElementById('ios-battery-pct-text');
+    const level = (sb.batteryLevel !== undefined) ? parseInt(sb.batteryLevel, 10) : 90;
     if (batteryFill) {
-      const fillWidth = Math.max(1.5, Math.min(15, (level / 100) * 15));
-      batteryFill.setAttribute('width', fillWidth.toFixed(1));
+      if (batteryFill.tagName === 'rect' || batteryFill.hasAttribute('width')) {
+        const fillWidth = Math.max(1.5, Math.min(15, (level / 100) * 15));
+        batteryFill.setAttribute('width', fillWidth.toFixed(1));
+      } else {
+        batteryFill.style.width = `${level}%`;
+      }
       if (level <= 20) {
         batteryFill.style.fill = '#ef4444';
+        batteryFill.style.backgroundColor = '#ef4444';
       } else {
         batteryFill.style.fill = 'currentColor';
+        batteryFill.style.backgroundColor = 'currentColor';
       }
     }
     if (batteryPct) {
-      batteryPct.textContent = `${level}%`;
-      batteryPct.style.display = sb.showBatteryPct ? 'inline-block' : 'none';
+      batteryPct.textContent = `${level}`;
+      if (batteryPct.id === 'ov-ios-battery-pct') {
+        batteryPct.textContent = `${level}%`;
+        batteryPct.style.display = sb.showBatteryPct ? 'inline-block' : 'none';
+      }
+    }
+  }
+
+  // Render Verified P&L Report Page Overlays
+  function renderVerifiedPnlUI() {
+    if (!appState.verifiedPnl) return;
+    const vp = appState.verifiedPnl;
+
+    const dateRangeEl = document.getElementById('vpnl-val-date-range');
+    if (dateRangeEl) dateRangeEl.textContent = vp.dateRange || '2026-07-01  —  2026-09-12';
+
+    const realisedEl = document.getElementById('vpnl-val-realised');
+    if (realisedEl) {
+      realisedEl.textContent = vp.realisedPnl || '-1.18L';
+      const isPos = vp.isRealisedGreen !== undefined ? vp.isRealisedGreen : !String(vp.realisedPnl).includes('-');
+      realisedEl.className = 'vpnl-big-amount ' + (isPos ? 'green' : 'red');
+    }
+
+    const unrealisedEl = document.getElementById('vpnl-val-unrealised');
+    if (unrealisedEl) {
+      unrealisedEl.textContent = vp.unrealisedPnl || '-5.85k';
+      const isPos = vp.isUnrealisedGreen !== undefined ? vp.isUnrealisedGreen : !String(vp.unrealisedPnl).includes('-');
+      unrealisedEl.className = 'vpnl-big-amount ' + (isPos ? 'green' : 'red');
+    }
+
+    const chargesEl = document.getElementById('vpnl-val-charges');
+    if (chargesEl) chargesEl.textContent = vp.chargesTaxes || '37.66k';
+
+    const otherEl = document.getElementById('vpnl-val-other');
+    if (otherEl) otherEl.textContent = vp.otherCreditsDebits || '-59';
+
+    const netEl = document.getElementById('vpnl-val-net');
+    if (netEl) {
+      netEl.textContent = vp.netRealisedPnl || '-1.55L';
+      const isPos = vp.isNetGreen !== undefined ? vp.isNetGreen : !String(vp.netRealisedPnl).includes('-');
+      netEl.className = 'vpnl-net-amount ' + (isPos ? 'green' : 'red');
+    }
+
+    const lastUpEl = document.getElementById('vpnl-val-last-updated');
+    if (lastUpEl) lastUpEl.textContent = vp.lastUpdated || '2026-09-11';
+
+    // Render Trades list
+    const tradesListEl = document.getElementById('vpnl-trades-list');
+    if (tradesListEl && vp.trades) {
+      tradesListEl.innerHTML = '';
+      vp.trades.forEach((t) => {
+        const item = document.createElement('div');
+        item.className = 'vpnl-trade-item';
+        const isPos = t.isGreen !== undefined ? t.isGreen : !String(t.realised).includes('-');
+        item.innerHTML = `
+          <div class="vpnl-trade-header">
+            <span class="vpnl-trade-symbol">${t.symbol}</span>
+            <span class="vpnl-trade-qty">Qty. ${t.qty}</span>
+          </div>
+          <div class="vpnl-trade-realised-row">
+            <span class="vpnl-trade-label">Realised</span>
+            <span class="vpnl-trade-realised-val ${isPos ? 'green' : 'red'}">${t.realised}</span>
+          </div>
+          <div class="vpnl-trade-details-row">
+            <div class="vpnl-trade-detail-item">
+              <span class="vpnl-trade-label">Buy avg.</span>
+              <span class="vpnl-trade-val">${t.buyAvg}</span>
+            </div>
+            <div class="vpnl-trade-detail-item right">
+              <span class="vpnl-trade-label">Buy value</span>
+              <span class="vpnl-trade-val">${t.buyValue}</span>
+            </div>
+          </div>
+        `;
+        tradesListEl.appendChild(item);
+      });
+    }
+  }
+
+  // Setup Verified P&L Click Handlers for direct inline editing
+  function setupVerifiedPnlClickHandlers() {
+    const ovDateRange = document.getElementById('ov-vpnl-date-range');
+    if (ovDateRange) {
+      ovDateRange.addEventListener('click', () => {
+        const val = prompt('Edit Date Range (e.g. 2026-07-01  —  2026-09-12):', appState.verifiedPnl?.dateRange || '2026-07-01  —  2026-09-12');
+        if (val !== null && val.trim()) {
+          if (!appState.verifiedPnl) appState.verifiedPnl = {};
+          appState.verifiedPnl.dateRange = val.trim();
+          saveState();
+          renderVerifiedPnlUI();
+        }
+      });
+    }
+
+    const ovRealised = document.getElementById('ov-vpnl-realised');
+    if (ovRealised) {
+      ovRealised.addEventListener('click', () => {
+        const val = prompt('Edit Realised P&L (e.g. -1.18L or +2.45L):', appState.verifiedPnl?.realisedPnl || '-1.18L');
+        if (val !== null && val.trim()) {
+          if (!appState.verifiedPnl) appState.verifiedPnl = {};
+          appState.verifiedPnl.realisedPnl = val.trim();
+          appState.verifiedPnl.isRealisedGreen = !val.trim().includes('-');
+          saveState();
+          renderVerifiedPnlUI();
+        }
+      });
+    }
+
+    const ovUnrealised = document.getElementById('ov-vpnl-unrealised');
+    if (ovUnrealised) {
+      ovUnrealised.addEventListener('click', () => {
+        const val = prompt('Edit Unrealised P&L (e.g. -5.85k or +10.2k):', appState.verifiedPnl?.unrealisedPnl || '-5.85k');
+        if (val !== null && val.trim()) {
+          if (!appState.verifiedPnl) appState.verifiedPnl = {};
+          appState.verifiedPnl.unrealisedPnl = val.trim();
+          appState.verifiedPnl.isUnrealisedGreen = !val.trim().includes('-');
+          saveState();
+          renderVerifiedPnlUI();
+        }
+      });
+    }
+
+    const ovCharges = document.getElementById('ov-vpnl-charges');
+    if (ovCharges) {
+      ovCharges.addEventListener('click', () => {
+        const val = prompt('Edit Charges & taxes (e.g. 37.66k):', appState.verifiedPnl?.chargesTaxes || '37.66k');
+        if (val !== null && val.trim()) {
+          if (!appState.verifiedPnl) appState.verifiedPnl = {};
+          appState.verifiedPnl.chargesTaxes = val.trim();
+          saveState();
+          renderVerifiedPnlUI();
+        }
+      });
+    }
+
+    const ovOther = document.getElementById('ov-vpnl-other');
+    if (ovOther) {
+      ovOther.addEventListener('click', () => {
+        const val = prompt('Edit Other credits & debits (e.g. -59):', appState.verifiedPnl?.otherCreditsDebits || '-59');
+        if (val !== null && val.trim()) {
+          if (!appState.verifiedPnl) appState.verifiedPnl = {};
+          appState.verifiedPnl.otherCreditsDebits = val.trim();
+          saveState();
+          renderVerifiedPnlUI();
+        }
+      });
+    }
+
+    const ovNet = document.getElementById('ov-vpnl-net');
+    if (ovNet) {
+      ovNet.addEventListener('click', () => {
+        const val = prompt('Edit Net Realised P&L (e.g. -1.55L):', appState.verifiedPnl?.netRealisedPnl || '-1.55L');
+        if (val !== null && val.trim()) {
+          if (!appState.verifiedPnl) appState.verifiedPnl = {};
+          appState.verifiedPnl.netRealisedPnl = val.trim();
+          appState.verifiedPnl.isNetGreen = !val.trim().includes('-');
+          saveState();
+          renderVerifiedPnlUI();
+        }
+      });
+    }
+
+    const ovLastUp = document.getElementById('ov-vpnl-last-updated');
+    if (ovLastUp) {
+      ovLastUp.addEventListener('click', () => {
+        const val = prompt('Edit Last Updated Date (e.g. 2026-09-11):', appState.verifiedPnl?.lastUpdated || '2026-09-11');
+        if (val !== null && val.trim()) {
+          if (!appState.verifiedPnl) appState.verifiedPnl = {};
+          appState.verifiedPnl.lastUpdated = val.trim();
+          saveState();
+          renderVerifiedPnlUI();
+        }
+      });
     }
   }
 
@@ -1084,6 +1292,7 @@ function initKiteApp() {
   }
 
   setupOverlayClickHandlers();
+  setupVerifiedPnlClickHandlers();
 
   // Mode Switcher: Screenshot Overlay Mode vs Native HTML Mode
   const phoneFrame = document.getElementById('phone-frame');
@@ -2287,7 +2496,26 @@ function initKiteApp() {
       if (sbBatLbl) sbBatLbl.textContent = `${appState.statusBar.batteryLevel || 98}%`;
     }
     const sbPct = document.getElementById('admin-statusbar-showpct');
-    if (sbPct) sbPct.checked = !!appState.statusBar.showBatteryPct;
+    // Verified P&L Report Fields
+    if (appState.verifiedPnl) {
+      const vp = appState.verifiedPnl;
+      const dRange = document.getElementById('admin-vpnl-daterange');
+      if (dRange) dRange.value = vp.dateRange || '2026-07-01  —  2026-09-12';
+      const lUp = document.getElementById('admin-vpnl-lastupdated');
+      if (lUp) lUp.value = vp.lastUpdated || '2026-09-11';
+      const rPnl = document.getElementById('admin-vpnl-realised');
+      if (rPnl) rPnl.value = vp.realisedPnl || '-1.18L';
+      const uPnl = document.getElementById('admin-vpnl-unrealised');
+      if (uPnl) uPnl.value = vp.unrealisedPnl || '-5.85k';
+      const chg = document.getElementById('admin-vpnl-charges');
+      if (chg) chg.value = vp.chargesTaxes || '37.66k';
+      const oth = document.getElementById('admin-vpnl-other');
+      if (oth) oth.value = vp.otherCreditsDebits || '-59';
+      const net = document.getElementById('admin-vpnl-net');
+      if (net) net.value = vp.netRealisedPnl || '-1.55L';
+
+      renderAdminVerifiedPnlEditor();
+    }
 
     updateTickerBadge();
   }
@@ -2497,6 +2725,58 @@ function initKiteApp() {
     if (sbBatEl) appState.statusBar.batteryLevel = parseInt(sbBatEl.value, 10) || 98;
     const sbPctEl = document.getElementById('admin-statusbar-showpct');
     if (sbPctEl) appState.statusBar.showBatteryPct = sbPctEl.checked;
+
+    // Verified P&L State Sync
+    if (!appState.verifiedPnl) appState.verifiedPnl = {};
+    const vpDateRangeEl = document.getElementById('admin-vpnl-daterange');
+    if (vpDateRangeEl) appState.verifiedPnl.dateRange = vpDateRangeEl.value.trim();
+    const vpLastUpEl = document.getElementById('admin-vpnl-lastupdated');
+    if (vpLastUpEl) appState.verifiedPnl.lastUpdated = vpLastUpEl.value.trim();
+
+    const vpRealisedEl = document.getElementById('admin-vpnl-realised');
+    if (vpRealisedEl) {
+      appState.verifiedPnl.realisedPnl = vpRealisedEl.value.trim();
+      appState.verifiedPnl.isRealisedGreen = !vpRealisedEl.value.includes('-');
+    }
+    const vpUnrealisedEl = document.getElementById('admin-vpnl-unrealised');
+    if (vpUnrealisedEl) {
+      appState.verifiedPnl.unrealisedPnl = vpUnrealisedEl.value.trim();
+      appState.verifiedPnl.isUnrealisedGreen = !vpUnrealisedEl.value.includes('-');
+    }
+    const vpChargesEl = document.getElementById('admin-vpnl-charges');
+    if (vpChargesEl) appState.verifiedPnl.chargesTaxes = vpChargesEl.value.trim();
+    const vpOtherEl = document.getElementById('admin-vpnl-other');
+    if (vpOtherEl) appState.verifiedPnl.otherCreditsDebits = vpOtherEl.value.trim();
+
+    const vpNetEl = document.getElementById('admin-vpnl-net');
+    if (vpNetEl) {
+      appState.verifiedPnl.netRealisedPnl = vpNetEl.value.trim();
+      appState.verifiedPnl.isNetGreen = !vpNetEl.value.includes('-');
+    }
+
+    const vpnlTradesContainer = document.getElementById('admin-vpnl-trades-forms');
+    if (vpnlTradesContainer) {
+      const cards = vpnlTradesContainer.querySelectorAll('.admin-card-box');
+      if (cards.length > 0) {
+        appState.verifiedPnl.trades = [];
+        cards.forEach((card, idx) => {
+          const sym = card.querySelector('.vpnl-trade-input-symbol')?.value.trim() || 'BANKNIFTY26AUG57700CE';
+          const qty = card.querySelector('.vpnl-trade-input-qty')?.value.trim() || '120';
+          const realised = card.querySelector('.vpnl-trade-input-realised')?.value.trim() || '+1,647.00 (+4.96%)';
+          const buyAvg = card.querySelector('.vpnl-trade-input-buyavg')?.value.trim() || '276.98';
+          const buyValue = card.querySelector('.vpnl-trade-input-buyval')?.value.trim() || '33,237.00';
+          appState.verifiedPnl.trades.push({
+            id: 'vtrade_' + idx,
+            symbol: sym,
+            qty: qty,
+            realised: realised,
+            isGreen: !realised.includes('-'),
+            buyAvg: buyAvg,
+            buyValue: buyValue
+          });
+        });
+      }
+    }
   }
 
   function renderAdminPositionsEditor() {
@@ -2938,6 +3218,94 @@ function initKiteApp() {
       populateAdminForms();
       renderAppUI();
       showInputToast('Watchlist item added!', true);
+    });
+  }
+
+  // Render Verified P&L Trades in Admin Control Panel
+  function renderAdminVerifiedPnlEditor() {
+    const vpnlForms = document.getElementById('admin-vpnl-trades-forms');
+    if (!vpnlForms) return;
+    vpnlForms.innerHTML = '';
+    if (!appState.verifiedPnl || !appState.verifiedPnl.trades) return;
+
+    appState.verifiedPnl.trades.forEach((t, idx) => {
+      const box = document.createElement('div');
+      box.className = 'admin-card-box';
+      box.style.border = '1px solid #cbd5e1';
+      box.style.borderRadius = '10px';
+      box.style.padding = '14px';
+      box.style.background = '#ffffff';
+      box.style.marginBottom = '12px';
+
+      const isPos = t.isGreen !== undefined ? t.isGreen : !String(t.realised).includes('-');
+
+      box.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9;">
+          <strong style="font-size: 13.5px; color: #0f172a;">Trade Item #${idx + 1}</strong>
+          <span style="font-size: 12px; font-weight: 700; color: ${isPos ? '#16a34a' : '#dc2626'}; background: ${isPos ? '#dcfce7' : '#fee2e2'}; padding: 2px 8px; border-radius: 4px;">${t.realised}</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <div>
+            <label class="admin-label" style="font-size: 11px;">Symbol</label>
+            <input type="text" class="admin-input vpnl-trade-input-symbol" value="${t.symbol}">
+          </div>
+          <div>
+            <label class="admin-label" style="font-size: 11px;">Quantity</label>
+            <input type="text" class="admin-input vpnl-trade-input-qty" value="${t.qty}">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <div>
+            <label class="admin-label" style="font-size: 11px;">Realised P&L (Formatted)</label>
+            <input type="text" class="admin-input vpnl-trade-input-realised" value="${t.realised}" style="font-weight: 700; color: ${isPos ? '#16a34a' : '#dc2626'};">
+          </div>
+          <div>
+            <label class="admin-label" style="font-size: 11px;">Buy Avg</label>
+            <input type="text" class="admin-input vpnl-trade-input-buyavg" value="${t.buyAvg}">
+          </div>
+          <div>
+            <label class="admin-label" style="font-size: 11px;">Buy Value</label>
+            <input type="text" class="admin-input vpnl-trade-input-buyval" value="${t.buyValue}">
+          </div>
+        </div>
+        <div class="admin-card-actions" style="display: flex; justify-content: flex-end; margin-top: 6px;">
+          <button type="button" class="admin-btn-delete vpnl-trade-delete-btn" style="padding: 4px 10px; font-size: 11.5px;">🗑 Remove Trade</button>
+        </div>
+      `;
+
+      const delBtn = box.querySelector('.vpnl-trade-delete-btn');
+      if (delBtn) {
+        delBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          appState.verifiedPnl.trades.splice(idx, 1);
+          saveState();
+          renderAdminVerifiedPnlEditor();
+          showInputToast('Trade item removed', false);
+        });
+      }
+
+      vpnlForms.appendChild(box);
+    });
+  }
+
+  const adminAddVpnlBtn = document.getElementById('admin-add-vpnl-trade');
+  if (adminAddVpnlBtn) {
+    adminAddVpnlBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!appState.verifiedPnl) appState.verifiedPnl = {};
+      if (!appState.verifiedPnl.trades) appState.verifiedPnl.trades = [];
+      appState.verifiedPnl.trades.push({
+        id: 'vtrade_' + Date.now(),
+        symbol: 'NIFTY26AUG24500CE',
+        qty: '75',
+        realised: '+2,150.00 (+5.20%)',
+        isGreen: true,
+        buyAvg: '185.50',
+        buyValue: '13,912.50'
+      });
+      saveState();
+      renderAdminVerifiedPnlEditor();
+      showInputToast('Added new verified trade row!', true);
     });
   }
 

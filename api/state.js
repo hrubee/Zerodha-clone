@@ -66,6 +66,29 @@ function loadInitialState() {
       tickInterval: '1200',
       isTickerActive: true,
       marketHoursMode: 'auto'
+    },
+    verifiedPnl: {
+      dateRange: "2026-07-01  —  2026-09-12",
+      realisedPnl: "-1.18L",
+      isRealisedGreen: false,
+      unrealisedPnl: "-5.85k",
+      isUnrealisedGreen: false,
+      chargesTaxes: "37.66k",
+      otherCreditsDebits: "-59",
+      netRealisedPnl: "-1.55L",
+      isNetGreen: false,
+      lastUpdated: "2026-09-11",
+      trades: [
+        {
+          id: "vtrade_0",
+          symbol: "BANKNIFTY26AUG57700CE",
+          qty: "120",
+          realised: "+1,647.00 (+4.96%)",
+          isGreen: true,
+          buyAvg: "276.98",
+          buyValue: "33,237.00"
+        }
+      ]
     }
   };
 }

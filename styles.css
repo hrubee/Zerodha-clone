@@ -2483,13 +2483,308 @@ body.is-fullscreen .floating-fs-btn,
 :fullscreen #btn-fullscreen-toggle,
 :-webkit-full-screen #btn-fullscreen-toggle,
 :-moz-full-screen #btn-fullscreen-toggle,
-:-ms-fullscreen #btn-fullscreen-toggle,
-body.is-fullscreen #btn-fullscreen-toggle {
-  display: none !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
+/* ==========================================================================
+   VERIFIED P&L REPORT PAGE & OVERLAYS (console.zerodha.com)
+   ========================================================================== */
+
+body.page-verified-pnl {
+  background: #f8fafc;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
 }
 
+.verified-pnl-canvas {
+  aspect-ratio: 945 / 2048 !important;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #ffffff;
+}
 
+/* Status Bar on Verified P&L */
+.vpnl-status-bar {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 5.6% !important;
+  z-index: 50 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 5% !important;
+  background: transparent !important;
+  box-sizing: border-box !important;
+}
 
+.ios-time-pill {
+  background: rgb(215, 44, 38);
+  border-radius: 12px;
+  padding: 2px 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.ios-time-pill .ios-clock-time {
+  color: #ffffff !important;
+  font-size: 1.45vh !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0.2px !important;
+}
+
+.vpnl-battery-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.vpnl-battery-pct {
+  font-size: 1.35vh;
+  font-weight: 600;
+  color: #222222;
+}
+
+.vpnl-battery-icon {
+  width: 2.2vh;
+  height: 1.1vh;
+}
+
+/* Overlay Fields for Verified P&L */
+.vpnl-overlay-field {
+  position: absolute !important;
+  z-index: 42 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  display: flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+}
+
+.vpnl-overlay-field:hover {
+  outline: 1.5px dashed rgba(2, 132, 199, 0.45);
+  border-radius: 4px;
+}
+
+/* Date Range */
+.vpnl-date-range {
+  top: 26.6% !important;
+  left: 0 !important;
+  width: 100% !important;
+  justify-content: center !important;
+  font-size: 1.62vh !important;
+  font-weight: 500 !important;
+  color: #8c8c8c !important;
+  letter-spacing: 0.2px !important;
+}
+
+/* Big P&L Cards */
+.vpnl-realised-pnl {
+  top: 45.8% !important;
+  left: 8.8% !important;
+}
+
+.vpnl-unrealised-pnl {
+  top: 45.8% !important;
+  left: 49.6% !important;
+}
+
+.vpnl-big-amount {
+  font-size: 2.45vh !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.3px !important;
+}
+
+.vpnl-big-amount.red,
+.vpnl-net-amount.red {
+  color: #d93829 !important;
+}
+
+.vpnl-big-amount.green,
+.vpnl-net-amount.green {
+  color: #2e7d32 !important;
+}
+
+/* Summary Rows */
+.vpnl-charges {
+  top: 52.4% !important;
+  right: 9.8% !important;
+  font-size: 1.58vh !important;
+  font-weight: 500 !important;
+  color: #383838 !important;
+  text-align: right !important;
+}
+
+.vpnl-other-credits {
+  top: 56.1% !important;
+  right: 9.8% !important;
+  font-size: 1.58vh !important;
+  font-weight: 500 !important;
+  color: #383838 !important;
+  text-align: right !important;
+}
+
+.vpnl-net-realised {
+  top: 59.8% !important;
+  right: 9.8% !important;
+  font-size: 1.65vh !important;
+  font-weight: 600 !important;
+  text-align: right !important;
+}
+
+/* Metadata: Last updated */
+.vpnl-last-updated {
+  top: 72.8% !important;
+  left: 24.6% !important;
+  font-size: 1.35vh !important;
+  font-weight: 500 !important;
+  color: #757575 !important;
+  letter-spacing: 0.1px !important;
+}
+
+/* Trades List Container */
+.vpnl-trades-container {
+  position: absolute !important;
+  top: 79.5% !important;
+  left: 0 !important;
+  width: 100% !important;
+  max-height: 14.8% !important;
+  overflow-y: auto !important;
+  padding: 0 4.5% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1vh !important;
+  z-index: 42 !important;
+  pointer-events: auto !important;
+  background: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
+.vpnl-trades-container::-webkit-scrollbar {
+  width: 3px;
+}
+.vpnl-trades-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+.vpnl-trade-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35vh;
+  padding-bottom: 0.8vh;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.vpnl-trade-item:last-child {
+  border-bottom: none;
+}
+
+.vpnl-trade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.vpnl-trade-symbol {
+  font-size: 1.75vh;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: 0.2px;
+}
+
+.vpnl-trade-qty {
+  font-size: 1.45vh;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.vpnl-trade-realised-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.vpnl-trade-label {
+  font-size: 1.4vh;
+  font-weight: 400;
+  color: #64748b;
+}
+
+.vpnl-trade-realised-val {
+  font-size: 1.48vh;
+  font-weight: 600;
+}
+
+.vpnl-trade-realised-val.green {
+  color: #16a34a;
+}
+
+.vpnl-trade-realised-val.red {
+  color: #dc2626;
+}
+
+.vpnl-trade-details-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.15vh;
+}
+
+.vpnl-trade-detail-item {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.vpnl-trade-val {
+  font-size: 1.4vh;
+  font-weight: 500;
+  color: #334155;
+}
+
+/* Floating Navigation helper */
+.vpnl-floating-nav {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  display: flex;
+  gap: 8px;
+  z-index: 1000;
+  opacity: 0.35;
+  transition: opacity 0.25s ease;
+}
+
+.vpnl-floating-nav:hover {
+  opacity: 1;
+}
+
+.vpnl-nav-link {
+  padding: 6px 14px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.vpnl-nav-link:hover {
+  background: rgba(2, 132, 199, 0.95);
+  transform: translateY(-1px);
+}
