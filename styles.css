@@ -2798,6 +2798,10 @@ body.page-verified-pnl .app-viewport-wrapper {
   color: #64748b;
 }
 
+.vpnl-trade-realised-row .vpnl-trade-label {
+  font-weight: 500;
+}
+
 .vpnl-trade-realised-val {
   font-size: 4.15cqw;
   font-weight: 600;
