@@ -979,19 +979,6 @@ function initKiteApp() {
         }
       });
     }
-
-    // Toggle Floating Nav Action Pills
-    const navToggleBtn = document.getElementById('vpnl-nav-toggle');
-    const navPills = document.getElementById('vpnl-nav-pills');
-    if (navToggleBtn && navPills) {
-      navToggleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        navPills.classList.toggle('hidden');
-        const isHidden = navPills.classList.contains('hidden');
-        navToggleBtn.textContent = isHidden ? '⚙️' : '✕';
-        navToggleBtn.title = isHidden ? 'Show navigation buttons' : 'Hide navigation buttons';
-      });
-    }
   }
 
   // Sync Overlay Text Fields with Current App State

@@ -8,17 +8,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=80">
+  <link rel="stylesheet" href="styles.css?v=82">
 </head>
 <body class="page-verified-pnl">
 
-  <!-- Mobile Viewport Container matching iPhone Aspect Ratio -->
-  <div class="mobile-viewport" id="verified-viewport">
-    
-    <!-- Canvas Frame with Template Background -->
+  <div class="app-viewport-wrapper">
+    <!-- Pure Display Canvas (Exact 945 / 2048 Aspect Ratio, 100vh Height, No Frame Borders, Clean Like Other Pages) -->
     <div class="canvas-frame verified-pnl-canvas">
       <!-- Background Image -->
-      <img src="bg_verified_pnl.png?v=80" alt="Zerodha Console P&L" class="canvas-bg-img" id="vpnl-bg-img">
+      <img src="bg_verified_pnl.png?v=82" alt="Zerodha Console P&L" class="canvas-bg-img" id="vpnl-bg-img">
 
       <!-- 1. Top iPhone iOS Status Bar Overlay -->
       <div class="ios-status-bar vpnl-status-bar" id="ios-status-bar">
@@ -97,7 +95,6 @@
 
       <!-- 5. Trades / Breakdown Items Dynamic List -->
       <div class="vpnl-trades-container" id="vpnl-trades-list">
-        <!-- Dynamic Trade Item Row -->
         <div class="vpnl-trade-item">
           <div class="vpnl-trade-header">
             <span class="vpnl-trade-symbol">BANKNIFTY26AUG57700CE</span>
@@ -123,16 +120,7 @@
     </div>
   </div>
 
-  <!-- Quick Floating Action for Navigation to Kite App & Input Panel -->
-  <div class="vpnl-floating-nav" id="vpnl-floating-nav">
-    <div class="vpnl-nav-pills" id="vpnl-nav-pills">
-      <a href="/display" class="vpnl-nav-link" title="Open Kite Portfolio">📱 Kite</a>
-      <a href="/input" class="vpnl-nav-link" title="Open Admin Control Panel">⚙️ Edit</a>
-    </div>
-    <button type="button" class="vpnl-nav-toggle-btn" id="vpnl-nav-toggle" title="Toggle quick navigation buttons">✕</button>
-  </div>
-
   <!-- Scripts -->
-  <script src="app.js?v=81"></script>
+  <script src="app.js?v=82"></script>
 </body>
 </html>

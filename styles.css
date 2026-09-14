@@ -2487,87 +2487,44 @@ body.is-fullscreen .floating-fs-btn,
    VERIFIED P&L REPORT PAGE & OVERLAYS (console.zerodha.com)
    ========================================================================== */
 
-body.page-verified-pnl {
-  background: #0f172a;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+html, body.page-verified-pnl {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: #000000 !important;
+  overflow: hidden !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+body.page-verified-pnl .app-viewport-wrapper {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000000;
+  z-index: 10;
   margin: 0;
   padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  min-height: 100dvh;
-  width: 100vw;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Mobile Viewport Container */
-.mobile-viewport {
-  position: relative;
-  width: 100%;
-  max-width: min(100vw, calc(100dvh * (945 / 2048)));
-  aspect-ratio: 945 / 2048;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: auto;
-  box-sizing: border-box;
-}
-
-/* Desktop View: Sleek Mobile Phone Frame */
-@media (min-width: 601px) {
-  body.page-verified-pnl {
-    padding: 24px 16px;
-    box-sizing: border-box;
-  }
-  .mobile-viewport {
-    max-height: calc(100dvh - 48px);
-    width: calc((100dvh - 48px) * (945 / 2048));
-    max-width: min(92vw, 480px);
-    border-radius: 40px;
-    box-shadow: 
-      0 0 0 10px #1e293b,
-      0 0 0 12px rgba(255, 255, 255, 0.12),
-      0 25px 65px -12px rgba(0, 0, 0, 0.75);
-    overflow: hidden;
-  }
-}
-
-/* Real Mobile View: Edge-to-Edge Full Screen */
-@media (max-width: 600px) {
-  body.page-verified-pnl {
-    background: #ffffff !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    align-items: flex-start !important;
-  }
-  .mobile-viewport {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: auto !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    border: none !important;
-    margin: 0 !important;
-    overflow: visible !important;
-  }
-  .verified-pnl-canvas {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: calc(100vw * (2048 / 945)) !important;
-    border-radius: 0 !important;
-  }
+  overflow: hidden;
 }
 
 .verified-pnl-canvas {
-  aspect-ratio: 945 / 2048 !important;
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #ffffff;
+  display: block !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  width: calc(100vh * (945 / 2048)) !important;
+  max-width: 100vw !important;
+  position: relative !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 auto !important;
   container-type: inline-size;
   container-name: vpnl;
 }
@@ -2859,80 +2816,4 @@ body.page-verified-pnl {
   font-size: 3.03cqw;
   font-weight: 500;
   color: #334155;
-}
-
-/* Floating Quick Navigation & Controls */
-.vpnl-floating-nav {
-  position: fixed;
-  bottom: max(16px, env(safe-area-inset-bottom, 16px));
-  right: max(16px, env(safe-area-inset-right, 16px));
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  z-index: 1000;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.vpnl-nav-toggle-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s ease, background 0.2s ease;
-  user-select: none;
-  padding: 0;
-}
-
-.vpnl-nav-toggle-btn:hover,
-.vpnl-nav-toggle-btn:active {
-  background: rgba(2, 132, 199, 0.95);
-  transform: scale(1.08);
-}
-
-.vpnl-nav-pills {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  transition: opacity 0.2s ease, transform 0.2s ease, max-width 0.25s ease;
-  max-width: 250px;
-  overflow: hidden;
-}
-
-.vpnl-nav-pills.hidden {
-  opacity: 0;
-  pointer-events: none;
-  max-width: 0;
-  transform: translateX(10px);
-}
-
-.vpnl-nav-link {
-  padding: 7px 13px;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: #ffffff;
-  text-decoration: none;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  white-space: nowrap;
-  transition: background 0.15s ease, transform 0.15s ease;
-}
-
-.vpnl-nav-link:hover,
-.vpnl-nav-link:active {
-  background: rgba(2, 132, 199, 0.95);
-  transform: translateY(-1px);
 }
