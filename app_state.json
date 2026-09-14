@@ -2,14 +2,21 @@
   "user": {
     "userId": "ZP9413",
     "email": "surekha@zerodha.clone",
-    "funds": "\u20b914.00",
+    "funds": "\u20b914,00,000.00",
     "fundsDetails": {
-      "availableMargin": "\u20b914.00",
+      "availableMargin": "\u20b914,00,000.00",
       "availableCash": "35,50,000.00",
       "usedMargin": "0.00",
       "openingBalance": "35,50,000.00"
     },
     "fullName": "Surekha Sandeep Gundre"
+  },
+  "statusBar": {
+    "mode": "live",
+    "customTime": "9:41",
+    "batteryLevel": 98,
+    "showBatteryPct": false,
+    "is24Hour": false
   },
   "indices": {
     "nifty": {
@@ -36,7 +43,7 @@
       "isGreen": false
     }
   },
-  "totalPnl": "+79,043.99",
+  "totalPnl": "+95,378.94",
   "holdingsCount": "1",
   "positions": [
     {
@@ -47,10 +54,10 @@
       "entryPrice": "0.00",
       "qty": "0",
       "avg": "0.00",
-      "ltp": "811.00",
+      "ltp": "70,255.80",
       "type": "NRML",
       "autoCalc": true,
-      "pnl": "+7,9043.99",
+      "pnl": "+95,378.94",
       "isGreen": true
     }
   ],

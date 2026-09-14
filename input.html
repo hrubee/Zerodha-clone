@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=72">
+  <link rel="stylesheet" href="styles.css?v=73">
 </head>
 <body class="page-input-standalone">
 
@@ -162,6 +162,46 @@
 
       <!-- SECTION 3: INDICES & HEADER EDITOR -->
       <div class="admin-section" id="asec-indices">
+        
+        <!-- iPhone iOS Status Bar Settings -->
+        <div class="admin-card-box" style="border: 1.5px solid #38bdf8; background: #f0f9ff;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h4 style="margin: 0; color: #0369a1;">📱 iPhone iOS Status Bar (Top Header)</h4>
+            <span style="font-size: 11px; font-weight: 700; color: #0284c7; background: #e0f2fe; border: 1px solid #bae6fd; padding: 3px 8px; border-radius: 6px;">⚡ Live IST Clock</span>
+          </div>
+          <div class="admin-grid-2" style="margin-bottom: 12px;">
+            <div>
+              <label class="admin-label">Clock Mode</label>
+              <select id="admin-statusbar-mode" class="admin-input" style="background: #fff; font-weight: 600;">
+                <option value="live" selected>⚡ Real Live IST Time (Auto-ticking)</option>
+                <option value="custom">✎ Custom Static Time</option>
+              </select>
+            </div>
+            <div>
+              <label class="admin-label">Custom Time (e.g. 9:41 or 11:20)</label>
+              <input type="text" id="admin-statusbar-customtime" value="9:41" class="admin-input" placeholder="e.g. 9:41">
+            </div>
+          </div>
+          <div class="admin-grid-2">
+            <div>
+              <label class="admin-label">Time Format</label>
+              <select id="admin-statusbar-timeformat" class="admin-input" style="background: #fff;">
+                <option value="12" selected>12-Hour Format (e.g. 9:41, 11:20)</option>
+                <option value="24">24-Hour Format (e.g. 09:41, 23:20)</option>
+              </select>
+            </div>
+            <div>
+              <label class="admin-label">Battery Level: <span id="admin-statusbar-batterylabel" style="font-weight: 700; color: #0284c7;">98%</span></label>
+              <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px;">
+                <input type="range" id="admin-statusbar-battery" min="1" max="100" value="98" style="flex: 1; accent-color: #0284c7; cursor: pointer;">
+                <label style="font-size: 12px; display: flex; align-items: center; gap: 4px; color: #475569; white-space: nowrap; cursor: pointer;">
+                  <input type="checkbox" id="admin-statusbar-showpct"> Show %
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="admin-card-box">
           <h4>NIFTY 50 Header Ticker</h4>
           <div class="admin-grid-2">
@@ -297,6 +337,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=72"></script>
+  <script src="app.js?v=73"></script>
 </body>
 </html>

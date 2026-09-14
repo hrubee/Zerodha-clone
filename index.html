@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=72">
+  <link rel="stylesheet" href="styles.css?v=73">
   <style>
     html, body {
       margin: 0;
@@ -70,6 +70,37 @@
     <!-- Clean Screenshot Overlay Viewport -->
     <div class="display-screen-container screenshot-overlay-viewport phone-frame overlay-mode-active view-portfolio" id="phone-frame">
       
+      <!-- iPhone iOS Status Bar Overlay (Live IST Clock, Cellular, Wi-Fi, Battery) -->
+      <div class="ios-status-bar" id="ov-ios-status-bar">
+        <div class="ios-status-left">
+          <span class="ios-status-time" id="ov-ios-time">11:18</span>
+        </div>
+        <div class="ios-status-right">
+          <!-- 4-bar Cellular Signal -->
+          <svg class="ios-icon ios-icon-cellular" viewBox="0 0 17 12" fill="currentColor">
+            <rect x="0.5" y="8" width="2.6" height="4" rx="0.8"/>
+            <rect x="4.8" y="5.5" width="2.6" height="6.5" rx="0.8"/>
+            <rect x="9.1" y="3" width="2.6" height="9" rx="0.8"/>
+            <rect x="13.4" y="0.5" width="2.6" height="11.5" rx="0.8"/>
+          </svg>
+          <!-- Wi-Fi Waves -->
+          <svg class="ios-icon ios-icon-wifi" viewBox="0 0 16 12" fill="currentColor">
+            <path d="M8 11.5a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z"/>
+            <path d="M4.6 7.4a4.8 4.8 0 0 1 6.8 0 .8.8 0 0 0 1.13-1.13 6.4 6.4 0 0 0-9.06 0 .8.8 0 0 0 1.13 1.13z"/>
+            <path d="M2.1 4.9a8.3 8.3 0 0 1 11.8 0 .8.8 0 0 0 1.13-1.13 9.9 9.9 0 0 0-14.06 0 .8.8 0 0 0 1.13 1.13z"/>
+          </svg>
+          <!-- Battery Capsule -->
+          <div class="ios-battery-group">
+            <span class="ios-battery-pct" id="ov-ios-battery-pct" style="display: none;">98%</span>
+            <svg class="ios-icon ios-icon-battery" viewBox="0 0 25 12" fill="none" stroke="currentColor">
+              <rect x="1" y="1" width="20" height="10" rx="3.2" stroke="currentColor" stroke-width="1.1" fill="none"/>
+              <path d="M22.5 4.2C23.2 4.6 23.5 5.2 23.5 6C23.5 6.8 23.2 7.4 22.5 7.8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+              <rect class="ios-battery-level-fill" id="ov-ios-battery-fill" x="2.5" y="2.5" width="15" height="7" rx="1.8" fill="currentColor"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
       <!-- Top Live Indices Ticker Overlay (NIFTY 50 & SENSEX) - Visible on Portfolio & Profile -->
       <div class="overlay-header-indices" id="ov-header-indices">
         <!-- NIFTY 50 Ticker Overlay -->
@@ -180,6 +211,6 @@
     </svg>
   </button>
 
-  <script src="app.js?v=72"></script>
+  <script src="app.js?v=73"></script>
 </body>
 </html>

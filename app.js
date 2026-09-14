@@ -202,6 +202,13 @@ function initKiteApp() {
       feedMode: 'auto',
       tickInterval: 1200,
       isTickerActive: true
+    },
+    statusBar: {
+      mode: 'live',
+      customTime: '9:41',
+      batteryLevel: 98,
+      showBatteryPct: false,
+      is24Hour: false
     }
   };
 
@@ -214,6 +221,15 @@ function initKiteApp() {
       feedMode: 'auto',
       tickInterval: 1200,
       isTickerActive: true
+    };
+  }
+  if (!appState.statusBar) {
+    appState.statusBar = {
+      mode: 'live',
+      customTime: '9:41',
+      batteryLevel: 98,
+      showBatteryPct: false,
+      is24Hour: false
     };
   }
   // Guarantee ticker active
@@ -706,9 +722,62 @@ function initKiteApp() {
     updateOverlayFields();
   }
 
+  // Update iPhone iOS Status Bar with live Indian Standard Time (IST, Asia/Kolkata) & battery
+  function updateLiveStatusBarTime() {
+    const timeEl = document.getElementById('ov-ios-time');
+    if (!timeEl) return;
+
+    const sb = (appState && appState.statusBar) ? appState.statusBar : { mode: 'live', is24Hour: false, batteryLevel: 98, showBatteryPct: false };
+    
+    if (sb.mode === 'custom' && sb.customTime) {
+      timeEl.textContent = sb.customTime;
+    } else {
+      try {
+        const parts = new Intl.DateTimeFormat('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: !sb.is24Hour
+        }).formatToParts(new Date());
+
+        const hour = parts.find(p => p.type === 'hour')?.value || '9';
+        const minute = parts.find(p => p.type === 'minute')?.value || '41';
+        timeEl.textContent = `${hour}:${minute}`;
+      } catch (e) {
+        // Fallback calculation for IST (UTC+5:30)
+        const now = new Date();
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const ist = new Date(utc + (3600000 * 5.5));
+        let h = ist.getHours();
+        if (!sb.is24Hour) h = h % 12 || 12;
+        const m = String(ist.getMinutes()).padStart(2, '0');
+        timeEl.textContent = `${h}:${m}`;
+      }
+    }
+
+    const batteryFill = document.getElementById('ov-ios-battery-fill');
+    const batteryPct = document.getElementById('ov-ios-battery-pct');
+    const level = (sb.batteryLevel !== undefined) ? parseInt(sb.batteryLevel, 10) : 98;
+    if (batteryFill) {
+      const fillWidth = Math.max(1.5, Math.min(15, (level / 100) * 15));
+      batteryFill.setAttribute('width', fillWidth.toFixed(1));
+      if (level <= 20) {
+        batteryFill.style.fill = '#ef4444';
+      } else {
+        batteryFill.style.fill = 'currentColor';
+      }
+    }
+    if (batteryPct) {
+      batteryPct.textContent = `${level}%`;
+      batteryPct.style.display = sb.showBatteryPct ? 'inline-block' : 'none';
+    }
+  }
+
   // Sync Overlay Text Fields with Current App State
   // Sync Overlay Text Fields & Render Dynamic Overlay Positions
   function updateOverlayFields() {
+    updateLiveStatusBarTime();
+
     const ovPositionsCount = document.getElementById('ov-val-positions-count');
     if (ovPositionsCount) {
       ovPositionsCount.textContent = appState.positions ? appState.positions.length : '0';
@@ -2133,6 +2202,32 @@ function initKiteApp() {
     if (document.getElementById('admin-dhan-interval')) {
       document.getElementById('admin-dhan-interval').value = appState.dhan ? appState.dhan.tickInterval : 'random';
     }
+
+    // iPhone iOS Status Bar fields
+    if (!appState.statusBar) {
+      appState.statusBar = {
+        mode: 'live',
+        customTime: '9:41',
+        batteryLevel: 98,
+        showBatteryPct: false,
+        is24Hour: false
+      };
+    }
+    const sbMode = document.getElementById('admin-statusbar-mode');
+    if (sbMode) sbMode.value = appState.statusBar.mode || 'live';
+    const sbTime = document.getElementById('admin-statusbar-customtime');
+    if (sbTime) sbTime.value = appState.statusBar.customTime || '9:41';
+    const sbFmt = document.getElementById('admin-statusbar-timeformat');
+    if (sbFmt) sbFmt.value = appState.statusBar.is24Hour ? '24' : '12';
+    const sbBat = document.getElementById('admin-statusbar-battery');
+    const sbBatLbl = document.getElementById('admin-statusbar-batterylabel');
+    if (sbBat) {
+      sbBat.value = appState.statusBar.batteryLevel || 98;
+      if (sbBatLbl) sbBatLbl.textContent = `${appState.statusBar.batteryLevel || 98}%`;
+    }
+    const sbPct = document.getElementById('admin-statusbar-showpct');
+    if (sbPct) sbPct.checked = !!appState.statusBar.showBatteryPct;
+
     updateTickerBadge();
   }
 
@@ -2328,6 +2423,19 @@ function initKiteApp() {
     if (document.getElementById('admin-dhan-interval')) {
       appState.dhan.tickInterval = document.getElementById('admin-dhan-interval').value;
     }
+
+    // iPhone iOS Status Bar fields sync
+    if (!appState.statusBar) appState.statusBar = {};
+    const sbModeEl = document.getElementById('admin-statusbar-mode');
+    if (sbModeEl) appState.statusBar.mode = sbModeEl.value;
+    const sbTimeEl = document.getElementById('admin-statusbar-customtime');
+    if (sbTimeEl) appState.statusBar.customTime = sbTimeEl.value.trim();
+    const sbFmtEl = document.getElementById('admin-statusbar-timeformat');
+    if (sbFmtEl) appState.statusBar.is24Hour = (sbFmtEl.value === '24');
+    const sbBatEl = document.getElementById('admin-statusbar-battery');
+    if (sbBatEl) appState.statusBar.batteryLevel = parseInt(sbBatEl.value, 10) || 98;
+    const sbPctEl = document.getElementById('admin-statusbar-showpct');
+    if (sbPctEl) appState.statusBar.showBatteryPct = sbPctEl.checked;
   }
 
   function renderAdminPositionsEditor() {
@@ -2806,6 +2914,14 @@ function initKiteApp() {
         fMarginInput.value = uFundsInput.value;
       });
     }
+
+    const sbBatInput = document.getElementById('admin-statusbar-battery');
+    const sbBatLabel = document.getElementById('admin-statusbar-batterylabel');
+    if (sbBatInput && sbBatLabel) {
+      sbBatInput.addEventListener('input', () => {
+        sbBatLabel.textContent = `${sbBatInput.value}%`;
+      });
+    }
   }
 
   // Event Listeners for Dhan controls
@@ -2889,6 +3005,10 @@ function initKiteApp() {
       }
     });
   }
+
+  // Start Live iOS Status Bar Clock (Real-world IST live reflection)
+  updateLiveStatusBarTime();
+  setInterval(updateLiveStatusBarTime, 1000);
 
   // Live ticker only runs if explicitly activated in state
   if (appState.dhan && appState.dhan.isTickerActive) {
