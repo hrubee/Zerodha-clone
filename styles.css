@@ -2764,8 +2764,8 @@ body.page-verified-pnl .app-viewport-wrapper {
 .vpnl-trade-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  line-height: 1.35;
+  align-items: flex-start;
+  line-height: 1.25;
 }
 
 .vpnl-trade-symbol {
@@ -2773,12 +2773,15 @@ body.page-verified-pnl .app-viewport-wrapper {
   font-weight: 700;
   color: #1e293b;
   letter-spacing: 0.2px;
+  line-height: 1.2;
+  margin-top: 0.2cqw;
 }
 
 .vpnl-trade-qty {
   font-size: 3.14cqw;
   font-weight: 500;
   color: #64748b;
+  line-height: 1.2;
 }
 
 .vpnl-trade-realised-row {
