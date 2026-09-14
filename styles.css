@@ -2550,7 +2550,7 @@ body.page-verified-pnl .app-viewport-wrapper {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 0 4.8% !important;
+  padding: 0 5% !important;
   background: transparent !important;
   box-sizing: border-box !important;
 }
@@ -2558,23 +2558,23 @@ body.page-verified-pnl .app-viewport-wrapper {
 .vpnl-status-bar .ios-status-right {
   display: flex !important;
   align-items: center !important;
-  gap: 1.6cqw !important;
+  gap: 1.8cqw !important;
 }
 
 .vpnl-status-bar .ios-icon-cellular {
-  width: 3.6cqw !important;
-  height: 2.2cqw !important;
+  width: 3.68cqw !important;
+  height: 2.6cqw !important;
 }
 
 .vpnl-status-bar .ios-icon-wifi {
-  width: 3.5cqw !important;
-  height: 2.5cqw !important;
+  width: 3.47cqw !important;
+  height: 2.6cqw !important;
 }
 
 .ios-time-pill {
-  background: #96302f !important;
-  border-radius: 2.8cqw;
-  padding: 0.5cqw 2.2cqw;
+  background: rgb(215, 44, 38);
+  border-radius: 2.6cqw;
+  padding: 0.45cqw 2cqw;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2582,61 +2582,42 @@ body.page-verified-pnl .app-viewport-wrapper {
 }
 
 .ios-time-pill .ios-clock-time {
-  color: #e2e8f0 !important;
-  font-size: 3.0cqw !important;
-  font-weight: 600 !important;
-  line-height: 1.2 !important;
-  letter-spacing: 0.1px !important;
-}
-
-/* In-Battery Capsule matching real iOS status bar */
-.vpnl-battery-capsule {
-  position: relative !important;
-  width: 5.3cqw !important;
-  height: 2.6cqw !important;
-  border: 0.28cqw solid #000000 !important;
-  border-radius: 0.7cqw !important;
-  box-sizing: border-box !important;
-  background: rgba(0, 0, 0, 0.14) !important;
-  display: flex !important;
-  align-items: center !important;
-  padding: 0.15cqw !important;
-}
-
-.vpnl-battery-level {
-  height: 100% !important;
-  background: #000000 !important;
-  border-radius: 0.45cqw !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  position: relative !important;
-  overflow: hidden !important;
-}
-
-.vpnl-battery-num {
   color: #ffffff !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', sans-serif !important;
-  font-size: 1.75cqw !important;
+  font-size: 3.14cqw !important;
   font-weight: 700 !important;
-  line-height: 1 !important;
-  letter-spacing: -0.2px !important;
-  position: absolute !important;
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  user-select: none !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0.2px !important;
 }
 
-.vpnl-battery-nub {
-  position: absolute !important;
-  right: -0.45cqw !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  width: 0.25cqw !important;
-  height: 1.0cqw !important;
-  background: #000000 !important;
-  border-radius: 0 0.2cqw 0.2cqw 0 !important;
+.vpnl-battery-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1.1cqw;
+}
+
+.vpnl-battery-pct {
+  font-size: 2.93cqw;
+  font-weight: 600;
+  color: #222222;
+  line-height: 1;
+}
+
+.vpnl-battery-icon {
+  width: 4.77cqw !important;
+  height: 2.38cqw !important;
+  border: 0.28cqw solid #333333 !important;
+  border-radius: 0.65cqw !important;
+  padding: 0.2cqw !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.vpnl-battery-icon .ios-battery-fill {
+  height: 100% !important;
+  background: #222222 !important;
+  border-radius: 0.35cqw !important;
 }
 
 /* Overlay Fields for Verified P&L */
@@ -2660,93 +2641,93 @@ body.page-verified-pnl .app-viewport-wrapper {
 
 /* Date Range */
 .vpnl-date-range {
-  top: 26.5% !important;
+  top: 25.9% !important;
   left: 0 !important;
   width: 100% !important;
   justify-content: center !important;
-  font-size: 2.65cqw !important;
+  font-size: 3.51cqw !important;
   font-weight: 500 !important;
-  color: #828282 !important;
-  letter-spacing: 0.1px !important;
+  color: #8c8c8c !important;
+  letter-spacing: 0.2px !important;
 }
 
 /* Big P&L Cards */
 .vpnl-realised-pnl {
-  top: 48.14% !important;
-  left: 9.95% !important;
+  top: 47.0% !important;
+  left: 8.8% !important;
 }
 
 .vpnl-unrealised-pnl {
-  top: 48.19% !important;
-  left: 51.96% !important;
+  top: 47.0% !important;
+  left: 49.6% !important;
 }
 
 .vpnl-big-amount {
-  font-size: 3.7cqw !important;
+  font-size: 5.31cqw !important;
   font-weight: 600 !important;
   line-height: 1 !important;
-  letter-spacing: -0.2px !important;
+  letter-spacing: -0.3px !important;
 }
 
 .vpnl-big-amount.red,
 .vpnl-net-amount.red {
-  color: #dc6141 !important;
+  color: #d93829 !important;
 }
 
 .vpnl-big-amount.green,
 .vpnl-net-amount.green {
-  color: #4ba87d !important;
+  color: #2e7d32 !important;
 }
 
 /* Summary Rows */
 .vpnl-charges {
-  top: 54.39% !important;
-  right: 7.09% !important;
-  font-size: 2.3cqw !important;
+  top: 52.4% !important;
+  right: 9.8% !important;
+  font-size: 3.42cqw !important;
   font-weight: 500 !important;
-  color: #333333 !important;
+  color: #383838 !important;
   text-align: right !important;
 }
 
 .vpnl-other-credits {
-  top: 58.06% !important;
-  right: 7.09% !important;
-  font-size: 2.3cqw !important;
+  top: 56.1% !important;
+  right: 9.8% !important;
+  font-size: 3.42cqw !important;
   font-weight: 500 !important;
-  color: #333333 !important;
+  color: #383838 !important;
   text-align: right !important;
 }
 
 .vpnl-net-realised {
-  top: 61.72% !important;
-  right: 8.25% !important;
-  font-size: 2.45cqw !important;
+  top: 59.8% !important;
+  right: 9.8% !important;
+  font-size: 3.58cqw !important;
   font-weight: 600 !important;
   text-align: right !important;
 }
 
-/* Metadata: Last updated (Starts after 'Last updated:' label) */
+/* Metadata: Last updated */
 .vpnl-last-updated {
-  top: 73.1% !important;
-  left: 35.3% !important;
-  font-size: 2.6cqw !important;
-  font-weight: 400 !important;
-  color: #878787 !important;
+  top: 72.3% !important;
+  left: 32.0% !important;
+  font-size: 3.45cqw !important;
+  font-weight: 500 !important;
+  color: #757575 !important;
   letter-spacing: 0.1px !important;
 }
 
 /* Trades List Container */
 .vpnl-trades-container {
   position: absolute !important;
-  top: 82.5% !important;
-  left: 4.5% !important;
-  width: 91% !important;
-  max-height: 12.5% !important;
+  top: 79.5% !important;
+  left: 0 !important;
+  width: 100% !important;
+  max-height: 14.8% !important;
   overflow-y: auto !important;
-  padding: 0 !important;
+  padding: 0 4.5% !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 1.5cqw !important;
+  gap: 2.1cqw !important;
   z-index: 42 !important;
   pointer-events: auto !important;
   background: #ffffff !important;
@@ -2765,8 +2746,8 @@ body.page-verified-pnl .app-viewport-wrapper {
 .vpnl-trade-item {
   display: flex;
   flex-direction: column;
-  gap: 0.55cqw;
-  padding-bottom: 1.2cqw;
+  gap: 0.75cqw;
+  padding-bottom: 1.7cqw;
   border-bottom: 1px solid #f1f5f9;
 }
 
@@ -2781,63 +2762,58 @@ body.page-verified-pnl .app-viewport-wrapper {
 }
 
 .vpnl-trade-symbol {
-  font-size: 3.3cqw;
+  font-size: 3.79cqw;
   font-weight: 700;
-  color: #414142;
-  letter-spacing: -0.2px;
+  color: #1e293b;
+  letter-spacing: 0.2px;
 }
 
 .vpnl-trade-qty {
-  font-size: 2.85cqw;
+  font-size: 3.14cqw;
   font-weight: 500;
-  color: #414142;
-}
-
-.vpnl-trade-muted {
-  color: #878787;
-  font-weight: 400;
+  color: #64748b;
 }
 
 .vpnl-trade-realised-row {
   display: flex;
   align-items: baseline;
-  gap: 1.1cqw;
+  gap: 1.3cqw;
 }
 
 .vpnl-trade-label {
-  font-size: 2.7cqw;
+  font-size: 3.03cqw;
   font-weight: 400;
-  color: #878787;
+  color: #64748b;
 }
 
 .vpnl-trade-realised-val {
-  font-size: 2.85cqw;
+  font-size: 3.2cqw;
   font-weight: 600;
 }
 
 .vpnl-trade-realised-val.green {
-  color: #4ba87d;
+  color: #16a34a;
 }
 
 .vpnl-trade-realised-val.red {
-  color: #dc6141;
+  color: #dc2626;
 }
 
 .vpnl-trade-details-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 0.2cqw;
+  margin-top: 0.3cqw;
 }
 
 .vpnl-trade-detail-item {
   display: flex;
-  gap: 1.0cqw;
+  gap: 1.3cqw;
   align-items: baseline;
 }
 
 .vpnl-trade-val {
-  font-size: 2.7cqw;
+  font-size: 3.03cqw;
   font-weight: 500;
-  color: #414142;
+  color: #334155;
 }
