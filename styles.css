@@ -2667,6 +2667,7 @@ body.page-verified-pnl .app-viewport-wrapper {
   font-weight: 400 !important;
   line-height: 1 !important;
   letter-spacing: -0.3px !important;
+  opacity: 0.8 !important;
 }
 
 .vpnl-big-amount.red,
@@ -2706,6 +2707,10 @@ body.page-verified-pnl .app-viewport-wrapper {
   text-align: right !important;
 }
 
+.vpnl-net-amount {
+  opacity: 0.8 !important;
+}
+
 /* Metadata: Last updated */
 .vpnl-last-updated {
   top: 72.2% !important;
@@ -2714,6 +2719,7 @@ body.page-verified-pnl .app-viewport-wrapper {
   font-weight: 500 !important;
   color: #757575 !important;
   letter-spacing: 0.1px !important;
+  opacity: 0.8 !important;
 }
 
 /* Trades List Container */
