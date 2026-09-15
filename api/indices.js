@@ -23,9 +23,9 @@ export default async function handler(req, res) {
     };
 
     const symbols = [
-      { key: 'nifty', sym: '%5ENSEI', name: 'NIFTY 50', fallbackPrice: 23398.10, fallbackPrev: 23477.80 },
-      { key: 'sensex', sym: '%5EBSESN', name: 'SENSEX', fallbackPrice: 74781.76, fallbackPrev: 74902.59 },
-      { key: 'banknifty', sym: '%5ENSEBANK', name: 'NIFTY BANK', fallbackPrice: 56606.55, fallbackPrev: 56471.95 }
+      { key: 'nifty', sym: '%5ENSEI', name: 'NIFTY 50', fallbackPrice: 23175.40, fallbackOpen: 23576.15, fallbackPrev: 23398.10 },
+      { key: 'sensex', sym: '%5EBSESN', name: 'SENSEX', fallbackPrice: 74167.41, fallbackOpen: 75369.63, fallbackPrev: 74781.76 },
+      { key: 'banknifty', sym: '%5ENSEBANK', name: 'NIFTY BANK', fallbackPrice: 55924.90, fallbackOpen: 56884.25, fallbackPrev: 56606.55 }
     ];
 
     const resultData = {};
@@ -40,16 +40,20 @@ export default async function handler(req, res) {
           if (response.ok) {
             const json = await response.json();
             const meta = json?.chart?.result?.[0]?.meta;
+            const quote = json?.chart?.result?.[0]?.indicators?.quote?.[0];
             if (meta && meta.regularMarketPrice) {
               const price = Number(meta.regularMarketPrice);
+              const open = Number(meta.regularMarketOpen || quote?.open?.[0] || item.fallbackOpen);
               const prevClose = Number(meta.chartPreviousClose || meta.previousClose || item.fallbackPrev);
-              const chg = price - prevClose;
-              const pct = (chg / prevClose) * 100;
+              const anchor = open || prevClose;
+              const chg = price - anchor;
+              const pct = anchor ? (chg / anchor) * 100 : 0;
               const isGreen = chg >= 0;
               resultData[item.key] = {
                 val: price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                 change: (chg >= 0 ? '+' : '') + chg.toFixed(2) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)',
                 price,
+                open,
                 prevClose,
                 isGreen
               };
@@ -60,15 +64,18 @@ export default async function handler(req, res) {
           // fallback below
         }
 
-        // Fallback realistic prices (74k Sensex, 23.4k Nifty)
+        // Fallback realistic prices anchored to day open
         const price = item.fallbackPrice;
+        const open = item.fallbackOpen;
         const prevClose = item.fallbackPrev;
-        const chg = price - prevClose;
-        const pct = (chg / prevClose) * 100;
+        const anchor = open || prevClose;
+        const chg = price - anchor;
+        const pct = anchor ? (chg / anchor) * 100 : 0;
         resultData[item.key] = {
           val: price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
           change: (chg >= 0 ? '+' : '') + chg.toFixed(2) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)',
           price,
+          open,
           prevClose,
           isGreen: chg >= 0
         };
