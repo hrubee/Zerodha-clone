@@ -511,7 +511,10 @@ function initKiteApp() {
     }
   }
 
-  function saveState(skipBroadcast = false) {
+  let lastBackendPostTime = 0;
+  let backendPostTimer = null;
+
+  function saveState(skipBroadcast = false, forceImmediateBackend = false) {
     const statePayload = JSON.stringify(appState);
     localStorage.setItem('kite_replica_admin_state', statePayload);
     KiteSyncLogger.sync('SAVE_LOCALSTORAGE', `Saved to localStorage (${appState.positions ? appState.positions.length : 0} positions, PnL: ${appState.totalPnl})`);
@@ -525,18 +528,38 @@ function initKiteApp() {
       }
     }
 
-    // Cross-tab / Cross-browser backend sync
-    try {
-      fetch('/api/state', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: statePayload
-      }).then(res => res.json()).then(data => {
-        KiteSyncLogger.http('POST_API_STATE', 'Backend state updated successfully', data);
-      }).catch(err => {
-        KiteSyncLogger.warn('POST_API_WARN', 'Backend POST warning: ' + err.message);
-      });
-    } catch (e) {}
+    // Throttled backend sync (at most once every 3s, or immediately on explicit save)
+    const now = Date.now();
+    if (forceImmediateBackend || (now - lastBackendPostTime > 3000)) {
+      lastBackendPostTime = now;
+      if (backendPostTimer) {
+        clearTimeout(backendPostTimer);
+        backendPostTimer = null;
+      }
+      try {
+        fetch('/api/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: statePayload
+        }).then(res => res.json()).then(data => {
+          KiteSyncLogger.http('POST_API_STATE', 'Backend state updated successfully', data);
+        }).catch(err => {
+          KiteSyncLogger.warn('POST_API_WARN', 'Backend POST warning: ' + err.message);
+        });
+      } catch (e) {}
+    } else if (!backendPostTimer) {
+      backendPostTimer = setTimeout(() => {
+        backendPostTimer = null;
+        lastBackendPostTime = Date.now();
+        try {
+          fetch('/api/state', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(appState)
+          }).catch(() => {});
+        } catch (e) {}
+      }, 3000);
+    }
   }
 
   // Handle incoming live sync updates
@@ -2577,7 +2600,7 @@ function initKiteApp() {
     }
 
     try {
-      const res = await fetch('/api/dhan/optionchain/expirylist', {
+      let res = await fetch('/api/dhan/expirylist', {
         method: 'POST',
         headers: {
           'client-id': appState.dhan.clientId || '1104706516',
@@ -2589,6 +2612,21 @@ function initKiteApp() {
           "UnderlyingSeg": "IDX_I"
         })
       });
+
+      if (!res.ok) {
+        res = await fetch('/api/dhan/optionchain/expirylist', {
+          method: 'POST',
+          headers: {
+            'client-id': appState.dhan.clientId || '1104706516',
+            'access-token': appState.dhan.accessToken,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            "UnderlyingScrip": scripId,
+            "UnderlyingSeg": "IDX_I"
+          })
+        });
+      }
 
       if (res.ok) {
         const json = await res.json();
@@ -2666,11 +2704,14 @@ function initKiteApp() {
   function getLtpFromDhanOC(ocData, strike, optType) {
     if (!ocData) return null;
     const strNum = parseFloat(strike);
+    if (isNaN(strNum)) return null;
     const optKey = (optType || 'CE').toLowerCase();
     for (const key in ocData) {
       const row = ocData[key];
-      if (row && (row.strike_price === strNum || parseFloat(key) === strNum)) {
-        if (row[optKey] && row[optKey].last_price !== undefined) {
+      const keyNum = parseFloat(key);
+      const rowStrike = row?.strike_price !== undefined ? parseFloat(row.strike_price) : keyNum;
+      if (Math.abs(keyNum - strNum) < 0.5 || Math.abs(rowStrike - strNum) < 0.5) {
+        if (row && row[optKey] && row[optKey].last_price !== undefined) {
           const liveLtp = parseFloat(row[optKey].last_price);
           if (liveLtp > 0) return liveLtp;
         }
