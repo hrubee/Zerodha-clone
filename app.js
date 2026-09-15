@@ -2566,7 +2566,7 @@ function initKiteApp() {
     if (!sym) return '';
     const isFut = sym.trim().toUpperCase().endsWith('FUT');
     return sym.replace(/(\d+)(th|st|nd|rd)\b/gi, (match, num, ord) => {
-      const badge = isFut ? '' : ` <span class="weekly-badge-w">w</span>`;
+      const badge = isFut ? '' : ` <span class="weekly-badge-w"><span class="w-inner">w</span></span>`;
       return `${num}<sup class="pos-date-ord">${ord.toLowerCase()}</sup>${badge}`;
     });
   }

@@ -1024,6 +1024,14 @@ body.page-display {
   vertical-align: middle;
   text-transform: lowercase;
   line-height: 1;
+  position: relative;
+  top: -1px; /* 1px up with respect to the line */
+}
+
+.weekly-badge-w .w-inner {
+  display: inline-block;
+  transform: scaleY(1.3); /* Increase only the height of W */
+  line-height: 1;
 }
 
 .pos-card-overlay-item .weekly-badge-w {
@@ -1032,6 +1040,14 @@ body.page-display {
   font-size: 0.70vh; /* Reduced font size by 1px equivalent */
   background-color: #87acf8;
   margin: 0 0.25vh;
+  position: relative;
+  top: -0.15vh; /* 1px equivalent up */
+}
+
+.pos-card-overlay-item .weekly-badge-w .w-inner {
+  display: inline-block;
+  transform: scaleY(1.3);
+  line-height: 1;
 }
 
 .tab-badge-grey {
