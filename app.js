@@ -2088,43 +2088,6 @@ function initKiteApp() {
     appState.indices[indexKey].isGreen = chg >= 0;
     appState.indices[indexKey].prevClose = baseClose;
 
-    // Recalculate derivative option positions tracking this underlying index
-    if (appState.positions && appState.positions.length > 0) {
-      let anyPosUpdated = false;
-      appState.positions.forEach(pos => {
-        if (!pos.securityId && pos.autoCalc !== false) {
-          const parsed = parseOptionSymbol(pos.symbol || '');
-          const matchKey = (parsed.underlying || '').toLowerCase().replace(/[^a-z]/g, '');
-          const curIndexKey = indexKey.toLowerCase().replace(/[^a-z]/g, '');
-          if (matchKey === curIndexKey || (matchKey === 'banknifty' && curIndexKey === 'banknifty') || (matchKey === 'nifty' && curIndexKey === 'nifty') || (matchKey === 'sensex' && curIndexKey === 'sensex')) {
-            const calcLtpStr = calculateRealisticOptionLTP(parsed.underlying, parsed.strike, parsed.optionType);
-            if (calcLtpStr) {
-              pos.ltp = calcLtpStr;
-              const curLtp = parseFloat(String(pos.ltp).replace(/,/g, '')) || 0;
-              const entryVal = parseFloat(String(pos.entryPrice || pos.avg).replace(/,/g, '')) || 0;
-              const qtyVal = parseFloat(String(pos.qty).replace(/,/g, '')) || 0;
-              const side = (pos.side || 'BUY').toUpperCase();
-              if (qtyVal > 0 && entryVal > 0) {
-                const diff = (side === 'BUY') ? (curLtp - entryVal) : (entryVal - curLtp);
-                const pnlVal = diff * qtyVal;
-                pos.pnl = (pnlVal >= 0 ? '+' : '') + pnlVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-              }
-              pos.isGreen = !pos.pnl.includes('-');
-              anyPosUpdated = true;
-            }
-          }
-        }
-      });
-      if (anyPosUpdated) {
-        let total = 0;
-        appState.positions.forEach(p => {
-          const v = parseFloat(String(p.pnl).replace(/,/g, '').replace('+', '')) || 0;
-          total += v;
-        });
-        appState.totalPnl = (total >= 0 ? '+' : '') + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      }
-    }
-
     renderAppUI();
   }
 
@@ -2269,8 +2232,8 @@ function initKiteApp() {
       appState.positions = [];
     }
 
-    const marketMode = appState.dhan ? (appState.dhan.marketHoursMode || 'auto') : 'auto';
-    const isOpen = (marketMode === 'always') ? true : (marketMode === 'closed' ? false : isIndianMarketOpen());
+    // Always ensure security IDs are resolved and subscribed to live WebSocket
+    resolvePositionSecurityIds();
 
     // Fetch real-world market prices (IRL live prices)
     const liveIndices = await fetchRealMarketIndices();
@@ -2281,38 +2244,22 @@ function initKiteApp() {
       if (!appState.indices.nifty) appState.indices.nifty = {};
       const basePrice = Number(liveIndices.nifty.price || parseFloat(String(liveIndices.nifty.val).replace(/,/g, '')) || 23398.10);
       const prevClose = Number(liveIndices.nifty.prevClose || appState.indices.nifty.prevClose || 23477.80);
-      
-      let nextPrice = basePrice;
-      if (isOpen) {
-        // Micro-tick jitter during market hours or demo mode
-        const jitter = (Math.random() - 0.48) * 1.5;
-        nextPrice = Math.max(1000, basePrice + jitter);
-      }
-      
-      const chg = nextPrice - prevClose;
-      const pct = (chg / prevClose) * 100;
-      appState.indices.nifty.val = nextPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const chg = basePrice - prevClose;
+      const pct = prevClose ? (chg / prevClose) * 100 : 0;
+      appState.indices.nifty.val = basePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       appState.indices.nifty.change = (chg >= 0 ? '+' : '') + chg.toFixed(2) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)';
       appState.indices.nifty.isGreen = chg >= 0;
       appState.indices.nifty.prevClose = prevClose;
     }
 
-    // 2. Top Right Index: SENSEX (Real ~74k)
+    // 2. Top Right Index: SENSEX
     if (liveIndices && liveIndices.sensex) {
       if (!appState.indices.sensex) appState.indices.sensex = {};
       const basePrice = Number(liveIndices.sensex.price || parseFloat(String(liveIndices.sensex.val).replace(/,/g, '')) || 74781.76);
       const prevClose = Number(liveIndices.sensex.prevClose || appState.indices.sensex.prevClose || 74902.59);
-      
-      let nextPrice = basePrice;
-      if (isOpen) {
-        // Micro-tick jitter during market hours or demo mode
-        const jitter = (Math.random() - 0.48) * 4.5;
-        nextPrice = Math.max(1000, basePrice + jitter);
-      }
-      
-      const chg = nextPrice - prevClose;
-      const pct = (chg / prevClose) * 100;
-      appState.indices.sensex.val = nextPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const chg = basePrice - prevClose;
+      const pct = prevClose ? (chg / prevClose) * 100 : 0;
+      appState.indices.sensex.val = basePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       appState.indices.sensex.change = (chg >= 0 ? '+' : '') + chg.toFixed(2) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)';
       appState.indices.sensex.isGreen = chg >= 0;
       appState.indices.sensex.prevClose = prevClose;
@@ -2323,16 +2270,9 @@ function initKiteApp() {
       if (!appState.indices.banknifty) appState.indices.banknifty = {};
       const basePrice = Number(liveIndices.banknifty.price || parseFloat(String(liveIndices.banknifty.val).replace(/,/g, '')) || 56606.55);
       const prevClose = Number(liveIndices.banknifty.prevClose || appState.indices.banknifty.prevClose || 56471.95);
-      
-      let nextPrice = basePrice;
-      if (isOpen) {
-        const jitter = (Math.random() - 0.48) * 3.5;
-        nextPrice = Math.max(1000, basePrice + jitter);
-      }
-      
-      const chg = nextPrice - prevClose;
-      const pct = (chg / prevClose) * 100;
-      appState.indices.banknifty.val = nextPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const chg = basePrice - prevClose;
+      const pct = prevClose ? (chg / prevClose) * 100 : 0;
+      appState.indices.banknifty.val = basePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       appState.indices.banknifty.change = (chg >= 0 ? '+' : '') + chg.toFixed(2) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)';
       appState.indices.banknifty.isGreen = chg >= 0;
       appState.indices.banknifty.prevClose = prevClose;
@@ -2340,9 +2280,9 @@ function initKiteApp() {
 
     let totalPnlSum = 0;
     if (appState.positions.length > 0) {
-      // Background slow-poll option chain for active underlyings (at most once every 20s)
+      // Periodic Option Chain refresh for live real-time strikes
       const now = Date.now();
-      if (!window._lastDhanOcTickPoll || (now - window._lastDhanOcTickPoll > 20000)) {
+      if (!window._lastDhanOcTickPoll || (now - window._lastDhanOcTickPoll > 10000)) {
         window._lastDhanOcTickPoll = now;
         if (appState.dhan && appState.dhan.accessToken && appState.dhan.accessToken.length > 30) {
           const underlyings = new Set();
@@ -2357,9 +2297,8 @@ function initKiteApp() {
       }
 
       appState.positions.forEach(pos => {
-        let currentLtp = parseFloat(String(pos.ltp).replace(/,/g, '')) || 100.0;
+        let currentLtp = parseFloat(String(pos.ltp).replace(/,/g, '')) || 0;
         let newLtp = currentLtp;
-        let hasLiveDhanLtp = false;
 
         const parsed = parseOptionSymbol(pos.symbol);
         if (parsed && parsed.underlying && parsed.strike) {
@@ -2367,41 +2306,18 @@ function initKiteApp() {
           const liveDhanPrice = getLtpFromDhanOC(cachedOc, parsed.strike, parsed.optionType);
           if (liveDhanPrice !== null && liveDhanPrice > 0) {
             newLtp = liveDhanPrice;
-            hasLiveDhanLtp = true;
+            pos.ltp = newLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
           }
-        }
-
-        if (dhanWsConnected && pos.securityId) {
-          // Live binary feed is actively streaming this security ID from Dhan HQ, preserve current live WS LTP
-          newLtp = currentLtp;
-        } else if (hasLiveDhanLtp) {
-          pos.ltp = newLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        } else if (isOpen && parsed && parsed.strike && parsed.underlying) {
-          // Dynamic calculation based on current spot & strike
-          const calcLtpStr = calculateRealisticOptionLTP(parsed.underlying, parsed.strike, parsed.optionType);
-          const calcLtpNum = parseFloat(calcLtpStr.replace(/,/g, '')) || currentLtp;
-          const microJitter = (Math.random() - 0.48) * 0.35;
-          newLtp = Math.max(0.05, Math.round((calcLtpNum + microJitter) * 20) / 20);
-          pos.ltp = newLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        } else if (isOpen) {
-          let deltaPercent = (Math.random() - 0.46) * 0.008;
-          newLtp = Math.max(0.05, currentLtp * (1 + deltaPercent));
-          pos.ltp = newLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         const entryVal = parseFloat(String(pos.entryPrice || pos.avg).replace(/,/g, '')) || 0;
         const qtyVal = parseFloat(String(pos.qty).replace(/,/g, '')) || 0;
         const side = (pos.side || 'BUY').toUpperCase();
 
-        if (qtyVal > 0 && entryVal > 0) {
+        if (qtyVal > 0 && entryVal > 0 && newLtp > 0) {
           let diff = (side === 'BUY') ? (newLtp - entryVal) : (entryVal - newLtp);
           let pnlVal = diff * qtyVal;
           pos.pnl = (pnlVal >= 0 ? '+' : '') + pnlVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        } else if (isOpen) {
-          let currentPnl = parseFloat(String(pos.pnl).replace(/[^0-9.-]/g, '')) || 0;
-          let pnlDelta = (Math.random() - 0.46) * (currentPnl ? Math.abs(currentPnl) * 0.005 : 50);
-          let newPnl = currentPnl + pnlDelta;
-          pos.pnl = (newPnl >= 0 ? '+' : '') + newPnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
         pos.isGreen = !pos.pnl.includes('-');
 
@@ -2412,23 +2328,9 @@ function initKiteApp() {
       // Update total P&L
       appState.totalPnl = (totalPnlSum >= 0 ? '+' : '') + totalPnlSum.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-      // If on input page, update form inputs without disrupting user typing focus
-      if (adminPositionsForms) {
-        const posCards = adminPositionsForms.querySelectorAll('.admin-card-box');
-        posCards.forEach((card, idx) => {
-          const pos = appState.positions[idx];
-          if (pos) {
-            const ltpInput = card.querySelector('.pos-input-ltp');
-            const pnlInput = card.querySelector('.pos-input-pnl');
-            const pillEl = card.querySelector('.pos-live-pnl-pill');
-            if (ltpInput && document.activeElement !== ltpInput) ltpInput.value = pos.ltp;
-            if (pnlInput && document.activeElement !== pnlInput) pnlInput.value = pos.pnl;
-            if (pillEl) {
-              pillEl.textContent = pos.pnl;
-              pillEl.className = `pos-live-pnl-pill ${pos.isGreen ? 'green' : 'red'}`;
-            }
-          }
-        });
+      // If on input page, sync real ticks to DOM
+      if (document.body.classList.contains('page-input-standalone')) {
+        syncLiveTicksToInputDOM();
       }
     } else {
       appState.totalPnl = '+0.00';
@@ -2687,80 +2589,6 @@ function initKiteApp() {
     return 23459.55;
   }
 
-  // Realistic Options & Commodity Pricing Model (Intrinsic + Volatility & Extrinsic Time Value based on Spot & Strike)
-  function calculateRealisticOptionLTP(underlying, strike, optType) {
-    const und = (underlying || 'BANKNIFTY').toUpperCase();
-    const type = (optType || 'CE').toUpperCase();
-    const spot = getUnderlyingSpot(und);
-
-    if (type === 'FUT' || String(strike).toUpperCase() === 'FUT') {
-      const futJitter = (Math.random() - 0.5) * (spot * 0.001);
-      const futPrice = Math.max(0.05, Math.round((spot + futJitter) * 20) / 20);
-      return futPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    const strikeNum = parseFloat(strike) || 0;
-    if (strikeNum <= 0) return '100.00';
-
-    let step = 100;
-    let baseAtmExtrinsic = 340.0;
-    if (und === 'NIFTY') {
-      step = 50;
-      baseAtmExtrinsic = 135.0;
-    } else if (und === 'BANKNIFTY') {
-      step = 100;
-      baseAtmExtrinsic = 340.0;
-    } else if (und === 'FINNIFTY') {
-      step = 50;
-      baseAtmExtrinsic = 125.0;
-    } else if (und === 'SENSEX') {
-      step = 100;
-      baseAtmExtrinsic = 420.0;
-    } else if (und === 'MIDCPNIFTY') {
-      step = 50;
-      baseAtmExtrinsic = 85.0;
-    } else if (und === 'CRUDEOIL') {
-      step = 50;
-      baseAtmExtrinsic = 115.0;
-    } else if (und === 'NATURALGAS') {
-      step = 5;
-      baseAtmExtrinsic = 12.5;
-    } else if (und === 'GOLD' || und === 'GOLDM') {
-      step = 500;
-      baseAtmExtrinsic = 680.0;
-    } else if (und === 'SILVER' || und === 'SILVERM' || und === 'SILVERMIC') {
-      step = 1000;
-      baseAtmExtrinsic = 1250.0;
-    } else if (und === 'COPPER') {
-      step = 10;
-      baseAtmExtrinsic = 18.0;
-    } else if (und === 'ZINC') {
-      step = 5;
-      baseAtmExtrinsic = 8.0;
-    } else if (und === 'ALUMINIUM') {
-      step = 5;
-      baseAtmExtrinsic = 6.0;
-    } else if (und === 'LEAD') {
-      step = 5;
-      baseAtmExtrinsic = 5.0;
-    }
-
-    let intrinsic = 0;
-    if (type === 'CE') {
-      intrinsic = Math.max(0, spot - strikeNum);
-    } else {
-      intrinsic = Math.max(0, strikeNum - spot);
-    }
-
-    // Gaussian time value decay based on distance from ATM in strike steps
-    const stepDist = Math.abs(spot - strikeNum) / step;
-    const extrinsic = baseAtmExtrinsic * Math.exp(-0.5 * Math.pow(stepDist / 4.2, 2));
-
-    let totalLtp = intrinsic + extrinsic;
-    // Round to standard 0.05 tick size
-    totalLtp = Math.max(0.05, Math.round(totalLtp * 20) / 20);
-    return totalLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
 
   // Dhan Option Chain In-Memory Cache
   const dhanOptionChainCache = {};
@@ -2930,7 +2758,7 @@ function initKiteApp() {
     return strikes.map(Number).sort((a, b) => a - b);
   }
 
-  // Real-time Dhan HQ API Option Chain quote lookup with fallback
+  // Real-time Dhan HQ API Option Chain quote lookup (Only live LTP)
   async function fetchOptionContractLTP(underlying, strike, optType, expiry = null) {
     const oc = await fetchDhanOptionChain(underlying, expiry);
     if (oc) {
@@ -2939,7 +2767,7 @@ function initKiteApp() {
         return livePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       }
     }
-    return calculateRealisticOptionLTP(underlying, strike, optType);
+    return '0.00';
   }
 
   function getUnderlyingOptionsHTML(selectedUnderlying) {
@@ -3838,10 +3666,10 @@ function initKiteApp() {
       if (e && typeof e.preventDefault === 'function') e.preventDefault();
       syncAdminFormsToState();
 
-      const initialLtp = calculateRealisticOptionLTP('CRUDEOIL', '6400', 'CE');
+      const initialLtp = '178.50';
       const initialEntry = '165.00';
       const initialQty = '100';
-      const ltpNum = parseFloat(initialLtp.replace(/,/g, '')) || 178.50;
+      const ltpNum = 178.50;
       const initPnl = (ltpNum - 165.0) * 100;
       const formattedPnl = (initPnl >= 0 ? '+' : '') + initPnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
