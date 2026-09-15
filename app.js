@@ -1851,20 +1851,62 @@ function initKiteApp() {
     const segment = view.getUint8(3);
     const securityId = view.getInt32(4, true);
 
-    if (responseCode === 1) { // Index Packet
+    // Response Code 1: Index Packet (<BHBIfIffff)
+    if (responseCode === 1 && buffer.byteLength >= 12) {
       const ltp = view.getFloat32(8, true);
-      const open = view.getFloat32(12, true);
-      const close = view.getFloat32(16, true);
+      const open = buffer.byteLength >= 16 ? view.getFloat32(12, true) : null;
+      const close = buffer.byteLength >= 20 ? view.getFloat32(16, true) : null;
       if (ltp > 0) {
         if (securityId === 13) updateLiveIndexFromWs('nifty', ltp, close || open);
         else if (securityId === 25) updateLiveIndexFromWs('banknifty', ltp, close || open);
         else if (securityId === 51) updateLiveIndexFromWs('sensex', ltp, close || open);
       }
-    } else if (responseCode === 2 || responseCode === 4) { // Ticker or Quote Packet
+    } 
+    // Response Code 2: Ticker Packet (<BHBIfI)
+    else if (responseCode === 2 && buffer.byteLength >= 12) {
       const ltp = view.getFloat32(8, true);
       if (ltp > 0) {
-        updateSecurityLtpFromWs(securityId, ltp);
+        if (securityId === 13) updateLiveIndexFromWs('nifty', ltp);
+        else if (securityId === 25) updateLiveIndexFromWs('banknifty', ltp);
+        else if (securityId === 51) updateLiveIndexFromWs('sensex', ltp);
+        else updateSecurityLtpFromWs(securityId, ltp);
       }
+    } 
+    // Response Code 4: Quote Packet (<BHBIfHIfIIIffff)
+    else if (responseCode === 4 && buffer.byteLength >= 12) {
+      const ltp = view.getFloat32(8, true);
+      const open = buffer.byteLength >= 38 ? view.getFloat32(34, true) : null;
+      const close = buffer.byteLength >= 42 ? view.getFloat32(38, true) : null;
+      if (ltp > 0) {
+        if (securityId === 13) updateLiveIndexFromWs('nifty', ltp, close || open);
+        else if (securityId === 25) updateLiveIndexFromWs('banknifty', ltp, close || open);
+        else if (securityId === 51) updateLiveIndexFromWs('sensex', ltp, close || open);
+        else updateSecurityLtpFromWs(securityId, ltp);
+      }
+    }
+    // Response Code 8: Full Packet (<BHBIfHIfIIIIIIffff100s)
+    else if (responseCode === 8 && buffer.byteLength >= 12) {
+      const ltp = view.getFloat32(8, true);
+      const open = buffer.byteLength >= 50 ? view.getFloat32(46, true) : null;
+      const close = buffer.byteLength >= 54 ? view.getFloat32(50, true) : null;
+      if (ltp > 0) {
+        if (securityId === 13) updateLiveIndexFromWs('nifty', ltp, close || open);
+        else if (securityId === 25) updateLiveIndexFromWs('banknifty', ltp, close || open);
+        else if (securityId === 51) updateLiveIndexFromWs('sensex', ltp, close || open);
+        else updateSecurityLtpFromWs(securityId, ltp);
+      }
+    }
+    // Response Code 50: Server Disconnection / Auth Error Packet (<BHBIH)
+    else if (responseCode === 50 && buffer.byteLength >= 10) {
+      const disconnectCode = view.getUint16(8, true);
+      const errMsgs = {
+        805: 'No. of active websocket connections exceeded',
+        806: 'Subscribe to Data APIs to continue',
+        807: 'Access Token is expired',
+        808: 'Invalid Client ID',
+        809: 'Authentication Failed'
+      };
+      console.warn(`⚡ [Dhan WS] Server Disconnected (${disconnectCode}): ${errMsgs[disconnectCode] || 'Unknown reason'}`);
     }
   }
 
