@@ -1,3 +1,5 @@
+let ocCache = {};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -7,15 +9,22 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const clientId = req.headers['client-id'] || '';
+  const clientId = req.headers['client-id'] || '1104706516';
   const accessToken = req.headers['access-token'] || '';
 
   if (!accessToken) {
     return res.status(401).json({ status: 'error', message: 'Missing Dhan access token' });
   }
 
+  const bodyPayload = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
+  const cacheKey = bodyPayload;
+  const now = Date.now();
+
+  if (ocCache[cacheKey] && (now - ocCache[cacheKey].timestamp < 6000)) {
+    return res.status(200).json(ocCache[cacheKey].data);
+  }
+
   try {
-    const bodyPayload = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
     const response = await fetch('https://api.dhan.co/v2/optionchain', {
       method: 'POST',
       headers: {
@@ -27,8 +36,14 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    if (response.ok && data.status === 'success') {
+      ocCache[cacheKey] = { timestamp: now, data };
+    }
     return res.status(response.status).json(data);
   } catch (error) {
+    if (ocCache[cacheKey]) {
+      return res.status(200).json(ocCache[cacheKey].data);
+    }
     return res.status(500).json({ status: 'failed', error: error.message });
   }
 }

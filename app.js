@@ -2216,17 +2216,19 @@ function initKiteApp() {
 
     let totalPnlSum = 0;
     if (appState.positions.length > 0) {
-      // Pre-fetch Dhan Option Chains for all active underlyings if Dhan credentials present
-      if (appState.dhan && appState.dhan.accessToken && appState.dhan.accessToken.length > 30) {
-        const underlyings = new Set();
-        appState.positions.forEach(pos => {
-          const parsed = parseOptionSymbol(pos.symbol);
-          if (parsed && parsed.underlying) {
-            underlyings.add(parsed.underlying.toUpperCase());
-          }
-        });
-        for (const u of underlyings) {
-          await fetchDhanOptionChain(u);
+      // Background slow-poll option chain for active underlyings (at most once every 20s)
+      const now = Date.now();
+      if (!window._lastDhanOcTickPoll || (now - window._lastDhanOcTickPoll > 20000)) {
+        window._lastDhanOcTickPoll = now;
+        if (appState.dhan && appState.dhan.accessToken && appState.dhan.accessToken.length > 30) {
+          const underlyings = new Set();
+          appState.positions.forEach(pos => {
+            const parsed = parseOptionSymbol(pos.symbol);
+            if (parsed && parsed.underlying) {
+              underlyings.add(parsed.underlying.toUpperCase());
+            }
+          });
+          underlyings.forEach(u => fetchDhanOptionChain(u).catch(() => {}));
         }
       }
 
