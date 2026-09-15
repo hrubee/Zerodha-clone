@@ -2596,10 +2596,10 @@ function initKiteApp() {
 
     // Dhan config
     if (document.getElementById('admin-dhan-clientid')) {
-      document.getElementById('admin-dhan-clientid').value = appState.dhan ? appState.dhan.clientId : '93fc0cbb';
+      document.getElementById('admin-dhan-clientid').value = appState.dhan ? appState.dhan.clientId : '1104706516';
     }
     if (document.getElementById('admin-dhan-accesstoken')) {
-      document.getElementById('admin-dhan-accesstoken').value = appState.dhan ? appState.dhan.accessToken : '58d16338-9afe-4253-8a78-2f5cc398d62a';
+      document.getElementById('admin-dhan-accesstoken').value = appState.dhan ? appState.dhan.accessToken : '';
     }
     if (document.getElementById('admin-dhan-feedmode')) {
       document.getElementById('admin-dhan-feedmode').value = appState.dhan ? appState.dhan.feedMode : 'auto';
