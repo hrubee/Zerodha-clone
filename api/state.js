@@ -62,6 +62,7 @@ function loadInitialState() {
     ],
     dhan: {
       clientId: '1104706516',
+      accessToken: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJ1c2VyUmVnaW9uIjoiUjEiLCJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzg5NTI5MTM0LCJpYXQiOjE3ODk0NDI3MzQsInRva2VuQ29uc3VtZXJUeXBlIjoiU0VMRiIsIndlYmhvb2tVcmwiOiIiLCJkaGFuQ2xpZW50SWQiOiIxMTA0NzA2NTE2In0.NETS6Mhr7IZjqDIFpvwWttOjNAo7_Pmz4KD6kVpIIdVOQL25a593j4UTfxgUgV_YJN0oSGxXu9xLkmFvwY5oJg',
       feedMode: 'auto',
       tickInterval: '1200',
       isTickerActive: true,

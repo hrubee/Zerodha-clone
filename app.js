@@ -543,6 +543,10 @@ function initKiteApp() {
         populateAdminForms();
       }
     }
+
+    if (appState.dhan && appState.dhan.accessToken && !dhanWsConnected) {
+      initDhanWebSocket();
+    }
   }
 
   if (syncChannel) {
@@ -1919,6 +1923,43 @@ function initKiteApp() {
     appState.indices[indexKey].change = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
     appState.indices[indexKey].isGreen = chg >= 0;
     appState.indices[indexKey].prevClose = baseClose;
+
+    // Recalculate derivative option positions tracking this underlying index
+    if (appState.positions && appState.positions.length > 0) {
+      let anyPosUpdated = false;
+      appState.positions.forEach(pos => {
+        if (!pos.securityId && pos.autoCalc) {
+          const parsed = parseSymbolDetails(pos.symbol || '');
+          const matchKey = (parsed.underlying || '').toLowerCase().replace(/[^a-z]/g, '');
+          if (matchKey === indexKey.toLowerCase().replace(/[^a-z]/g, '')) {
+            const calcLtpStr = calculateRealisticOptionLTP(parsed.underlying, parsed.strike, parsed.optionType);
+            if (calcLtpStr) {
+              pos.ltp = calcLtpStr;
+              const curLtp = parseFloat(String(pos.ltp).replace(/,/g, '')) || 0;
+              const entryVal = parseFloat(String(pos.entryPrice || pos.avg).replace(/,/g, '')) || 0;
+              const qtyVal = parseFloat(String(pos.qty).replace(/,/g, '')) || 0;
+              const side = (pos.side || 'BUY').toUpperCase();
+              if (qtyVal > 0 && entryVal > 0) {
+                const diff = (side === 'BUY') ? (curLtp - entryVal) : (entryVal - curLtp);
+                const pnlVal = diff * qtyVal;
+                pos.pnl = (pnlVal >= 0 ? '+' : '') + pnlVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              }
+              pos.isGreen = !pos.pnl.includes('-');
+              anyPosUpdated = true;
+            }
+          }
+        }
+      });
+      if (anyPosUpdated) {
+        let total = 0;
+        appState.positions.forEach(p => {
+          const v = parseFloat(String(p.pnl).replace(/,/g, '').replace('+', '')) || 0;
+          total += v;
+        });
+        appState.totalPnl = (total >= 0 ? '+' : '') + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+    }
+
     renderAppUI();
   }
 

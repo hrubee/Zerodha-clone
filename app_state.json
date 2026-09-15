@@ -20,22 +20,25 @@
   },
   "indices": {
     "nifty": {
-      "val": "23,398.10",
-      "change": "-79.70 (-0.34%)",
+      "val": "23,352.39",
+      "change": "-79.10 (-0.34%)",
       "isGreen": false,
-      "prevClose": 23477.8
+      "prevClose": 23431.5,
+      "value": "23,352.40"
     },
     "banknifty": {
-      "val": "56,606.55",
-      "change": "+134.60 (+0.24%)",
-      "isGreen": true,
-      "prevClose": 56471.95
+      "val": "56,205.15",
+      "change": "-487.10 (-0.86%)",
+      "isGreen": false,
+      "prevClose": 56693.5,
+      "value": "56,206.40"
     },
     "sensex": {
-      "val": "74,781.76",
-      "change": "-120.83 (-0.16%)",
+      "val": "74,690.18",
+      "change": "-74.05 (-0.10%)",
       "isGreen": false,
-      "prevClose": 74902.59
+      "prevClose": 74764.23,
+      "value": "74,692.32"
     },
     "vix": {
       "val": "13.82",
@@ -43,35 +46,21 @@
       "isGreen": false
     }
   },
-  "totalPnl": "+13,31,077.61",
+  "totalPnl": "+11,89,910.90",
   "holdingsCount": "1",
   "positions": [
     {
       "id": "pos_0",
-      "symbol": "SENSEX JUL 4600 CE",
+      "symbol": "SENSEX 17th SEP 75000 PE",
       "exchange": "BFO",
       "side": "BUY",
       "entryPrice": "0.00",
       "qty": "0",
       "avg": "0.00",
-      "ltp": "70,182.20",
+      "ltp": "580.15",
       "type": "NRML",
       "autoCalc": true,
-      "pnl": "+11,17,087.61",
-      "isGreen": true
-    },
-    {
-      "id": "pos_1",
-      "symbol": "MIDCPNIFTY 14th FEB 9800 CE",
-      "exchange": "NFO",
-      "side": "BUY",
-      "entryPrice": "310.00",
-      "qty": "100",
-      "avg": "310.00",
-      "ltp": "2,449.90",
-      "type": "MIS",
-      "autoCalc": true,
-      "pnl": "+2,13,990.00",
+      "pnl": "+11,89,910.90",
       "isGreen": true
     }
   ],
