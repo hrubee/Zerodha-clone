@@ -216,13 +216,16 @@ function initKiteApp() {
     ]
   };
 
+  const ACTIVE_DHAN_CLIENT_ID = '1104706516';
+  const ACTIVE_DHAN_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJ1c2VyUmVnaW9uIjoiUjEiLCJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzg5NTI5MTM0LCJpYXQiOjE3ODk0NDI3MzQsInRva2VuQ29uc3VtZXJUeXBlIjoiU0VMRiIsIndlYmhvb2tVcmwiOiIiLCJkaGFuQ2xpZW50SWQiOiIxMTA0NzA2NTE2In0.NETS6Mhr7IZjqDIFpvwWttOjNAo7_Pmz4KD6kVpIIdVOQL25a593j4UTfxgUgV_YJN0oSGxXu9xLkmFvwY5oJg';
+
   // Default state: load IMG_0961 video scenario
   const defaultState = {
     ...JSON.parse(JSON.stringify(videoPresets['IMG_0961'])),
     watchlist: defaultWatchlist,
     dhan: {
-      clientId: '93fc0cbb',
-      accessToken: '58d16338-9afe-4253-8a78-2f5cc398d62a',
+      clientId: ACTIVE_DHAN_CLIENT_ID,
+      accessToken: ACTIVE_DHAN_TOKEN,
       feedMode: 'auto',
       tickInterval: 1200,
       isTickerActive: true
@@ -241,12 +244,21 @@ function initKiteApp() {
   let appState = JSON.parse(localStorage.getItem('kite_replica_admin_state')) || JSON.parse(JSON.stringify(defaultState));
   if (!appState.dhan) {
     appState.dhan = {
-      clientId: '93fc0cbb',
-      accessToken: '58d16338-9afe-4253-8a78-2f5cc398d62a',
+      clientId: ACTIVE_DHAN_CLIENT_ID,
+      accessToken: ACTIVE_DHAN_TOKEN,
       feedMode: 'auto',
       tickInterval: 1200,
       isTickerActive: true
     };
+  }
+
+  // Auto-upgrade invalid or legacy placeholder tokens from localStorage
+  if (!appState.dhan.accessToken || !appState.dhan.accessToken.startsWith('eyJ') || appState.dhan.accessToken.length < 50) {
+    appState.dhan.accessToken = ACTIVE_DHAN_TOKEN;
+    appState.dhan.clientId = ACTIVE_DHAN_CLIENT_ID;
+    try {
+      localStorage.setItem('kite_replica_admin_state', JSON.stringify(appState));
+    } catch (e) {}
   }
   if (!appState.statusBar) {
     appState.statusBar = {
