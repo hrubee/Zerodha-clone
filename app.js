@@ -876,8 +876,9 @@ function initKiteApp() {
     // 3. Render Total P&L & Badges
     if (totalPnlVal) {
       totalPnlVal.textContent = appState.totalPnl;
-      const isPos = !appState.totalPnl.includes('-');
-      totalPnlVal.className = `pnl-amount ${isPos ? 'green' : 'red'}`;
+      const isNeg = appState.totalPnl.includes('-');
+      totalPnlVal.className = `pnl-amount ${isNeg ? 'red' : 'green'}`;
+      totalPnlVal.style.setProperty('color', isNeg ? '#df514c' : 'var(--color-green)', 'important');
     }
     if (holdingsCountBadge) {
       holdingsCountBadge.textContent = appState.holdingsCount || '1';
@@ -903,7 +904,7 @@ function initKiteApp() {
 
         card.innerHTML = `
           <div class="pos-row-top">
-            <span class="pos-qty-avg">Qty. <span class="pos-qty-val" style="color: #387ed1; font-weight: 600;">${pos.qty}</span> &nbsp; Avg. ${pos.avg}</span>
+            <span class="pos-qty-avg">Qty. <span class="pos-qty-val" style="color: #6092d6; font-weight: 600;">${pos.qty}</span> &nbsp; Avg. <span class="pos-avg-val" style="color: #334155; font-weight: 600;">${pos.avg}</span></span>
             <span class="pos-type-badge ${badgeTypeClass}">${pos.type || 'NRML'}</span>
           </div>
           <div class="pos-row-main">
@@ -1205,7 +1206,9 @@ function initKiteApp() {
     const ovTotalPnl = document.getElementById('ov-val-total-pnl');
     if (ovTotalPnl) {
       ovTotalPnl.textContent = appState.totalPnl;
-      ovTotalPnl.style.color = appState.totalPnl.includes('-') ? '#df2029' : 'rgb(111, 174, 101)';
+      const isNeg = appState.totalPnl.includes('-');
+      ovTotalPnl.className = isNeg ? 'red' : 'green';
+      ovTotalPnl.style.setProperty('color', isNeg ? '#df514c' : 'rgb(111, 174, 101)', 'important');
     }
 
     const ovPositionsList = document.getElementById('ov-positions-list');
@@ -1233,7 +1236,7 @@ function initKiteApp() {
           item.style.boxShadow = 'none';
 
           const isGreenPnl = !pos.pnl.includes('-');
-          const pnlColor = isGreenPnl ? 'rgb(111, 174, 101)' : '#df2029';
+          const pnlColor = isGreenPnl ? 'rgb(111, 174, 101)' : '#df514c';
           const isMis = (pos.type || 'NRML').toLowerCase() === 'mis';
           const badgeBg = isMis ? 'rgba(217, 119, 6, 0.1)' : 'rgba(167, 139, 250, 0.1)';
           const badgeColor = isMis ? '#d97706' : '#a78bfa';
@@ -1242,7 +1245,7 @@ function initKiteApp() {
 
           item.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; line-height: 1.3;">
-              <span style="font-size: 1.1vh; color: #94a3b8;">Qty. <span class="pos-qty-val" style="color: #387ed1; font-weight: 600; letter-spacing: 0.8px;">${pos.qty || '0'}</span> &nbsp; Avg. <span style="color: #64748b; letter-spacing: 0.8px;">${pos.avg || '0.00'}</span></span>
+              <span style="font-size: 1.1vh; color: #94a3b8;">Qty. <span class="pos-qty-val" style="color: #6092d6; font-weight: 600; letter-spacing: 0.8px;">${pos.qty || '0'}</span> &nbsp; Avg. <span class="pos-avg-val" style="color: #334155; font-weight: 600; letter-spacing: 0.8px;">${pos.avg || '0.00'}</span></span>
               <span class="pos-type-badge ${isMis ? 'mis' : ''}" style="font-size: calc(1.1vh + 1px); font-weight: 700; background: ${badgeBg}; color: ${badgeColor}; padding: 0.28vh 0.8vh; border-radius: 3px;">${pos.type || 'NRML'}</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 0.9vh; line-height: 1.3;">
