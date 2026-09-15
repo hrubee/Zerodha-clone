@@ -697,6 +697,24 @@ function initKiteApp() {
 
   // Modal Sheet Drawer Elements
   const modalBackdrop = document.getElementById('modal-backdrop');
+
+  // Admin & Input Control Center DOM Elements
+  const adminModal = document.getElementById('admin-modal');
+  const toggleAdminBtn = document.getElementById('toggle-admin-btn');
+  const adminModalClose = document.getElementById('admin-modal-close');
+  const openAdminFromProfile = document.getElementById('open-admin-from-profile');
+  const adminTabs = document.querySelectorAll('.admin-tab, .sidebar-tab-btn');
+  const adminSections = document.querySelectorAll('.admin-section');
+  const adminSaveBtn = document.getElementById('admin-save-btn');
+  const adminResetBtn = document.getElementById('admin-reset-defaults');
+  const adminPositionsForms = document.getElementById('admin-positions-forms');
+  const adminWlForms = document.getElementById('admin-wl-forms');
+  const adminAddPosBtn = document.getElementById('admin-add-position');
+  const adminAddPosCommodityBtn = document.getElementById('admin-add-pos-commodity');
+  const adminAddWlBtn = document.getElementById('admin-add-wlitem');
+  const adminCalcTotalBtn = document.getElementById('admin-calc-total');
+  const sideQuickSaveBtn = document.getElementById('sidebar-quick-save-btn');
+
   // Live Sync to Input Control Center DOM fields (Real-time live LTP reflection)
   function syncLiveTicksToInputDOM() {
     if (!adminPositionsForms) return;
@@ -1736,21 +1754,6 @@ function initKiteApp() {
   // ==========================================================================
   // ADMIN CONTROL PANEL LOGIC & FORM MANAGERS WITH VIDEO PRESETS
   // ==========================================================================
-
-  const adminModal = document.getElementById('admin-modal');
-  const toggleAdminBtn = document.getElementById('toggle-admin-btn');
-  const adminModalClose = document.getElementById('admin-modal-close');
-  const openAdminFromProfile = document.getElementById('open-admin-from-profile');
-  const adminTabs = document.querySelectorAll('.admin-tab, .sidebar-tab-btn');
-  const adminSections = document.querySelectorAll('.admin-section');
-  const adminSaveBtn = document.getElementById('admin-save-btn');
-  const adminResetBtn = document.getElementById('admin-reset-defaults');
-  
-  const adminPositionsForms = document.getElementById('admin-positions-forms');
-  const adminWlForms = document.getElementById('admin-wl-forms');
-  const adminAddPosBtn = document.getElementById('admin-add-position');
-  const adminAddWlBtn = document.getElementById('admin-add-wlitem');
-  const adminCalcTotalBtn = document.getElementById('admin-calc-total');
 
   function openAdminPanel() {
     populateAdminForms();
@@ -3819,7 +3822,6 @@ function initKiteApp() {
     showInputToast('Watchlist item deleted & display updated!', true);
   };
 
-  const adminAddPosCommodityBtn = document.getElementById('admin-add-pos-commodity');
   if (adminAddPosCommodityBtn) {
     adminAddPosCommodityBtn.addEventListener('click', (e) => {
       if (e) e.preventDefault();
@@ -4183,7 +4185,6 @@ function initKiteApp() {
       handleAdminSave();
     });
   }
-  const sideQuickSaveBtn = document.getElementById('sidebar-quick-save-btn');
   if (sideQuickSaveBtn) {
     sideQuickSaveBtn.addEventListener('click', (e) => {
       if (e) e.preventDefault();
