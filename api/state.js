@@ -47,16 +47,16 @@ function loadInitialState() {
     positions: [
       {
         id: 'pos_0',
-        symbol: 'SENSEX JUL 4600 CE',
+        symbol: 'SENSEX 17th SEP 75000 PE',
         exchange: 'BFO',
         side: 'BUY',
         entryPrice: '0.00',
         qty: '0',
         avg: '0.00',
-        ltp: '70,255.75',
+        ltp: '596.10',
         type: 'NRML',
         autoCalc: true,
-        pnl: '+1,20,568.34',
+        pnl: '+13,98,506.53',
         isGreen: true
       }
     ],

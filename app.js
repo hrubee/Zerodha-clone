@@ -576,6 +576,30 @@ function initKiteApp() {
       }
     }
 
+    // On display page, if incoming state is from background server polling, merge configuration while preserving active live LTP/PnL
+    if (sourceMsg.includes('Backend Synced') && appState && appState.positions && newState.positions) {
+      const configChanged = newState.positions.length !== appState.positions.length ||
+        newState.positions.some((np, i) => {
+          const op = appState.positions[i];
+          return !op || op.id !== np.id || op.symbol !== np.symbol || op.qty !== np.qty || op.avg !== np.avg || op.side !== np.side || op.exchange !== np.exchange;
+        });
+
+      if (!configChanged) {
+        // Positions config did not change, keep live LTP/PnL and merge non-market fields
+        newState.positions.forEach((np, i) => {
+          if (appState.positions[i]) {
+            np.ltp = appState.positions[i].ltp;
+            np.pnl = appState.positions[i].pnl;
+            np.isGreen = appState.positions[i].isGreen;
+          }
+        });
+        newState.totalPnl = appState.totalPnl;
+        if (appState.indices) {
+          newState.indices = appState.indices;
+        }
+      }
+    }
+
     appState = newState;
     renderAppUI();
     KiteSyncLogger.sync('STATE_APPLIED', `Applied new state from ${sourceMsg} (Total PnL: ${appState.totalPnl})`);
@@ -633,7 +657,7 @@ function initKiteApp() {
   // Initial fetch from backend state (Only on Display page)
   if (!document.body.classList.contains('page-input-standalone')) {
     checkServerStateSync();
-    setInterval(checkServerStateSync, 500);
+    setInterval(checkServerStateSync, 3000);
 
     window.addEventListener('focus', () => {
       KiteSyncLogger.info('WINDOW_FOCUS', 'Window focused - checking server state sync');
@@ -1960,7 +1984,10 @@ function initKiteApp() {
     const baseClose = prevClose || appState.indices[indexKey].prevClose || price;
     const chg = price - baseClose;
     const pct = baseClose ? (chg / baseClose) * 100 : 0;
-    appState.indices[indexKey].value = price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formattedPrice = price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    appState.indices[indexKey].val = formattedPrice;
+    appState.indices[indexKey].value = formattedPrice;
+    appState.indices[indexKey].price = price;
     appState.indices[indexKey].change = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
     appState.indices[indexKey].isGreen = chg >= 0;
     appState.indices[indexKey].prevClose = baseClose;
@@ -1969,10 +1996,11 @@ function initKiteApp() {
     if (appState.positions && appState.positions.length > 0) {
       let anyPosUpdated = false;
       appState.positions.forEach(pos => {
-        if (!pos.securityId && pos.autoCalc) {
-          const parsed = parseSymbolDetails(pos.symbol || '');
+        if (!pos.securityId && pos.autoCalc !== false) {
+          const parsed = parseOptionSymbol(pos.symbol || '');
           const matchKey = (parsed.underlying || '').toLowerCase().replace(/[^a-z]/g, '');
-          if (matchKey === indexKey.toLowerCase().replace(/[^a-z]/g, '')) {
+          const curIndexKey = indexKey.toLowerCase().replace(/[^a-z]/g, '');
+          if (matchKey === curIndexKey || (matchKey === 'banknifty' && curIndexKey === 'banknifty') || (matchKey === 'nifty' && curIndexKey === 'nifty') || (matchKey === 'sensex' && curIndexKey === 'sensex')) {
             const calcLtpStr = calculateRealisticOptionLTP(parsed.underlying, parsed.strike, parsed.optionType);
             if (calcLtpStr) {
               pos.ltp = calcLtpStr;
@@ -2473,15 +2501,15 @@ function initKiteApp() {
   function getUnderlyingSpot(underlying) {
     const und = (underlying || 'BANKNIFTY').toUpperCase();
     if (und === 'NIFTY') {
-      return parseFloat(String(appState.indices?.nifty?.val || '23459.55').replace(/,/g, '')) || 23459.55;
+      return parseFloat(String(appState.indices?.nifty?.val || appState.indices?.nifty?.value || appState.indices?.nifty?.price || '23459.55').replace(/,/g, '')) || 23459.55;
     } else if (und === 'BANKNIFTY') {
-      return parseFloat(String(appState.indices?.banknifty?.val || '56471.95').replace(/,/g, '')) || 56471.95;
+      return parseFloat(String(appState.indices?.banknifty?.val || appState.indices?.banknifty?.value || appState.indices?.banknifty?.price || '56471.95').replace(/,/g, '')) || 56471.95;
     } else if (und === 'SENSEX') {
-      return parseFloat(String(appState.indices?.sensex?.val || '74855.81').replace(/,/g, '')) || 74855.81;
+      return parseFloat(String(appState.indices?.sensex?.val || appState.indices?.sensex?.value || appState.indices?.sensex?.price || '74855.81').replace(/,/g, '')) || 74855.81;
     } else if (und === 'FINNIFTY') {
-      return parseFloat(String(appState.indices?.finnifty?.val || '21250.00').replace(/,/g, '')) || 21250.00;
+      return parseFloat(String(appState.indices?.finnifty?.val || appState.indices?.finnifty?.value || appState.indices?.finnifty?.price || '21250.00').replace(/,/g, '')) || 21250.00;
     } else if (und === 'MIDCPNIFTY') {
-      return parseFloat(String(appState.indices?.midcpnifty?.val || '12250.00').replace(/,/g, '')) || 12250.00;
+      return parseFloat(String(appState.indices?.midcpnifty?.val || appState.indices?.midcpnifty?.value || appState.indices?.midcpnifty?.price || '12250.00').replace(/,/g, '')) || 12250.00;
     } else if (und === 'CRUDEOIL') {
       return 6280.00;
     } else if (und === 'NATURALGAS') {

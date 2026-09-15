@@ -7,12 +7,8 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const clientId = req.headers['client-id'] || '';
-  const accessToken = req.headers['access-token'] || '';
-
-  if (!accessToken) {
-    return res.status(401).json({ status: 'error', message: 'Missing Dhan access token' });
-  }
+  const clientId = req.headers['client-id'] || process.env.DHAN_CLIENT_ID || '1104706516';
+  const accessToken = req.headers['access-token'] || process.env.DHAN_ACCESS_TOKEN || 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJ1c2VyUmVnaW9uIjoiUjEiLCJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzg5NTI5MTM0LCJpYXQiOjE3ODk0NDI3MzQsInRva2VuQ29uc3VtZXJUeXBlIjoiU0VMRiIsIndlYmhvb2tVcmwiOiIiLCJkaGFuQ2xpZW50SWQiOiIxMTA0NzA2NTE2In0.NETS6Mhr7IZjqDIFpvwWttOjNAo7_Pmz4KD6kVpIIdVOQL25a593j4UTfxgUgV_YJN0oSGxXu9xLkmFvwY5oJg';
 
   try {
     const bodyPayload = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});

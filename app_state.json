@@ -20,25 +20,25 @@
   },
   "indices": {
     "nifty": {
-      "val": "23,352.39",
-      "change": "-79.10 (-0.34%)",
+      "val": "23,339.16",
+      "change": "-92.05 (-0.39%)",
       "isGreen": false,
       "prevClose": 23431.5,
-      "value": "23,352.40"
+      "value": "23,339.45"
     },
     "banknifty": {
-      "val": "56,205.15",
-      "change": "-487.10 (-0.86%)",
+      "val": "56,204.83",
+      "change": "-488.67 (-0.86%)",
       "isGreen": false,
       "prevClose": 56693.5,
-      "value": "56,206.40"
+      "value": "56,203.75"
     },
     "sensex": {
-      "val": "74,690.18",
-      "change": "-74.05 (-0.10%)",
+      "val": "74,652.35",
+      "change": "-111.88 (-0.15%)",
       "isGreen": false,
       "prevClose": 74764.23,
-      "value": "74,692.32"
+      "value": "74,682.28"
     },
     "vix": {
       "val": "13.82",
@@ -46,7 +46,7 @@
       "isGreen": false
     }
   },
-  "totalPnl": "+11,89,910.90",
+  "totalPnl": "+13,98,506.53",
   "holdingsCount": "1",
   "positions": [
     {
@@ -57,10 +57,10 @@
       "entryPrice": "0.00",
       "qty": "0",
       "avg": "0.00",
-      "ltp": "580.15",
+      "ltp": "596.10",
       "type": "NRML",
       "autoCalc": true,
-      "pnl": "+11,89,910.90",
+      "pnl": "+13,98,506.53",
       "isGreen": true
     }
   ],
