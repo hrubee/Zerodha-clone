@@ -605,9 +605,7 @@ function initKiteApp() {
     KiteSyncLogger.sync('STATE_APPLIED', `Applied new state from ${sourceMsg} (Total PnL: ${appState.totalPnl})`);
 
     if (document.body.classList.contains('page-input-standalone')) {
-      if (!document.activeElement || document.activeElement.tagName === 'BODY') {
-        populateAdminForms();
-      }
+      syncLiveTicksToInputDOM();
     }
 
     if (appState.dhan && appState.dhan.accessToken && !dhanWsConnected) {
