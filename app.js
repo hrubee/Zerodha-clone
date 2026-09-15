@@ -2113,18 +2113,18 @@ function initKiteApp() {
     }
   }
 
-  function updateLiveIndexFromWs(indexKey, price, anchorPrice) {
+  function updateLiveIndexFromWs(indexKey, price, prevClose) {
     if (!appState.indices || !appState.indices[indexKey]) return;
-    const baseAnchor = anchorPrice || appState.indices[indexKey].openPrice || appState.indices[indexKey].prevClose || price;
-    const chg = price - baseAnchor;
-    const pct = baseAnchor ? (chg / baseAnchor) * 100 : 0;
+    const baseClose = prevClose || appState.indices[indexKey].prevClose || price;
+    const chg = price - baseClose;
+    const pct = baseClose ? (chg / baseClose) * 100 : 0;
     const formattedPrice = price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     appState.indices[indexKey].val = formattedPrice;
     appState.indices[indexKey].value = formattedPrice;
     appState.indices[indexKey].price = price;
     appState.indices[indexKey].change = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
     appState.indices[indexKey].isGreen = chg >= 0;
-    appState.indices[indexKey].openPrice = baseAnchor;
+    appState.indices[indexKey].prevClose = baseClose;
 
     renderAppUI();
   }
@@ -2210,17 +2210,14 @@ function initKiteApp() {
         cachedRealIndices = {
           nifty: dhanData['13'] ? {
             price: Number(dhanData['13'].last_price),
-            open: Number(dhanData['13'].ohlc?.open || dhanData['13'].ohlc?.close || 23576.15),
             prevClose: Number(dhanData['13'].ohlc?.close || 23398.10)
           } : null,
           sensex: dhanData['51'] ? {
             price: Number(dhanData['51'].last_price),
-            open: Number(dhanData['51'].ohlc?.open || dhanData['51'].ohlc?.close || 75369.63),
             prevClose: Number(dhanData['51'].ohlc?.close || 74781.76)
           } : null,
           banknifty: dhanData['25'] ? {
             price: Number(dhanData['25'].last_price),
-            open: Number(dhanData['25'].ohlc?.open || dhanData['25'].ohlc?.close || 56884.25),
             prevClose: Number(dhanData['25'].ohlc?.close || 56606.55)
           } : null
         };
@@ -2244,12 +2241,12 @@ function initKiteApp() {
       }
     } catch (e) {}
 
-    // 3. Fallback baseline if offline
+    // 3. Fallback baseline if offline (Change vs Prev Close)
     if (!cachedRealIndices) {
       cachedRealIndices = {
-        nifty: { price: 23175.40, open: 23576.15, prevClose: 23398.10 },
-        sensex: { price: 74167.41, open: 75369.63, prevClose: 74781.76 },
-        banknifty: { price: 55924.90, open: 56884.25, prevClose: 56606.55 }
+        nifty: { price: 23118.60, prevClose: 23398.10 },
+        sensex: { price: 74003.82, prevClose: 74781.76 },
+        banknifty: { price: 55794.75, prevClose: 56606.55 }
       };
     }
     return cachedRealIndices;
@@ -2280,51 +2277,42 @@ function initKiteApp() {
     const liveIndices = await fetchRealMarketIndices();
     if (!appState.indices) appState.indices = {};
 
-    // 1. Top Left Index: NIFTY 50 (Anchored to Day Open)
+    // 1. Top Left Index: NIFTY 50 (Change vs Previous Close)
     if (liveIndices && liveIndices.nifty) {
       if (!appState.indices.nifty) appState.indices.nifty = {};
-      const basePrice = Number(liveIndices.nifty.price || parseFloat(String(liveIndices.nifty.val).replace(/,/g, '')) || 23175.40);
-      const openPrice = Number(liveIndices.nifty.open || liveIndices.nifty.openPrice || appState.indices.nifty.openPrice || liveIndices.nifty.prevClose || 23576.15);
-      const prevClose = Number(liveIndices.nifty.prevClose || appState.indices.nifty.prevClose || openPrice);
-      const anchor = openPrice || prevClose;
-      const chg = basePrice - anchor;
-      const pct = anchor ? (chg / anchor) * 100 : 0;
+      const basePrice = Number(liveIndices.nifty.price || parseFloat(String(liveIndices.nifty.val).replace(/,/g, '')) || 23118.60);
+      const prevClose = Number(liveIndices.nifty.prevClose || appState.indices.nifty.prevClose || 23398.10);
+      const chg = basePrice - prevClose;
+      const pct = prevClose ? (chg / prevClose) * 100 : 0;
       appState.indices.nifty.val = basePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       appState.indices.nifty.change = (chg >= 0 ? '+' : '') + chg.toFixed(2) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)';
       appState.indices.nifty.isGreen = chg >= 0;
-      appState.indices.nifty.openPrice = openPrice;
       appState.indices.nifty.prevClose = prevClose;
     }
 
-    // 2. Top Right Index: SENSEX (Anchored to Day Open)
+    // 2. Top Right Index: SENSEX (Change vs Previous Close)
     if (liveIndices && liveIndices.sensex) {
       if (!appState.indices.sensex) appState.indices.sensex = {};
-      const basePrice = Number(liveIndices.sensex.price || parseFloat(String(liveIndices.sensex.val).replace(/,/g, '')) || 74167.41);
-      const openPrice = Number(liveIndices.sensex.open || liveIndices.sensex.openPrice || appState.indices.sensex.openPrice || liveIndices.sensex.prevClose || 75369.63);
-      const prevClose = Number(liveIndices.sensex.prevClose || appState.indices.sensex.prevClose || openPrice);
-      const anchor = openPrice || prevClose;
-      const chg = basePrice - anchor;
-      const pct = anchor ? (chg / anchor) * 100 : 0;
+      const basePrice = Number(liveIndices.sensex.price || parseFloat(String(liveIndices.sensex.val).replace(/,/g, '')) || 74003.82);
+      const prevClose = Number(liveIndices.sensex.prevClose || appState.indices.sensex.prevClose || 74781.76);
+      const chg = basePrice - prevClose;
+      const pct = prevClose ? (chg / prevClose) * 100 : 0;
       appState.indices.sensex.val = basePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       appState.indices.sensex.change = (chg >= 0 ? '+' : '') + chg.toFixed(2) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)';
       appState.indices.sensex.isGreen = chg >= 0;
-      appState.indices.sensex.openPrice = openPrice;
       appState.indices.sensex.prevClose = prevClose;
     }
 
-    // 3. Index Reference: NIFTY BANK (Anchored to Day Open)
+    // 3. Index Reference: NIFTY BANK (Change vs Previous Close)
     if (liveIndices && liveIndices.banknifty) {
       if (!appState.indices.banknifty) appState.indices.banknifty = {};
-      const basePrice = Number(liveIndices.banknifty.price || parseFloat(String(liveIndices.banknifty.val).replace(/,/g, '')) || 55924.90);
-      const openPrice = Number(liveIndices.banknifty.open || liveIndices.banknifty.openPrice || appState.indices.banknifty.openPrice || liveIndices.banknifty.prevClose || 56884.25);
-      const prevClose = Number(liveIndices.banknifty.prevClose || appState.indices.banknifty.prevClose || openPrice);
-      const anchor = openPrice || prevClose;
-      const chg = basePrice - anchor;
-      const pct = anchor ? (chg / anchor) * 100 : 0;
+      const basePrice = Number(liveIndices.banknifty.price || parseFloat(String(liveIndices.banknifty.val).replace(/,/g, '')) || 55794.75);
+      const prevClose = Number(liveIndices.banknifty.prevClose || appState.indices.banknifty.prevClose || 56606.55);
+      const chg = basePrice - prevClose;
+      const pct = prevClose ? (chg / prevClose) * 100 : 0;
       appState.indices.banknifty.val = basePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       appState.indices.banknifty.change = (chg >= 0 ? '+' : '') + chg.toFixed(2) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)';
       appState.indices.banknifty.isGreen = chg >= 0;
-      appState.indices.banknifty.openPrice = openPrice;
       appState.indices.banknifty.prevClose = prevClose;
     }
 
