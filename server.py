@@ -140,6 +140,35 @@ class RouteHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 self.wfile.write(json.dumps({"status":"error","message":str(e)}).encode('utf-8'))
+        if clean_path == '/api/dhan/auto-login':
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length) if content_length > 0 else b'{}'
+            try:
+                body = json.loads(post_data.decode('utf-8'))
+                from dhan_auto_login import auto_refresh_dhan_token
+                cid = body.get('clientId', '1104706516')
+                pin = body.get('pin', '')
+                totp_secret = body.get('totpSecret', '')
+                direct_totp = body.get('totp', '')
+                token = auto_refresh_dhan_token(client_id=cid, pin=pin, totp_secret=totp_secret, direct_totp=direct_totp)
+                if token:
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"status":"success","accessToken":token,"message":"Dhan token refreshed successfully!"}).encode('utf-8'))
+                else:
+                    self.send_response(400)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"status":"failed","message":"Failed to generate Dhan token"}).encode('utf-8'))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({"status":"error","message":str(e)}).encode('utf-8'))
             return
 
         # Direct Server-side Dhan API Proxy (Bypasses Browser CORS)
