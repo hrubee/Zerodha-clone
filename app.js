@@ -697,14 +697,90 @@ function initKiteApp() {
 
   // Modal Sheet Drawer Elements
   const modalBackdrop = document.getElementById('modal-backdrop');
-  const modalCloseBtn = document.getElementById('modal-close-btn');
-  const drawerSymbolName = document.getElementById('drawer-symbol-name');
-  const drawerSymbolExchange = document.getElementById('drawer-symbol-exchange');
-  const drawerSymbolPrice = document.getElementById('drawer-symbol-price');
-  const drawerSymbolChange = document.getElementById('drawer-symbol-change');
+  // Live Sync to Input Control Center DOM fields (Real-time live LTP reflection)
+  function syncLiveTicksToInputDOM() {
+    if (!adminPositionsForms) return;
+
+    // 1. Live Aggregated Portfolio Total P&L Banner on /input
+    const bannerPnl = document.getElementById('dashboard-total-pnl-display');
+    if (bannerPnl && appState.totalPnl) {
+      bannerPnl.textContent = appState.totalPnl;
+      const isPos = !appState.totalPnl.includes('-');
+      bannerPnl.className = `trade-summary-val ${isPos ? 'green' : 'red'}`;
+    }
+
+    const totalPnlInput = document.getElementById('admin-total-pnl');
+    if (totalPnlInput && document.activeElement !== totalPnlInput && appState.totalPnl) {
+      totalPnlInput.value = appState.totalPnl;
+    }
+
+    // 2. Update Position Card Inputs on /input
+    const cards = adminPositionsForms.querySelectorAll('.admin-card-box');
+    cards.forEach((card, idx) => {
+      const pos = appState.positions && appState.positions[idx];
+      if (!pos) return;
+
+      const ltpInput = card.querySelector('.pos-input-ltp');
+      const pnlInput = card.querySelector('.pos-input-pnl');
+      const pillEl = card.querySelector('.pos-live-pnl-pill');
+      const autoCalcEl = card.querySelector('.pos-input-autocalc');
+      const entryEl = card.querySelector('.pos-input-entry');
+      const qtyEl = card.querySelector('.pos-input-qty');
+      const sideEl = card.querySelector('.pos-input-side');
+
+      // Re-calculate math if autoCalc is on
+      if (autoCalcEl && autoCalcEl.checked && pos.ltp && entryEl && qtyEl) {
+        const ltpVal = parseFloat(String(pos.ltp).replace(/,/g, '')) || 0;
+        const entryVal = parseFloat(String(entryEl.value || pos.entryPrice || pos.avg).replace(/,/g, '')) || 0;
+        const qtyVal = parseFloat(String(qtyEl.value || pos.qty).replace(/,/g, '')) || 0;
+        const side = (sideEl ? sideEl.value : (pos.side || 'BUY')).toUpperCase();
+
+        if (qtyVal > 0 && entryVal > 0) {
+          const diff = (side === 'BUY') ? (ltpVal - entryVal) : (entryVal - ltpVal);
+          const pnlVal = diff * qtyVal;
+          pos.pnl = (pnlVal >= 0 ? '+' : '') + pnlVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          pos.isGreen = pnlVal >= 0;
+        }
+      }
+
+      if (pillEl && pos.pnl) {
+        pillEl.textContent = pos.pnl;
+        pillEl.className = `pos-live-pnl-pill ${!pos.pnl.includes('-') ? 'green' : 'red'}`;
+      }
+
+      if (ltpInput && document.activeElement !== ltpInput && pos.ltp) {
+        ltpInput.value = pos.ltp;
+      }
+
+      if (pnlInput && document.activeElement !== pnlInput && pos.pnl) {
+        pnlInput.value = pos.pnl;
+        pnlInput.style.color = !pos.pnl.includes('-') ? '#16a34a' : '#dc2626';
+      }
+    });
+
+    // 3. Update Live Indices Inputs if not currently focused
+    if (appState.indices) {
+      const nVal = document.getElementById('admin-nifty-val');
+      const nChg = document.getElementById('admin-nifty-change');
+      if (nVal && document.activeElement !== nVal && appState.indices.nifty?.val) nVal.value = appState.indices.nifty.val;
+      if (nChg && document.activeElement !== nChg && appState.indices.nifty?.change) nChg.value = appState.indices.nifty.change;
+
+      const sVal = document.getElementById('admin-sensex-val');
+      const sChg = document.getElementById('admin-sensex-change');
+      if (sVal && document.activeElement !== sVal && appState.indices.sensex?.val) sVal.value = appState.indices.sensex.val;
+      if (sChg && document.activeElement !== sChg && appState.indices.sensex?.change) sChg.value = appState.indices.sensex.change;
+
+      const bVal = document.getElementById('admin-banknifty-val');
+      const bChg = document.getElementById('admin-banknifty-change');
+      if (bVal && document.activeElement !== bVal && appState.indices.banknifty?.val) bVal.value = appState.indices.banknifty.val;
+      if (bChg && document.activeElement !== bChg && appState.indices.banknifty?.change) bChg.value = appState.indices.banknifty.change;
+    }
+  }
 
   // Render Full Application UI
   function renderAppUI() {
+    syncLiveTicksToInputDOM();
+
     // 1. Render Header Indices
     if (valNifty) valNifty.textContent = appState.indices.nifty.val;
     if (changeNifty) changeNifty.textContent = appState.indices.nifty.change;
@@ -4134,12 +4210,19 @@ function initKiteApp() {
   updateLiveStatusBarTime();
   setInterval(updateLiveStatusBarTime, 1000);
 
-  // Live ticker only runs if explicitly activated in state
-  if (appState.dhan && appState.dhan.isTickerActive) {
-    startLiveTickerLoop();
-  } else {
-    updateTickerBadge();
-  }
+  // Guarantee Live Ticker is always running for continuous 1-second updates
+  startLiveTickerLoop();
+
+  // Continuous 1-second live sync pulse for /input page DOM inputs and status badge
+  setInterval(() => {
+    syncLiveTicksToInputDOM();
+    const syncStatus = document.getElementById('sync-status-indicator');
+    if (syncStatus) {
+      const isWsLive = dhanWsConnected;
+      syncStatus.textContent = isWsLive ? '● Live Dhan Feed (WebSocket)' : '● Live Sync Active (1s)';
+      syncStatus.style.background = isWsLive ? '#15803d' : '#0369a1';
+    }
+  }, 1000);
 
   // Start Dhan real-time WebSocket market feed streaming
   initDhanWebSocket();
