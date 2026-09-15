@@ -1,0 +1,10 @@
+{
+  "name": "zerodha-clone",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Zerodha Kite Mobile Clone with Real-Time Dhan HQ Live Market Feed and Verified P&L",
+  "scripts": {
+    "start": "python3 server.py 8080"
+  }
+}
