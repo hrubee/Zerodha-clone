@@ -154,7 +154,12 @@ class RouteHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 import urllib.request, ssl
                 ctx = ssl._create_unverified_context()
-                dhan_url = f'https://api.dhan.co/v2/{endpoint}' if endpoint.startswith('optionchain') else 'https://api.dhan.co/v2/marketfeed/ltp'
+                if endpoint == 'expirylist' or endpoint == 'optionchain/expirylist':
+                    dhan_url = 'https://api.dhan.co/v2/optionchain/expirylist'
+                elif endpoint.startswith('optionchain'):
+                    dhan_url = 'https://api.dhan.co/v2/optionchain'
+                else:
+                    dhan_url = 'https://api.dhan.co/v2/marketfeed/ltp'
                 headers = {
                     'client-id': client_id,
                     'access-token': access_token,

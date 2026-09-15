@@ -2297,8 +2297,56 @@ function initKiteApp() {
 
   // Dhan Option Chain In-Memory Cache
   const dhanOptionChainCache = {};
+  const dhanExpiryListCache = {};
 
-  async function fetchDhanOptionChain(underlying) {
+  async function fetchDhanExpiryList(underlying) {
+    if (!appState.dhan || !appState.dhan.accessToken || appState.dhan.accessToken.length < 30) {
+      return [];
+    }
+    const und = (underlying || 'BANKNIFTY').toUpperCase();
+    const scripMap = {
+      'NIFTY': 13,
+      'BANKNIFTY': 25,
+      'FINNIFTY': 27,
+      'SENSEX': 51,
+      'MIDCPNIFTY': 442
+    };
+    const scripId = scripMap[und];
+    if (!scripId) return [];
+
+    const now = Date.now();
+    if (dhanExpiryListCache[und] && (now - dhanExpiryListCache[und].timestamp < 60000)) {
+      return dhanExpiryListCache[und].data;
+    }
+
+    try {
+      const res = await fetch('/api/dhan/optionchain/expirylist', {
+        method: 'POST',
+        headers: {
+          'client-id': appState.dhan.clientId || '1104706516',
+          'access-token': appState.dhan.accessToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          "UnderlyingScrip": scripId,
+          "UnderlyingSeg": "IDX_I"
+        })
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
+          dhanExpiryListCache[und] = { timestamp: now, data: json.data };
+          return json.data;
+        }
+      }
+    } catch (e) {
+      console.warn('Dhan expiry list fetch failed:', e);
+    }
+    return dhanExpiryListCache[und] ? dhanExpiryListCache[und].data : [];
+  }
+
+  async function fetchDhanOptionChain(underlying, requestedExpiry = null) {
     if (!appState.dhan || !appState.dhan.accessToken || appState.dhan.accessToken.length < 30) {
       return null;
     }
@@ -2313,10 +2361,20 @@ function initKiteApp() {
     const scripId = scripMap[und];
     if (!scripId) return null;
 
+    let expiry = requestedExpiry;
+    if (!expiry) {
+      const expiries = await fetchDhanExpiryList(und);
+      if (expiries && expiries.length > 0) {
+        expiry = expiries[0];
+      }
+    }
+    if (!expiry) return null;
+
+    const cacheKey = `${und}_${expiry}`;
     const now = Date.now();
     // Cache for 3.5 seconds to throttle and prevent HTTP 429
-    if (dhanOptionChainCache[und] && (now - dhanOptionChainCache[und].timestamp < 3500)) {
-      return dhanOptionChainCache[und].data;
+    if (dhanOptionChainCache[cacheKey] && (now - dhanOptionChainCache[cacheKey].timestamp < 3500)) {
+      return dhanOptionChainCache[cacheKey].data;
     }
 
     try {
@@ -2329,13 +2387,15 @@ function initKiteApp() {
         },
         body: JSON.stringify({
           "UnderlyingScrip": scripId,
-          "UnderlyingSeg": "IDX_I"
+          "UnderlyingSeg": "IDX_I",
+          "Expiry": expiry
         })
       });
 
       if (res.ok) {
         const data = await res.json();
         if (data.status === 'success' && data.data && data.data.oc) {
+          dhanOptionChainCache[cacheKey] = { timestamp: now, data: data.data.oc };
           dhanOptionChainCache[und] = { timestamp: now, data: data.data.oc };
           return data.data.oc;
         }
@@ -2343,7 +2403,7 @@ function initKiteApp() {
     } catch (e) {
       console.warn('Dhan Option Chain API fetch failed:', e);
     }
-    return dhanOptionChainCache[und] ? dhanOptionChainCache[und].data : null;
+    return dhanOptionChainCache[cacheKey] ? dhanOptionChainCache[cacheKey].data : (dhanOptionChainCache[und]?.data || null);
   }
 
   function getLtpFromDhanOC(ocData, strike, optType) {
