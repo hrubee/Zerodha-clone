@@ -697,6 +697,11 @@ function initKiteApp() {
 
   // Modal Sheet Drawer Elements
   const modalBackdrop = document.getElementById('modal-backdrop');
+  const modalCloseBtn = document.getElementById('modal-close-btn');
+  const drawerSymbolName = document.getElementById('drawer-symbol-name');
+  const drawerSymbolExchange = document.getElementById('drawer-symbol-exchange');
+  const drawerSymbolPrice = document.getElementById('drawer-symbol-price');
+  const drawerSymbolChange = document.getElementById('drawer-symbol-change');
 
   // Admin & Input Control Center DOM Elements
   const adminModal = document.getElementById('admin-modal');
@@ -953,7 +958,7 @@ function initKiteApp() {
     const batteryPct = document.getElementById('ov-ios-battery-pct') || document.getElementById('ios-battery-pct-text');
     const level = (sb.batteryLevel !== undefined) ? parseInt(sb.batteryLevel, 10) : 90;
     if (batteryFill) {
-      if (batteryFill.tagName === 'rect' || batteryFill.hasAttribute('width')) {
+      if (batteryFill.tagName === 'rect' || (batteryFill.hasAttribute && batteryFill.hasAttribute('width'))) {
         const fillWidth = Math.max(1.5, Math.min(15, (level / 100) * 15));
         batteryFill.setAttribute('width', fillWidth.toFixed(1));
       } else {
@@ -1650,11 +1655,11 @@ function initKiteApp() {
     drawerSymbolChange.textContent = `${changeSign}${item.change.toFixed(2)} (${changeSign}${item.percent.toFixed(2)}%)`;
     drawerSymbolChange.className = `drawer-change-val ${colorClass}`;
 
-    modalBackdrop.classList.add('open');
+    if (modalBackdrop) modalBackdrop.classList.add('open');
   }
 
   // Close Drawer Modal
-  if (modalCloseBtn) modalCloseBtn.addEventListener('click', () => modalBackdrop.classList.remove('open'));
+  if (modalCloseBtn && modalBackdrop) modalCloseBtn.addEventListener('click', () => modalBackdrop.classList.remove('open'));
   if (modalBackdrop) {
     modalBackdrop.addEventListener('click', (e) => {
       if (e.target === modalBackdrop) modalBackdrop.classList.remove('open');
@@ -1718,12 +1723,12 @@ function initKiteApp() {
     }
   });
 
-  // Double-click and Mobile Double-Tap to toggle fullscreen
+  // Double-click and Mobile Double-Tap to toggle fullscreen (Only on display/overlay viewport)
   const appWrapper = document.getElementById('app-wrapper');
   const phoneFrameEl = document.getElementById('phone-frame');
-  const displayTarget = appWrapper || phoneFrameEl || document.body;
+  const displayTarget = appWrapper || phoneFrameEl;
 
-  if (displayTarget) {
+  if (displayTarget && typeof displayTarget.addEventListener === 'function') {
     // Desktop double-click
     displayTarget.addEventListener('dblclick', (e) => {
       if (['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON', 'A'].includes(e.target?.tagName)) return;
@@ -3647,50 +3652,58 @@ function initKiteApp() {
         renderAppUI();
       }
 
-      undEl.addEventListener('change', async () => {
-        const expiries = await fetchDhanExpiryList(undEl.value);
-        if (expSelect) {
-          expSelect.innerHTML = getExpiryOptionsHTML(undEl.value, '', expiries);
-        }
-        const selectedIso = expSelect && expSelect.options[expSelect.selectedIndex] ? expSelect.options[expSelect.selectedIndex].dataset.iso : null;
-        const oc = await fetchDhanOptionChain(undEl.value, selectedIso);
-        const liveStrikes = getStrikesListFromDhanOC(oc);
-        strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl.value, liveStrikes);
-        await updateCardDetails(true);
-      });
-
-      if (expSelect) {
-        expSelect.addEventListener('change', async () => {
-          const selectedIso = expSelect.options[expSelect.selectedIndex] ? expSelect.options[expSelect.selectedIndex].dataset.iso : null;
+      if (undEl) {
+        undEl.addEventListener('change', async () => {
+          const expiries = await fetchDhanExpiryList(undEl.value);
+          if (expSelect) {
+            expSelect.innerHTML = getExpiryOptionsHTML(undEl.value, '', expiries);
+          }
+          const selectedIso = expSelect && expSelect.options[expSelect.selectedIndex] ? expSelect.options[expSelect.selectedIndex].dataset.iso : null;
           const oc = await fetchDhanOptionChain(undEl.value, selectedIso);
           const liveStrikes = getStrikesListFromDhanOC(oc);
-          strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl.value, liveStrikes);
+          if (strEl) strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl ? optEl.value : 'CE', liveStrikes);
           await updateCardDetails(true);
         });
       }
 
-      strEl.addEventListener('change', async () => {
-        await updateCardDetails(true);
-      });
+      if (expSelect) {
+        expSelect.addEventListener('change', async () => {
+          const selectedIso = expSelect.options[expSelect.selectedIndex] ? expSelect.options[expSelect.selectedIndex].dataset.iso : null;
+          const oc = await fetchDhanOptionChain(undEl ? undEl.value : 'BANKNIFTY', selectedIso);
+          const liveStrikes = getStrikesListFromDhanOC(oc);
+          if (strEl) strEl.innerHTML = getStrikeOptionsHTML(undEl ? undEl.value : 'BANKNIFTY', strEl.value, optEl ? optEl.value : 'CE', liveStrikes);
+          await updateCardDetails(true);
+        });
+      }
 
-      optEl.addEventListener('change', async () => {
-        const selectedIso = expSelect && expSelect.options[expSelect.selectedIndex] ? expSelect.options[expSelect.selectedIndex].dataset.iso : null;
-        const oc = await fetchDhanOptionChain(undEl.value, selectedIso);
-        const liveStrikes = getStrikesListFromDhanOC(oc);
-        strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl.value, liveStrikes);
-        await updateCardDetails(true);
-      });
+      if (strEl) {
+        strEl.addEventListener('change', async () => {
+          await updateCardDetails(true);
+        });
+      }
 
-      sideEl.addEventListener('change', () => updateCardDetails(false));
-      entryEl.addEventListener('input', () => updateCardDetails(false));
-      qtyEl.addEventListener('input', () => updateCardDetails(false));
-      ltpEl.addEventListener('input', () => updateCardDetails(false));
-      pnlEl.addEventListener('input', () => {
-        syncAdminFormsToState();
-        saveState();
-        renderAppUI();
-      });
-      autoCalcEl.addEventListener('change', () => updateCardDetails(false));
+      if (optEl) {
+        optEl.addEventListener('change', async () => {
+          const selectedIso = expSelect && expSelect.options[expSelect.selectedIndex] ? expSelect.options[expSelect.selectedIndex].dataset.iso : null;
+          const oc = await fetchDhanOptionChain(undEl ? undEl.value : 'BANKNIFTY', selectedIso);
+          const liveStrikes = getStrikesListFromDhanOC(oc);
+          if (strEl) strEl.innerHTML = getStrikeOptionsHTML(undEl ? undEl.value : 'BANKNIFTY', strEl.value, optEl.value, liveStrikes);
+          await updateCardDetails(true);
+        });
+      }
+
+      if (sideEl) sideEl.addEventListener('change', () => updateCardDetails(false));
+      if (entryEl) entryEl.addEventListener('input', () => updateCardDetails(false));
+      if (qtyEl) qtyEl.addEventListener('input', () => updateCardDetails(false));
+      if (ltpEl) ltpEl.addEventListener('input', () => updateCardDetails(false));
+      if (pnlEl) {
+        pnlEl.addEventListener('input', () => {
+          syncAdminFormsToState();
+          saveState();
+          renderAppUI();
+        });
+      }
+      if (autoCalcEl) autoCalcEl.addEventListener('change', () => updateCardDetails(false));
 
       // Attach Delete Event Listener
       const delBtn = box.querySelector('.pos-delete-btn');
@@ -3824,7 +3837,7 @@ function initKiteApp() {
 
   if (adminAddPosCommodityBtn) {
     adminAddPosCommodityBtn.addEventListener('click', (e) => {
-      if (e) e.preventDefault();
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
       syncAdminFormsToState();
 
       const initialLtp = calculateRealisticOptionLTP('CRUDEOIL', '6400', 'CE');
@@ -3864,7 +3877,7 @@ function initKiteApp() {
 
   if (adminAddPosBtn) {
     adminAddPosBtn.addEventListener('click', async (e) => {
-      if (e) e.preventDefault();
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
       syncAdminFormsToState();
 
       const expiries = await fetchDhanExpiryList('SENSEX');
@@ -3910,7 +3923,7 @@ function initKiteApp() {
 
   if (adminCalcTotalBtn) {
     adminCalcTotalBtn.addEventListener('click', (e) => {
-      if (e) e.preventDefault();
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
       syncAdminFormsToState();
 
       let total = 0;
@@ -3976,7 +3989,7 @@ function initKiteApp() {
 
   if (adminAddWlBtn) {
     adminAddWlBtn.addEventListener('click', (e) => {
-      if (e) e.preventDefault();
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
       syncAdminFormsToState();
 
       appState.watchlist.push({
@@ -4064,7 +4077,7 @@ function initKiteApp() {
   const adminAddVpnlBtn = document.getElementById('admin-add-vpnl-trade');
   if (adminAddVpnlBtn) {
     adminAddVpnlBtn.addEventListener('click', (e) => {
-      e.preventDefault();
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
       if (!appState.verifiedPnl) appState.verifiedPnl = {};
       if (!appState.verifiedPnl.trades) appState.verifiedPnl.trades = [];
       appState.verifiedPnl.trades.push({
@@ -4133,7 +4146,7 @@ function initKiteApp() {
   const toggleTickerBtn = document.getElementById('admin-dhan-toggle-ticker');
   if (toggleTickerBtn) {
     toggleTickerBtn.addEventListener('click', (e) => {
-      if (e) e.preventDefault();
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
       if (liveTickerTimer) {
         stopLiveTickerLoop();
         if (appState.dhan) appState.dhan.isTickerActive = false;
@@ -4181,13 +4194,13 @@ function initKiteApp() {
 
   if (adminSaveBtn) {
     adminSaveBtn.addEventListener('click', (e) => {
-      if (e) e.preventDefault();
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
       handleAdminSave();
     });
   }
   if (sideQuickSaveBtn) {
     sideQuickSaveBtn.addEventListener('click', (e) => {
-      if (e) e.preventDefault();
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
       handleAdminSave();
     });
   }
@@ -4195,7 +4208,7 @@ function initKiteApp() {
   // RESET TO DEFAULTS (IMG_0961 Preset)
   if (adminResetBtn) {
     adminResetBtn.addEventListener('click', (e) => {
-      if (e) e.preventDefault();
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
       if (confirm('Are you sure you want to reset back to IMG_0961 video defaults?')) {
         appState = JSON.parse(JSON.stringify(defaultState));
         saveState();
