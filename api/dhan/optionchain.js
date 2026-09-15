@@ -16,7 +16,7 @@ export default async function handler(req, res) {
   const cacheKey = bodyPayload;
   const now = Date.now();
 
-  if (ocCache[cacheKey] && (now - ocCache[cacheKey].timestamp < 6000)) {
+  if (ocCache[cacheKey] && (now - ocCache[cacheKey].timestamp < 30000)) {
     return res.status(200).json(ocCache[cacheKey].data);
   }
 
@@ -32,8 +32,13 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    if (response.ok && data.status === 'success') {
+    if (response.ok && data && (data.status === 'success' || data.data)) {
       ocCache[cacheKey] = { timestamp: now, data };
+      return res.status(200).json(data);
+    }
+
+    if (ocCache[cacheKey]) {
+      return res.status(200).json(ocCache[cacheKey].data);
     }
     return res.status(response.status).json(data);
   } catch (error) {
