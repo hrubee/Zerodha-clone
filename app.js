@@ -242,6 +242,9 @@ function initKiteApp() {
 
   // Load state from localStorage or default
   let appState = JSON.parse(localStorage.getItem('kite_replica_admin_state')) || JSON.parse(JSON.stringify(defaultState));
+  if (!appState.updatedAt) {
+    appState.updatedAt = Date.now();
+  }
   if (!appState.dhan) {
     appState.dhan = {
       clientId: ACTIVE_DHAN_CLIENT_ID,
@@ -515,13 +518,18 @@ function initKiteApp() {
   let backendPostTimer = null;
 
   function saveState(skipBroadcast = false, forceImmediateBackend = false) {
+    appState.updatedAt = Date.now();
     const statePayload = JSON.stringify(appState);
-    localStorage.setItem('kite_replica_admin_state', statePayload);
-    KiteSyncLogger.sync('SAVE_LOCALSTORAGE', `Saved to localStorage (${appState.positions ? appState.positions.length : 0} positions, PnL: ${appState.totalPnl})`);
+    try {
+      localStorage.setItem('kite_replica_admin_state', statePayload);
+      KiteSyncLogger.sync('SAVE_LOCALSTORAGE', `Saved to localStorage (${appState.positions ? appState.positions.length : 0} positions, PnL: ${appState.totalPnl})`);
+    } catch (e) {
+      console.warn('localStorage save failed:', e);
+    }
 
     if (syncChannel && !skipBroadcast) {
       try {
-        syncChannel.postMessage({ type: 'STATE_UPDATED', state: appState, timestamp: Date.now() });
+        syncChannel.postMessage({ type: 'STATE_UPDATED', state: appState, timestamp: appState.updatedAt });
         KiteSyncLogger.sync('BROADCAST_SENT', 'Emitted STATE_UPDATED to BroadcastChannel');
       } catch (err) {
         KiteSyncLogger.warn('BROADCAST_WARN', 'Broadcast error: ' + err.message);
@@ -564,15 +572,34 @@ function initKiteApp() {
 
   // Handle incoming live sync updates
   function applyIncomingState(newState, sourceMsg = 'Live Sync: Updates Applied!') {
-    if (!newState) return;
+    if (!newState || typeof newState !== 'object') return;
     const oldStr = JSON.stringify(appState);
     const newStr = JSON.stringify(newState);
     if (oldStr === newStr) return; // No change
 
     // If on standalone input page, protect active inputs from being overwritten by background server polling
     if (document.body.classList.contains('page-input-standalone')) {
-      if (sourceMsg.includes('Backend Synced') || sourceMsg.includes('POLL')) {
+      if (sourceMsg.includes('Backend Synced') || sourceMsg.includes('POLL') || sourceMsg.includes('backend')) {
         return; // Never overwrite active input dashboard with polling responses
+      }
+    }
+
+    const localUpdated = (appState && appState.updatedAt) ? Number(appState.updatedAt) : 0;
+    const incomingUpdated = (newState && newState.updatedAt) ? Number(newState.updatedAt) : 0;
+
+    // Check timestamps: if incoming update is older than local update, ignore it!
+    if (incomingUpdated > 0 && localUpdated > 0 && incomingUpdated < localUpdated) {
+      KiteSyncLogger.warn('SYNC_STALE_IGNORED', `Ignored stale state from ${sourceMsg} (local: ${localUpdated} > incoming: ${incomingUpdated})`);
+      return;
+    }
+
+    // Protect local state against stale or cold-start backend responses
+    if (sourceMsg.includes('Backend Synced') || sourceMsg.includes('POLL') || sourceMsg.includes('backend')) {
+      if (localUpdated > incomingUpdated) {
+        return;
+      }
+      if (appState && appState.positions && newState.positions && (appState.positions.length > newState.positions.length) && incomingUpdated <= localUpdated) {
+        return;
       }
     }
 
@@ -600,13 +627,34 @@ function initKiteApp() {
       }
     }
 
+    // If on input page and we received a broadcast from display page containing updated live ticks:
+    if (document.body.classList.contains('page-input-standalone')) {
+      const isPosCountSame = appState.positions && newState.positions && (appState.positions.length === newState.positions.length);
+      if (isPosCountSame) {
+        // Only update market data (LTP, PnL, isGreen, indices, totalPnl) without destroying user input form focus
+        newState.positions.forEach((np, i) => {
+          if (appState.positions[i]) {
+            appState.positions[i].ltp = np.ltp;
+            appState.positions[i].pnl = np.pnl;
+            appState.positions[i].isGreen = np.isGreen;
+          }
+        });
+        appState.totalPnl = newState.totalPnl;
+        if (newState.indices) appState.indices = newState.indices;
+        syncLiveTicksToInputDOM();
+        return;
+      } else {
+        // Positions were added or deleted, full state update and re-populate forms
+        appState = newState;
+        populateAdminForms();
+        renderAppUI();
+        return;
+      }
+    }
+
     appState = newState;
     renderAppUI();
     KiteSyncLogger.sync('STATE_APPLIED', `Applied new state from ${sourceMsg} (Total PnL: ${appState.totalPnl})`);
-
-    if (document.body.classList.contains('page-input-standalone')) {
-      syncLiveTicksToInputDOM();
-    }
 
     if (appState.dhan && appState.dhan.accessToken && !dhanWsConnected) {
       initDhanWebSocket();
@@ -634,9 +682,14 @@ function initKiteApp() {
     }
   });
 
-  // REST Polling Sync Fallback (Runs strictly on Display page)
+  // REST Polling Sync Fallback (Only on initial load if localStorage is totally empty)
   async function checkServerStateSync() {
     if (document.body.classList.contains('page-input-standalone')) return; // Never poll on input page
+    // If localStorage already has valid user state, DO NOT fetch or overwrite from serverless cold-start!
+    const existingLocal = localStorage.getItem('kite_replica_admin_state');
+    if (existingLocal) {
+      return;
+    }
     try {
       const res = await fetch('/api/state?t=' + Date.now(), {
         headers: { 'Cache-Control': 'no-cache' }
@@ -652,21 +705,12 @@ function initKiteApp() {
     }
   }
 
-  // Initial fetch from backend state (Only on Display page)
+  // Initial fetch from backend state ONLY if localStorage is empty
   if (!document.body.classList.contains('page-input-standalone')) {
-    checkServerStateSync();
-    setInterval(checkServerStateSync, 3000);
-
-    window.addEventListener('focus', () => {
-      KiteSyncLogger.info('WINDOW_FOCUS', 'Window focused - checking server state sync');
+    const hasLocalState = !!localStorage.getItem('kite_replica_admin_state');
+    if (!hasLocalState) {
       checkServerStateSync();
-    });
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        KiteSyncLogger.info('TAB_VISIBLE', 'Tab became visible - checking server state sync');
-        checkServerStateSync();
-      }
-    });
+    }
   }
 
   // DOM Containers

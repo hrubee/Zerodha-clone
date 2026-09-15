@@ -2,6 +2,17 @@ import fs from 'fs';
 import path from 'path';
 
 function loadInitialState() {
+  const tmpPath = '/tmp/kite_replica_state.json';
+  try {
+    if (fs.existsSync(tmpPath)) {
+      const content = fs.readFileSync(tmpPath, 'utf8');
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === 'object') {
+        return parsed;
+      }
+    }
+  } catch (e) {}
+
   try {
     const filePath = path.join(process.cwd(), 'app_state.json');
     if (fs.existsSync(filePath)) {
@@ -17,6 +28,7 @@ function loadInitialState() {
 
   // Fallback defaults matching real-life Indian indices (Sensex 74k, Nifty 23.4k)
   return {
+    updatedAt: 0,
     user: {
       userId: 'ZP9413',
       email: 'surekha@zerodha.clone',
@@ -118,6 +130,7 @@ export default function handler(req, res) {
         inMemoryState = {
           ...inMemoryState,
           ...body,
+          updatedAt: Date.now(),
           user: {
             ...inMemoryState.user,
             ...(body.user || {}),
@@ -127,8 +140,12 @@ export default function handler(req, res) {
             }
           }
         };
+
+        try {
+          fs.writeFileSync('/tmp/kite_replica_state.json', JSON.stringify(inMemoryState), 'utf8');
+        } catch (err) {}
       }
-      return res.status(200).json({ success: true, updated: Date.now() });
+      return res.status(200).json({ success: true, updated: inMemoryState.updatedAt });
     } catch (e) {
       return res.status(400).json({ error: 'Invalid JSON body' });
     }
