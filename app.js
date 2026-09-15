@@ -1877,6 +1877,40 @@ function initKiteApp() {
     } catch (e) {
       console.error('Failed to initialize Dhan WebSocket:', e);
     }
+  async function resolvePositionSecurityIds() {
+    if (!appState.positions || appState.positions.length === 0) return;
+    let anyResolved = false;
+
+    for (const pos of appState.positions) {
+      if (!pos.securityId) {
+        const parsed = parseOptionSymbol(pos.symbol);
+        if (parsed && parsed.underlying && parsed.strike) {
+          const oc = await fetchDhanOptionChain(parsed.underlying);
+          if (oc) {
+            const optKey = (parsed.optionType || 'CE').toLowerCase();
+            const strNum = parseFloat(parsed.strike);
+            for (const key in oc) {
+              const row = oc[key];
+              const keyNum = parseFloat(key);
+              const rowStrike = row?.strike_price !== undefined ? parseFloat(row.strike_price) : keyNum;
+              if (Math.abs(keyNum - strNum) < 0.5 || Math.abs(rowStrike - strNum) < 0.5) {
+                if (row && row[optKey] && row[optKey].security_id) {
+                  pos.securityId = row[optKey].security_id;
+                  pos.exchangeSegment = (parsed.underlying.toUpperCase() === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
+                  anyResolved = true;
+                  console.log(`⚡ [Dhan WS] Auto-resolved Security ID for ${pos.symbol}: ${pos.securityId} (${pos.exchangeSegment})`);
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (anyResolved && dhanWs && dhanWs.readyState === WebSocket.OPEN) {
+      subscribeDhanInstruments();
+    }
   }
 
   function subscribeDhanInstruments() {
@@ -1892,7 +1926,7 @@ function initKiteApp() {
       appState.positions.forEach(pos => {
         if (pos.securityId) {
           instrumentList.push({
-            "ExchangeSegment": pos.exchangeSegment || "NSE_FNO",
+            "ExchangeSegment": pos.exchangeSegment || (pos.symbol?.toUpperCase().includes('SENSEX') ? 'BSE_FNO' : 'NSE_FNO'),
             "SecurityId": String(pos.securityId)
           });
         }
@@ -1931,33 +1965,11 @@ function initKiteApp() {
         else if (securityId === 51) updateLiveIndexFromWs('sensex', ltp, close || open);
       }
     } 
-    // Response Code 2: Ticker Packet (<BHBIfI)
-    else if (responseCode === 2 && buffer.byteLength >= 12) {
-      const ltp = view.getFloat32(8, true);
-      if (ltp > 0) {
-        if (securityId === 13) updateLiveIndexFromWs('nifty', ltp);
-        else if (securityId === 25) updateLiveIndexFromWs('banknifty', ltp);
-        else if (securityId === 51) updateLiveIndexFromWs('sensex', ltp);
-        else updateSecurityLtpFromWs(securityId, ltp);
-      }
-    } 
-    // Response Code 4: Quote Packet (<BHBIfHIfIIIffff)
-    else if (responseCode === 4 && buffer.byteLength >= 12) {
+    // Response Code 2, 4, 6, 7, 8: Ticker / Quote / Full Packets (<BHBIf...)
+    else if ((responseCode === 2 || responseCode === 4 || responseCode === 6 || responseCode === 7 || responseCode === 8) && buffer.byteLength >= 12) {
       const ltp = view.getFloat32(8, true);
       const open = buffer.byteLength >= 38 ? view.getFloat32(34, true) : null;
       const close = buffer.byteLength >= 42 ? view.getFloat32(38, true) : null;
-      if (ltp > 0) {
-        if (securityId === 13) updateLiveIndexFromWs('nifty', ltp, close || open);
-        else if (securityId === 25) updateLiveIndexFromWs('banknifty', ltp, close || open);
-        else if (securityId === 51) updateLiveIndexFromWs('sensex', ltp, close || open);
-        else updateSecurityLtpFromWs(securityId, ltp);
-      }
-    }
-    // Response Code 8: Full Packet (<BHBIfHIfIIIIIIffff100s)
-    else if (responseCode === 8 && buffer.byteLength >= 12) {
-      const ltp = view.getFloat32(8, true);
-      const open = buffer.byteLength >= 50 ? view.getFloat32(46, true) : null;
-      const close = buffer.byteLength >= 54 ? view.getFloat32(50, true) : null;
       if (ltp > 0) {
         if (securityId === 13) updateLiveIndexFromWs('nifty', ltp, close || open);
         else if (securityId === 25) updateLiveIndexFromWs('banknifty', ltp, close || open);
@@ -3018,10 +3030,17 @@ function initKiteApp() {
             const autoCalc = autoCalcEl ? autoCalcEl.checked : true;
             let pnl = pnlEl ? pnlEl.value.trim() : '0.00';
 
+            const prevPos = appState.positions && appState.positions[idx] ? appState.positions[idx] : null;
+            const parsed = parseOptionSymbol(symbol);
+            const excSeg = (parsed.underlying.toUpperCase() === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
+            const securityId = (card.dataset && card.dataset.securityId) ? Number(card.dataset.securityId) : (prevPos ? prevPos.securityId : null);
+
             const posObj = {
               id: 'pos_' + idx,
               symbol: symbol,
               exchange: exchange,
+              exchangeSegment: (card.dataset && card.dataset.exchangeSegment) || (prevPos && prevPos.exchangeSegment) || excSeg,
+              securityId: securityId,
               side: side,
               entryPrice: entryPrice,
               qty: qty,
@@ -3262,6 +3281,9 @@ function initKiteApp() {
 
       const box = document.createElement('div');
       box.className = 'admin-card-box';
+      box.dataset.id = pos.id;
+      if (pos.securityId) box.dataset.securityId = pos.securityId;
+      if (pos.exchangeSegment) box.dataset.exchangeSegment = pos.exchangeSegment;
       box.style.border = '1px solid #cbd5e1';
       box.style.borderRadius = '10px';
       box.style.padding = '16px';
@@ -3432,6 +3454,30 @@ function initKiteApp() {
           ltpEl.value = fetchedLtp;
         }
 
+        // Auto-resolve live Dhan securityId for continuous WebSocket streaming
+        const oc = await fetchDhanOptionChain(u);
+        if (oc) {
+          const optKey = (o || 'CE').toLowerCase();
+          const strNum = parseFloat(s);
+          for (const key in oc) {
+            const row = oc[key];
+            const keyNum = parseFloat(key);
+            const rowStrike = row?.strike_price !== undefined ? parseFloat(row.strike_price) : keyNum;
+            if (Math.abs(keyNum - strNum) < 0.5 || Math.abs(rowStrike - strNum) < 0.5) {
+              if (row && row[optKey] && row[optKey].security_id) {
+                const secId = row[optKey].security_id;
+                const excSeg = (u === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
+                box.dataset.securityId = secId;
+                box.dataset.exchangeSegment = excSeg;
+                if (autoFetchStrikeLTP && row[optKey].last_price > 0) {
+                  ltpEl.value = Number(row[optKey].last_price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+                break;
+              }
+            }
+          }
+        }
+
         // Auto P&L calculation
         if (autoCalcEl.checked) {
           const ltpVal = parseFloat(String(ltpEl.value).replace(/,/g, '')) || 0;
@@ -3450,6 +3496,9 @@ function initKiteApp() {
         }
         
         syncAdminFormsToState();
+        if (dhanWs && dhanWs.readyState === WebSocket.OPEN) {
+          subscribeDhanInstruments();
+        }
         saveState();
         renderAppUI();
       }
