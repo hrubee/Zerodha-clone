@@ -1877,6 +1877,8 @@ function initKiteApp() {
     } catch (e) {
       console.error('Failed to initialize Dhan WebSocket:', e);
     }
+  }
+
   async function resolvePositionSecurityIds() {
     if (!appState.positions || appState.positions.length === 0) return;
     let anyResolved = false;
@@ -2287,7 +2289,10 @@ function initKiteApp() {
           }
         }
 
-        if (hasLiveDhanLtp) {
+        if (dhanWsConnected && pos.securityId) {
+          // Live binary feed is actively streaming this security ID from Dhan HQ, preserve current live WS LTP
+          newLtp = currentLtp;
+        } else if (hasLiveDhanLtp) {
           pos.ltp = newLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         } else if (isOpen && parsed && parsed.strike && parsed.underlying) {
           // Dynamic calculation based on current spot & strike
