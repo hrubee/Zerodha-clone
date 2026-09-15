@@ -2010,27 +2010,18 @@ function initKiteApp() {
     let anyResolved = false;
 
     for (const pos of appState.positions) {
-      if (!pos.securityId) {
-        const parsed = parseOptionSymbol(pos.symbol);
-        if (parsed && parsed.underlying && parsed.strike) {
-          const oc = await fetchDhanOptionChain(parsed.underlying);
-          if (oc) {
-            const optKey = (parsed.optionType || 'CE').toLowerCase();
-            const strNum = parseFloat(parsed.strike);
-            for (const key in oc) {
-              const row = oc[key];
-              const keyNum = parseFloat(key);
-              const rowStrike = row?.strike_price !== undefined ? parseFloat(row.strike_price) : keyNum;
-              if (Math.abs(keyNum - strNum) < 0.5 || Math.abs(rowStrike - strNum) < 0.5) {
-                if (row && row[optKey] && row[optKey].security_id) {
-                  pos.securityId = row[optKey].security_id;
-                  pos.exchangeSegment = (parsed.underlying.toUpperCase() === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
-                  anyResolved = true;
-                  console.log(`⚡ [Dhan WS] Auto-resolved Security ID for ${pos.symbol}: ${pos.securityId} (${pos.exchangeSegment})`);
-                  break;
-                }
-              }
-            }
+      const parsed = parseOptionSymbol(pos.symbol);
+      if (parsed && parsed.underlying && parsed.strike && parsed.optionType !== 'FUT') {
+        const info = await resolveOptionContractInfo(parsed.underlying, parsed.strike, parsed.optionType, parsed.expiry);
+        if (info && info.securityId) {
+          if (pos.securityId !== info.securityId || pos.exchangeSegment !== info.exchangeSegment) {
+            pos.securityId = info.securityId;
+            pos.exchangeSegment = info.exchangeSegment;
+            anyResolved = true;
+            console.log(`⚡ [Dhan WS] Auto-resolved Security ID for ${pos.symbol}: ${pos.securityId} (${pos.exchangeSegment})`);
+          }
+          if (info.lastPrice > 0 && (!pos.ltp || pos.ltp === '0.00' || parseFloat(pos.ltp) === 0)) {
+            pos.ltp = info.formattedLtp;
           }
         }
       }
@@ -2329,14 +2320,12 @@ function initKiteApp() {
       if (!window._lastDhanOcTickPoll || (now - window._lastDhanOcTickPoll > 10000)) {
         window._lastDhanOcTickPoll = now;
         if (appState.dhan && appState.dhan.accessToken && appState.dhan.accessToken.length > 30) {
-          const underlyings = new Set();
           appState.positions.forEach(pos => {
             const parsed = parseOptionSymbol(pos.symbol);
-            if (parsed && parsed.underlying) {
-              underlyings.add(parsed.underlying.toUpperCase());
+            if (parsed && parsed.underlying && parsed.expiry) {
+              fetchDhanOptionChain(parsed.underlying, parsed.expiry).catch(() => {});
             }
           });
-          underlyings.forEach(u => fetchDhanOptionChain(u).catch(() => {}));
         }
       }
 
@@ -2345,8 +2334,9 @@ function initKiteApp() {
         let newLtp = currentLtp;
 
         const parsed = parseOptionSymbol(pos.symbol);
-        if (parsed && parsed.underlying && parsed.strike) {
-          const cachedOc = dhanOptionChainCache[parsed.underlying.toUpperCase()]?.data;
+        if (parsed && parsed.underlying && parsed.strike && parsed.optionType !== 'FUT') {
+          const cachedOc = (parsed.expiry && dhanOptionChainCache[`${parsed.underlying.toUpperCase()}_${parsed.expiry}`]?.data) ||
+            dhanOptionChainCache[parsed.underlying.toUpperCase()]?.data;
           const liveDhanPrice = getLtpFromDhanOC(cachedOc, parsed.strike, parsed.optionType);
           if (liveDhanPrice !== null && liveDhanPrice > 0) {
             newLtp = liveDhanPrice;
@@ -2789,6 +2779,33 @@ function initKiteApp() {
     return null;
   }
 
+  async function resolveOptionContractInfo(underlying, strike, optType, expiry = null) {
+    const oc = await fetchDhanOptionChain(underlying, expiry);
+    if (!oc) return null;
+    const strNum = parseFloat(strike);
+    if (isNaN(strNum)) return null;
+    const optKey = (optType || 'CE').toLowerCase();
+    for (const key in oc) {
+      const row = oc[key];
+      const keyNum = parseFloat(key);
+      const rowStrike = row?.strike_price !== undefined ? parseFloat(row.strike_price) : keyNum;
+      if (Math.abs(keyNum - strNum) < 0.5 || Math.abs(rowStrike - strNum) < 0.5) {
+        if (row && row[optKey]) {
+          const livePrice = parseFloat(row[optKey].last_price) || 0;
+          const secId = row[optKey].security_id || null;
+          const excSeg = (underlying.toUpperCase() === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
+          return {
+            securityId: secId,
+            exchangeSegment: excSeg,
+            lastPrice: livePrice,
+            formattedLtp: livePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          };
+        }
+      }
+    }
+    return null;
+  }
+
   function getStrikesListFromDhanOC(ocData) {
     if (!ocData) return [];
     const strikes = [];
@@ -2804,6 +2821,10 @@ function initKiteApp() {
 
   // Real-time Dhan HQ API Option Chain quote lookup (Only live LTP)
   async function fetchOptionContractLTP(underlying, strike, optType, expiry = null) {
+    const info = await resolveOptionContractInfo(underlying, strike, optType, expiry);
+    if (info && info.lastPrice > 0) {
+      return info.formattedLtp;
+    }
     const oc = await fetchDhanOptionChain(underlying, expiry);
     if (oc) {
       const livePrice = getLtpFromDhanOC(oc, strike, optType);
@@ -3061,13 +3082,16 @@ function initKiteApp() {
             const prevPos = oldPositions[idx] ? oldPositions[idx] : null;
             const parsed = parseOptionSymbol(symbol);
             const excSeg = (parsed.underlying.toUpperCase() === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
-            const securityId = (card.dataset && card.dataset.securityId) ? Number(card.dataset.securityId) : (prevPos ? prevPos.securityId : null);
+            let securityId = (card.dataset && card.dataset.securityId) ? Number(card.dataset.securityId) : null;
+            if (!securityId && prevPos && prevPos.symbol === symbol) {
+              securityId = prevPos.securityId;
+            }
 
             const posObj = {
               id: 'pos_' + idx,
               symbol: symbol,
               exchange: exchange,
-              exchangeSegment: (card.dataset && card.dataset.exchangeSegment) || (prevPos && prevPos.exchangeSegment) || excSeg,
+              exchangeSegment: (card.dataset && card.dataset.exchangeSegment) || (prevPos && prevPos.symbol === symbol && prevPos.exchangeSegment) || excSeg,
               securityId: securityId,
               side: side,
               entryPrice: entryPrice,
@@ -3471,30 +3495,18 @@ function initKiteApp() {
         if (badgeExc) badgeExc.textContent = detectedExc;
 
         // Auto-resolve live Dhan securityId & LTP from option chain
-        const oc = await fetchDhanOptionChain(u, isoExpiry);
-        if (oc) {
-          const optKey = (o || 'CE').toLowerCase();
-          const strNum = parseFloat(s);
-          for (const key in oc) {
-            const row = oc[key];
-            const keyNum = parseFloat(key);
-            const rowStrike = row?.strike_price !== undefined ? parseFloat(row.strike_price) : keyNum;
-            if (Math.abs(keyNum - strNum) < 0.5 || Math.abs(rowStrike - strNum) < 0.5) {
-              if (row && row[optKey] && row[optKey].security_id) {
-                const secId = row[optKey].security_id;
-                const excSeg = (u === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
-                box.dataset.securityId = secId;
-                box.dataset.exchangeSegment = excSeg;
-                if (row[optKey].last_price > 0 && autoFetchStrikeLTP) {
-                  ltpEl.value = Number(row[optKey].last_price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                }
-                break;
-              }
-            }
+        const info = await resolveOptionContractInfo(u, s, o, isoExpiry || e);
+        if (info && info.securityId) {
+          box.dataset.securityId = info.securityId;
+          box.dataset.exchangeSegment = info.exchangeSegment;
+          if (info.lastPrice > 0 && autoFetchStrikeLTP) {
+            ltpEl.value = info.formattedLtp;
           }
         } else if (autoFetchStrikeLTP) {
-          const fetchedLtp = await fetchOptionContractLTP(u, s, o, e);
-          ltpEl.value = fetchedLtp;
+          const fetchedLtp = await fetchOptionContractLTP(u, s, o, isoExpiry || e);
+          if (fetchedLtp && fetchedLtp !== '0.00') {
+            ltpEl.value = fetchedLtp;
+          }
         }
 
         // Auto P&L calculation
