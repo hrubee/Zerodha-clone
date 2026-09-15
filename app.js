@@ -546,6 +546,13 @@ function initKiteApp() {
     const newStr = JSON.stringify(newState);
     if (oldStr === newStr) return; // No change
 
+    // If on standalone input page, protect active inputs from being overwritten by background server polling
+    if (document.body.classList.contains('page-input-standalone')) {
+      if (sourceMsg.includes('Backend Synced') || sourceMsg.includes('POLL')) {
+        return; // Never overwrite active input dashboard with polling responses
+      }
+    }
+
     appState = newState;
     renderAppUI();
     KiteSyncLogger.sync('STATE_APPLIED', `Applied new state from ${sourceMsg} (Total PnL: ${appState.totalPnl})`);
@@ -582,8 +589,9 @@ function initKiteApp() {
     }
   });
 
-  // REST Polling Sync Fallback (Runs on Display & on focus)
+  // REST Polling Sync Fallback (Runs strictly on Display page)
   async function checkServerStateSync() {
+    if (document.body.classList.contains('page-input-standalone')) return; // Never poll on input page
     try {
       const res = await fetch('/api/state?t=' + Date.now(), {
         headers: { 'Cache-Control': 'no-cache' }
@@ -599,24 +607,22 @@ function initKiteApp() {
     }
   }
 
-  // Initial fetch from backend state
-  checkServerStateSync();
-
-  // Poll backend state periodically if on display page (or not standalone input page)
+  // Initial fetch from backend state (Only on Display page)
   if (!document.body.classList.contains('page-input-standalone')) {
-    setInterval(checkServerStateSync, 500);
-  }
-
-  window.addEventListener('focus', () => {
-    KiteSyncLogger.info('WINDOW_FOCUS', 'Window focused - checking server state sync');
     checkServerStateSync();
-  });
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      KiteSyncLogger.info('TAB_VISIBLE', 'Tab became visible - checking server state sync');
+    setInterval(checkServerStateSync, 500);
+
+    window.addEventListener('focus', () => {
+      KiteSyncLogger.info('WINDOW_FOCUS', 'Window focused - checking server state sync');
       checkServerStateSync();
-    }
-  });
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        KiteSyncLogger.info('TAB_VISIBLE', 'Tab became visible - checking server state sync');
+        checkServerStateSync();
+      }
+    });
+  }
 
   // DOM Containers
   const watchlistContainer = document.getElementById('watchlist-items-container');
