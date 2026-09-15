@@ -2461,6 +2461,64 @@ function initKiteApp() {
     return { day, month, formatted: `${day} ${month}` };
   }
 
+  function formatDhanExpiry(isoStr) {
+    if (!isoStr) return { day: '17th', month: 'SEP', year: '2026', formatted: '17th SEP', iso: isoStr, label: '17th SEP 2026' };
+    const parts = String(isoStr).trim().split('-');
+    if (parts.length === 3) {
+      const y = parts[0];
+      const mNum = parseInt(parts[1], 10) - 1;
+      const dNum = parseInt(parts[2], 10);
+      const mName = MONTHS_LIST[mNum] || 'SEP';
+      const dOrd = getOrdinal(dNum);
+      return {
+        day: dOrd,
+        month: mName,
+        year: y,
+        formatted: `${dOrd} ${mName}`,
+        iso: isoStr,
+        label: `${dOrd} ${mName} ${y}`
+      };
+    }
+    return { day: '17th', month: 'SEP', year: '2026', formatted: isoStr, iso: isoStr, label: isoStr };
+  }
+
+  function getExpiryOptionsHTML(underlying, currentExpiryStr, expiryList = null) {
+    const und = (underlying || 'BANKNIFTY').toUpperCase();
+    let expiries = expiryList && expiryList.length > 0 ? expiryList : (dhanExpiryListCache[und]?.data || []);
+
+    if (!expiries || expiries.length === 0) {
+      if (und === 'SENSEX' || und === 'NIFTY') {
+        expiries = ["2026-09-17", "2026-09-24", "2026-10-01", "2026-10-08", "2026-10-15", "2026-10-22", "2026-10-29", "2026-11-26", "2026-12-31"];
+      } else if (und === 'BANKNIFTY') {
+        expiries = ["2026-09-29", "2026-10-27", "2026-11-23", "2026-12-29", "2027-03-30"];
+      } else if (und === 'FINNIFTY') {
+        expiries = ["2026-09-22", "2026-09-29", "2026-10-06", "2026-10-13", "2026-10-20", "2026-10-27"];
+      } else if (und === 'MIDCPNIFTY') {
+        expiries = ["2026-09-21", "2026-09-28", "2026-10-05", "2026-10-12", "2026-10-19", "2026-10-26"];
+      } else {
+        expiries = ["2026-09-19", "2026-10-19", "2026-11-18", "2026-12-18"];
+      }
+    }
+
+    let html = '';
+    const normCur = (currentExpiryStr || '').toUpperCase().trim();
+    let matched = false;
+
+    expiries.forEach((iso, idx) => {
+      const formatted = formatDhanExpiry(iso);
+      const isSelected = !matched && (normCur.includes(formatted.formatted.toUpperCase()) || normCur === iso);
+      if (isSelected) matched = true;
+      const tag = idx === 0 ? ' (Weekly/Current)' : (idx === 1 ? ' (Next)' : '');
+      html += `<option value="${formatted.formatted}" data-iso="${iso}" ${isSelected ? 'selected' : ''}>${formatted.label}${tag}</option>`;
+    });
+
+    if (!matched && normCur) {
+      html = `<option value="${normCur}" selected>${normCur}</option>` + html;
+    }
+
+    return html;
+  }
+
   function getExpiryDaysOptionsHTML(selectedDay) {
     let html = '';
     const selNum = parseInt(selectedDay, 10) || 14;
@@ -2703,9 +2761,19 @@ function initKiteApp() {
     const scripId = scripMap[und];
     if (!scripId) return null;
 
+    const expiries = await fetchDhanExpiryList(und);
     let expiry = requestedExpiry;
+    if (expiry && !expiry.includes('-')) {
+      const norm = expiry.toUpperCase().trim();
+      const matchedIso = (expiries || []).find(iso => {
+        const fmt = formatDhanExpiry(iso);
+        return norm.includes(fmt.formatted.toUpperCase()) || norm.includes(fmt.day.toUpperCase() + ' ' + fmt.month.toUpperCase()) || norm === fmt.label.toUpperCase();
+      });
+      if (matchedIso) expiry = matchedIso;
+      else expiry = null;
+    }
+
     if (!expiry) {
-      const expiries = await fetchDhanExpiryList(und);
       if (expiries && expiries.length > 0) {
         expiry = expiries[0];
       }
@@ -2772,17 +2840,17 @@ function initKiteApp() {
     const strikes = [];
     for (const key in ocData) {
       const row = ocData[key];
-      const s = row?.strike_price || parseFloat(key);
+      const s = row?.strike_price !== undefined ? parseFloat(row.strike_price) : parseFloat(key);
       if (s && !isNaN(s) && !strikes.includes(s)) {
         strikes.push(s);
       }
     }
-    return strikes.sort((a, b) => a - b);
+    return strikes.map(Number).sort((a, b) => a - b);
   }
 
   // Real-time Dhan HQ API Option Chain quote lookup with fallback
-  async function fetchOptionContractLTP(underlying, strike, optType, expiry) {
-    const oc = await fetchDhanOptionChain(underlying);
+  async function fetchOptionContractLTP(underlying, strike, optType, expiry = null) {
+    const oc = await fetchDhanOptionChain(underlying, expiry);
     if (oc) {
       const livePrice = getLtpFromDhanOC(oc, strike, optType);
       if (livePrice !== null && livePrice > 0) {
@@ -3006,6 +3074,7 @@ function initKiteApp() {
   function syncAdminFormsToState() {
     let autoSumTotal = 0;
     let hasPositions = false;
+    const oldPositions = [...(appState.positions || [])];
 
     if (adminPositionsForms) {
       const posCards = adminPositionsForms.querySelectorAll('.admin-card-box');
@@ -3035,7 +3104,7 @@ function initKiteApp() {
             const autoCalc = autoCalcEl ? autoCalcEl.checked : true;
             let pnl = pnlEl ? pnlEl.value.trim() : '0.00';
 
-            const prevPos = appState.positions && appState.positions[idx] ? appState.positions[idx] : null;
+            const prevPos = oldPositions[idx] ? oldPositions[idx] : null;
             const parsed = parseOptionSymbol(symbol);
             const excSeg = (parsed.underlying.toUpperCase() === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
             const securityId = (card.dataset && card.dataset.securityId) ? Number(card.dataset.securityId) : (prevPos ? prevPos.securityId : null);
@@ -3275,8 +3344,7 @@ function initKiteApp() {
     appState.positions.forEach((pos, idx) => {
       const parsed = parseOptionSymbol(pos.symbol);
       const parsedExpiry = parseExpiryDate(parsed.expiry);
-      const daysHtml = getExpiryDaysOptionsHTML(parsedExpiry.day);
-      const monthsHtml = getExpiryMonthsOptionsHTML(parsedExpiry.month);
+      const expiryOptionsHtml = getExpiryOptionsHTML(parsed.underlying, parsed.expiry);
       const cachedOc = dhanOptionChainCache[(parsed.underlying || 'BANKNIFTY').toUpperCase()]?.data;
       const cachedStrikes = getStrikesListFromDhanOC(cachedOc);
       const strikeHtml = getStrikeOptionsHTML(parsed.underlying, parsed.strike, parsed.optionType, cachedStrikes);
@@ -3313,10 +3381,10 @@ function initKiteApp() {
         <!-- 1. OPTION / COMMODITY CONTRACT BUILDER -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
           <div style="font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px;">
-            <span>🎯 1. Select Instrument (Indices F&O or MCX Commodities)</span>
-            <span style="font-size: 10.5px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 600;">⚡ Live Strike Sync</span>
+            <span>🎯 1. Select Instrument (Live Available Expiries & Option Chain Strikes)</span>
+            <span style="font-size: 10.5px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 600;">⚡ Live Dhan Sync</span>
           </div>
-          <div class="pos-grid-builder" style="display: grid; grid-template-columns: 1.2fr 1.2fr 1.2fr 1fr; gap: 10px;">
+          <div class="pos-grid-builder" style="display: grid; grid-template-columns: 1.2fr 1.3fr 1.2fr 1fr; gap: 10px;">
             <div>
               <label class="admin-label" style="font-size: 11px;">Underlying / Commodity</label>
               <select class="admin-input pos-builder-underlying" style="background: #fff; font-size: 12px; padding: 6px; font-weight: 600;">
@@ -3324,15 +3392,10 @@ function initKiteApp() {
               </select>
             </div>
             <div>
-              <label class="admin-label" style="font-size: 11px;">Expiry Date (Day & Month)</label>
-              <div style="display: flex; gap: 4px;">
-                <select class="admin-input pos-builder-expiry-day" style="background: #fff; font-size: 12px; padding: 6px 4px; font-weight: 600; flex: 1.1;">
-                  ${daysHtml}
-                </select>
-                <select class="admin-input pos-builder-expiry-month" style="background: #fff; font-size: 12px; padding: 6px 4px; font-weight: 600; flex: 1.2;">
-                  ${monthsHtml}
-                </select>
-              </div>
+              <label class="admin-label" style="font-size: 11px; font-weight: 700; color: #0369a1;">Available Expiry Date</label>
+              <select class="admin-input pos-builder-expiry-select" style="background: #fff; font-size: 12px; padding: 6px; font-weight: 600; width: 100%;">
+                ${expiryOptionsHtml}
+              </select>
               <input type="hidden" class="pos-builder-expiry" value="${parsedExpiry.formatted}">
             </div>
             <div>
@@ -3413,8 +3476,7 @@ function initKiteApp() {
 
       // Live Builder Sync Event Handlers
       const undEl = box.querySelector('.pos-builder-underlying');
-      const expDayEl = box.querySelector('.pos-builder-expiry-day');
-      const expMonthEl = box.querySelector('.pos-builder-expiry-month');
+      const expSelect = box.querySelector('.pos-builder-expiry-select');
       const expEl = box.querySelector('.pos-builder-expiry');
       const strEl = box.querySelector('.pos-builder-strike-select');
       const optEl = box.querySelector('.pos-builder-opttype');
@@ -3432,9 +3494,9 @@ function initKiteApp() {
 
       async function updateCardDetails(autoFetchStrikeLTP = false) {
         const u = undEl.value;
-        const d = expDayEl ? expDayEl.value : '14th';
-        const m = expMonthEl ? expMonthEl.value : 'FEB';
-        const e = `${d} ${m}`;
+        const selectedExpiryOpt = expSelect ? expSelect.options[expSelect.selectedIndex] : null;
+        const e = selectedExpiryOpt ? selectedExpiryOpt.value : (expEl ? expEl.value : '17th SEP');
+        const isoExpiry = selectedExpiryOpt ? selectedExpiryOpt.dataset.iso : null;
         if (expEl) expEl.value = e;
 
         const s = strEl.value;
@@ -3454,13 +3516,8 @@ function initKiteApp() {
         excEl.value = detectedExc;
         if (badgeExc) badgeExc.textContent = detectedExc;
 
-        if (autoFetchStrikeLTP) {
-          const fetchedLtp = await fetchOptionContractLTP(u, s, o, e);
-          ltpEl.value = fetchedLtp;
-        }
-
-        // Auto-resolve live Dhan securityId for continuous WebSocket streaming
-        const oc = await fetchDhanOptionChain(u);
+        // Auto-resolve live Dhan securityId & LTP from option chain
+        const oc = await fetchDhanOptionChain(u, isoExpiry);
         if (oc) {
           const optKey = (o || 'CE').toLowerCase();
           const strNum = parseFloat(s);
@@ -3474,13 +3531,16 @@ function initKiteApp() {
                 const excSeg = (u === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
                 box.dataset.securityId = secId;
                 box.dataset.exchangeSegment = excSeg;
-                if (autoFetchStrikeLTP && row[optKey].last_price > 0) {
+                if (row[optKey].last_price > 0 && autoFetchStrikeLTP) {
                   ltpEl.value = Number(row[optKey].last_price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }
                 break;
               }
             }
           }
+        } else if (autoFetchStrikeLTP) {
+          const fetchedLtp = await fetchOptionContractLTP(u, s, o, e);
+          ltpEl.value = fetchedLtp;
         }
 
         // Auto P&L calculation
@@ -3509,22 +3569,39 @@ function initKiteApp() {
       }
 
       undEl.addEventListener('change', async () => {
-        const oc = await fetchDhanOptionChain(undEl.value);
+        const expiries = await fetchDhanExpiryList(undEl.value);
+        if (expSelect) {
+          expSelect.innerHTML = getExpiryOptionsHTML(undEl.value, '', expiries);
+        }
+        const selectedIso = expSelect && expSelect.options[expSelect.selectedIndex] ? expSelect.options[expSelect.selectedIndex].dataset.iso : null;
+        const oc = await fetchDhanOptionChain(undEl.value, selectedIso);
         const liveStrikes = getStrikesListFromDhanOC(oc);
         strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl.value, liveStrikes);
         await updateCardDetails(true);
       });
-      if (expDayEl) expDayEl.addEventListener('change', () => updateCardDetails(false));
-      if (expMonthEl) expMonthEl.addEventListener('change', () => updateCardDetails(false));
+
+      if (expSelect) {
+        expSelect.addEventListener('change', async () => {
+          const selectedIso = expSelect.options[expSelect.selectedIndex] ? expSelect.options[expSelect.selectedIndex].dataset.iso : null;
+          const oc = await fetchDhanOptionChain(undEl.value, selectedIso);
+          const liveStrikes = getStrikesListFromDhanOC(oc);
+          strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl.value, liveStrikes);
+          await updateCardDetails(true);
+        });
+      }
+
       strEl.addEventListener('change', async () => {
         await updateCardDetails(true);
       });
+
       optEl.addEventListener('change', async () => {
-        const oc = await fetchDhanOptionChain(undEl.value);
+        const selectedIso = expSelect && expSelect.options[expSelect.selectedIndex] ? expSelect.options[expSelect.selectedIndex].dataset.iso : null;
+        const oc = await fetchDhanOptionChain(undEl.value, selectedIso);
         const liveStrikes = getStrikesListFromDhanOC(oc);
         strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl.value, liveStrikes);
         await updateCardDetails(true);
       });
+
       sideEl.addEventListener('change', () => updateCardDetails(false));
       entryEl.addEventListener('input', () => updateCardDetails(false));
       qtyEl.addEventListener('input', () => updateCardDetails(false));
@@ -3548,6 +3625,92 @@ function initKiteApp() {
 
       adminPositionsForms.appendChild(box);
     });
+
+    // Auto-sync all position cards with live Dhan available expiries & option chain strikes
+    syncAllPositionCardsWithDhan();
+  }
+
+  let isSyncingCards = false;
+  async function syncAllPositionCardsWithDhan() {
+    if (isSyncingCards || !adminPositionsForms) return;
+    isSyncingCards = true;
+    try {
+      const cards = adminPositionsForms.querySelectorAll('.admin-card-box');
+      if (!cards || cards.length === 0) return;
+
+      for (const card of cards) {
+        const undEl = card.querySelector('.pos-builder-underlying');
+        const expSelect = card.querySelector('.pos-builder-expiry-select');
+        const strEl = card.querySelector('.pos-builder-strike-select');
+        const optEl = card.querySelector('.pos-builder-opttype');
+        const ltpEl = card.querySelector('.pos-input-ltp');
+        const pnlEl = card.querySelector('.pos-input-pnl');
+        const pillEl = card.querySelector('.pos-live-pnl-pill');
+        const autoCalcEl = card.querySelector('.pos-input-autocalc');
+        const entryEl = card.querySelector('.pos-input-entry');
+        const qtyEl = card.querySelector('.pos-input-qty');
+        const sideEl = card.querySelector('.pos-input-side');
+
+        if (!undEl || !expSelect || !strEl || !optEl) continue;
+
+        const u = undEl.value;
+        const expiries = await fetchDhanExpiryList(u);
+        if (expiries && expiries.length > 0) {
+          const curExp = expSelect.value;
+          expSelect.innerHTML = getExpiryOptionsHTML(u, curExp, expiries);
+        }
+
+        const selectedIso = expSelect.options[expSelect.selectedIndex] ? expSelect.options[expSelect.selectedIndex].dataset.iso : null;
+        const oc = await fetchDhanOptionChain(u, selectedIso);
+        if (oc) {
+          const liveStrikes = getStrikesListFromDhanOC(oc);
+          if (liveStrikes && liveStrikes.length > 0) {
+            strEl.innerHTML = getStrikeOptionsHTML(u, strEl.value, optEl.value, liveStrikes);
+          }
+
+          const optKey = (optEl.value || 'CE').toLowerCase();
+          const strNum = parseFloat(strEl.value);
+          for (const key in oc) {
+            const row = oc[key];
+            const keyNum = parseFloat(key);
+            const rowStrike = row?.strike_price !== undefined ? parseFloat(row.strike_price) : keyNum;
+            if (Math.abs(keyNum - strNum) < 0.5 || Math.abs(rowStrike - strNum) < 0.5) {
+              if (row && row[optKey] && row[optKey].security_id) {
+                card.dataset.securityId = row[optKey].security_id;
+                card.dataset.exchangeSegment = (u === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
+                if (row[optKey].last_price > 0 && ltpEl && (parseFloat(ltpEl.value) === 0 || !ltpEl.value || ltpEl.value === '0.00')) {
+                  ltpEl.value = Number(row[optKey].last_price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+                break;
+              }
+            }
+          }
+        }
+
+        if (autoCalcEl && autoCalcEl.checked && ltpEl && entryEl && qtyEl && pnlEl && pillEl) {
+          const ltpVal = parseFloat(String(ltpEl.value).replace(/,/g, '')) || 0;
+          const entryVal = parseFloat(String(entryEl.value).replace(/,/g, '')) || 0;
+          const qtyVal = parseFloat(String(qtyEl.value).replace(/,/g, '')) || 0;
+          const side = sideEl ? sideEl.value : 'BUY';
+
+          if (qtyVal > 0 && entryVal > 0) {
+            const diff = (side === 'BUY') ? (ltpVal - entryVal) : (entryVal - ltpVal);
+            const pnlVal = diff * qtyVal;
+            const formattedPnl = (pnlVal >= 0 ? '+' : '') + pnlVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            pnlEl.value = formattedPnl;
+            pillEl.textContent = formattedPnl;
+            pillEl.className = `pos-live-pnl-pill ${pnlVal >= 0 ? 'green' : 'red'}`;
+          }
+        }
+      }
+
+      syncAdminFormsToState();
+      if (dhanWs && dhanWs.readyState === WebSocket.OPEN) {
+        subscribeDhanInstruments();
+      }
+    } finally {
+      isSyncingCards = false;
+    }
   }
 
   window.deletePosition = function(idx) {
@@ -3622,28 +3785,34 @@ function initKiteApp() {
   }
 
   if (adminAddPosBtn) {
-    adminAddPosBtn.addEventListener('click', (e) => {
+    adminAddPosBtn.addEventListener('click', async (e) => {
       if (e) e.preventDefault();
       syncAdminFormsToState();
 
-      const initialLtp = calculateRealisticOptionLTP('BANKNIFTY', '56500', 'CE');
-      const initialEntry = '310.00';
+      const expiries = await fetchDhanExpiryList('SENSEX');
+      const firstExpIso = (expiries && expiries.length > 0) ? expiries[0] : '2026-09-17';
+      const formattedExp = formatDhanExpiry(firstExpIso).formatted;
+
+      const initialLtp = await fetchOptionContractLTP('SENSEX', '75000', 'PE', firstExpIso);
+      const initialEntry = '400.00';
       const initialQty = '100';
-      const ltpNum = parseFloat(initialLtp.replace(/,/g, '')) || 340.0;
-      const initPnl = (ltpNum - 310.0) * 100;
+      const ltpNum = parseFloat(String(initialLtp).replace(/,/g, '')) || 540.0;
+      const initPnl = (ltpNum - 400.0) * 100;
       const formattedPnl = (initPnl >= 0 ? '+' : '') + initPnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
       appState.positions.push({
         id: 'pos_' + Date.now(),
-        symbol: 'BANKNIFTY 14th FEB 56500 CE',
-        exchange: 'NFO',
+        symbol: `SENSEX ${formattedExp} 75000 PE`,
+        exchange: 'BFO',
+        exchangeSegment: 'BSE_FNO',
+        securityId: 863990,
         side: 'BUY',
         entryPrice: initialEntry,
         qty: initialQty,
         avg: initialEntry,
         pnl: formattedPnl,
         ltp: initialLtp,
-        type: 'MIS',
+        type: 'NRML',
         autoCalc: true,
         isGreen: initPnl >= 0
       });
@@ -3657,7 +3826,7 @@ function initKiteApp() {
       saveState();
       populateAdminForms();
       renderAppUI();
-      showInputToast('New position (BANKNIFTY NFO) added & display updated!', true);
+      showInputToast('Index Option added & synced live with Dhan!', true);
     });
   }
 
