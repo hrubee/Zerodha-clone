@@ -1760,6 +1760,155 @@ function initKiteApp() {
   }
 
 
+  // ==========================================================================
+  // DHAN REAL-TIME WEBSOCKET FEED CLIENT (Continuous Binary Stream / Zero Rate Limits)
+  // ==========================================================================
+  let dhanWs = null;
+  let dhanWsConnected = false;
+  let dhanWsReconnectTimer = null;
+
+  function initDhanWebSocket() {
+    if (typeof WebSocket === 'undefined') return;
+    if (!appState.dhan || !appState.dhan.accessToken || appState.dhan.accessToken.length < 30) return;
+    if (dhanWs && (dhanWs.readyState === WebSocket.OPEN || dhanWs.readyState === WebSocket.CONNECTING)) return;
+
+    const token = appState.dhan.accessToken;
+    const clientId = appState.dhan.clientId || '1104706516';
+    const wsUrl = `wss://api-feed.dhan.co?version=2&token=${encodeURIComponent(token)}&clientId=${clientId}&authType=2`;
+
+    try {
+      dhanWs = new WebSocket(wsUrl);
+      dhanWs.binaryType = 'arraybuffer';
+
+      dhanWs.onopen = () => {
+        dhanWsConnected = true;
+        console.log('⚡ [Dhan WS] Connected to live market feed binary stream');
+        subscribeDhanInstruments();
+      };
+
+      dhanWs.onmessage = (event) => {
+        if (event.data instanceof ArrayBuffer) {
+          handleDhanBinaryMessage(event.data);
+        }
+      };
+
+      dhanWs.onerror = (err) => {
+        console.warn('⚡ [Dhan WS] Error:', err);
+      };
+
+      dhanWs.onclose = () => {
+        dhanWsConnected = false;
+        if (dhanWsReconnectTimer) clearTimeout(dhanWsReconnectTimer);
+        dhanWsReconnectTimer = setTimeout(() => {
+          if (appState.dhan && appState.dhan.accessToken) {
+            initDhanWebSocket();
+          }
+        }, 4000);
+      };
+    } catch (e) {
+      console.error('Failed to initialize Dhan WebSocket:', e);
+    }
+  }
+
+  function subscribeDhanInstruments() {
+    if (!dhanWs || dhanWs.readyState !== WebSocket.OPEN) return;
+
+    const instrumentList = [
+      { "ExchangeSegment": "IDX_I", "SecurityId": "13" },
+      { "ExchangeSegment": "IDX_I", "SecurityId": "25" },
+      { "ExchangeSegment": "IDX_I", "SecurityId": "51" }
+    ];
+
+    if (appState.positions && appState.positions.length > 0) {
+      appState.positions.forEach(pos => {
+        if (pos.securityId) {
+          instrumentList.push({
+            "ExchangeSegment": pos.exchangeSegment || "NSE_FNO",
+            "SecurityId": String(pos.securityId)
+          });
+        }
+      });
+    }
+
+    const subMsg = {
+      "RequestCode": 15, // 15 = Full Quote, 17 = LTP Ticker
+      "InstrumentCount": instrumentList.length,
+      "InstrumentList": instrumentList
+    };
+
+    try {
+      dhanWs.send(JSON.stringify(subMsg));
+      console.log('⚡ [Dhan WS] Subscribed to instruments:', instrumentList);
+    } catch (e) {
+      console.warn('Failed to send Dhan subscription:', e);
+    }
+  }
+
+  function handleDhanBinaryMessage(buffer) {
+    if (buffer.byteLength < 8) return;
+    const view = new DataView(buffer);
+    const responseCode = view.getUint8(0);
+    const segment = view.getUint8(3);
+    const securityId = view.getInt32(4, true);
+
+    if (responseCode === 1) { // Index Packet
+      const ltp = view.getFloat32(8, true);
+      const open = view.getFloat32(12, true);
+      const close = view.getFloat32(16, true);
+      if (ltp > 0) {
+        if (securityId === 13) updateLiveIndexFromWs('nifty', ltp, close || open);
+        else if (securityId === 25) updateLiveIndexFromWs('banknifty', ltp, close || open);
+        else if (securityId === 51) updateLiveIndexFromWs('sensex', ltp, close || open);
+      }
+    } else if (responseCode === 2 || responseCode === 4) { // Ticker or Quote Packet
+      const ltp = view.getFloat32(8, true);
+      if (ltp > 0) {
+        updateSecurityLtpFromWs(securityId, ltp);
+      }
+    }
+  }
+
+  function updateLiveIndexFromWs(indexKey, price, prevClose) {
+    if (!appState.indices || !appState.indices[indexKey]) return;
+    const baseClose = prevClose || appState.indices[indexKey].prevClose || price;
+    const chg = price - baseClose;
+    const pct = baseClose ? (chg / baseClose) * 100 : 0;
+    appState.indices[indexKey].value = price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    appState.indices[indexKey].change = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+    appState.indices[indexKey].isGreen = chg >= 0;
+    appState.indices[indexKey].prevClose = baseClose;
+    renderAppUI();
+  }
+
+  function updateSecurityLtpFromWs(securityId, price) {
+    let updated = false;
+    appState.positions.forEach(pos => {
+      if (pos.securityId && String(pos.securityId) === String(securityId)) {
+        pos.ltp = price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const entryVal = parseFloat(String(pos.entryPrice || pos.avg).replace(/,/g, '')) || 0;
+        const qtyVal = parseFloat(String(pos.qty).replace(/,/g, '')) || 0;
+        const side = (pos.side || 'BUY').toUpperCase();
+        if (qtyVal > 0 && entryVal > 0) {
+          const diff = (side === 'BUY') ? (price - entryVal) : (entryVal - price);
+          const pnlVal = diff * qtyVal;
+          pos.pnl = (pnlVal >= 0 ? '+' : '') + pnlVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        pos.isGreen = !pos.pnl.includes('-');
+        updated = true;
+      }
+    });
+
+    if (updated) {
+      let total = 0;
+      appState.positions.forEach(p => {
+        total += parseFloat(String(p.pnl).replace(/[^0-9.-]/g, '')) || 0;
+      });
+      appState.totalPnl = (total >= 0 ? '+' : '') + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      saveState();
+      renderAppUI();
+    }
+  }
+
   let lastDhanFetchTime = 0;
   let cachedDhanIndices = null;
   let lastLiveIndicesFetchTime = 0;
@@ -3596,6 +3745,9 @@ function initKiteApp() {
   } else {
     updateTickerBadge();
   }
+
+  // Start Dhan real-time WebSocket market feed streaming
+  initDhanWebSocket();
 
   // Auto-populate forms on input page after all functions and listeners are ready
   if (document.body.classList.contains('page-input-standalone')) {
