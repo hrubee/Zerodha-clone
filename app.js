@@ -2055,21 +2055,28 @@ function initKiteApp() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          "IDX_I": [13, 51]
+          "IDX_I": [13, 25, 51]
         })
       });
 
       const data = await res.json();
       if (res.ok && data.status === 'success') {
+        if (!appState.dhan) appState.dhan = {};
+        appState.dhan.clientId = clientId;
+        appState.dhan.accessToken = accessToken;
+        saveState();
+
         const n50Price = data?.data?.IDX_I?.['13']?.last_price ? `₹${data.data.IDX_I['13'].last_price}` : 'Active';
+        const bnPrice = data?.data?.IDX_I?.['25']?.last_price ? `₹${data.data.IDX_I['25'].last_price}` : 'Active';
         const sxPrice = data?.data?.IDX_I?.['51']?.last_price ? `₹${data.data.IDX_I['51'].last_price}` : 'Active';
-        statusText.textContent = `✅ Dhan API Connected! Left (NIFTY 50): ${n50Price} | Right (SENSEX): ${sxPrice}`;
+        statusText.textContent = `✅ Connected! NIFTY: ${n50Price} | BANKNIFTY: ${bnPrice} | SENSEX: ${sxPrice}`;
         statusText.style.color = '#10b981';
-      } else if (res.status === 401) {
-        statusText.textContent = '❌ Dhan API 401: Token expired or invalid.';
+      } else if (data && data.status === 'failed') {
+        const errDetail = data?.data ? JSON.stringify(data.data) : (data?.message || 'Invalid Token');
+        statusText.textContent = `❌ Dhan Auth Failed: ${errDetail}`;
         statusText.style.color = '#ef4444';
       } else {
-        statusText.textContent = '⚠️ Dhan API server responded with status: ' + res.status;
+        statusText.textContent = '⚠️ Dhan API responded with status: ' + res.status;
         statusText.style.color = '#f59e0b';
       }
     } catch (err) {
