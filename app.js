@@ -288,6 +288,9 @@ function initKiteApp() {
   }
 
   let liveTickerTimer = null;
+  let dhanExpiryListCache = {};
+  let cachedRealIndices = null;
+  let lastLiveIndicesFetchTime = 0;
 
   // ==========================================================================
   // COMPREHENSIVE LIVE DIAGNOSTICS & SYNC LOGGING ENGINE
