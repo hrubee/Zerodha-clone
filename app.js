@@ -2386,6 +2386,7 @@ function initKiteApp() {
         dhanWsConnected = true;
         isWsLeader = true;
         console.log('⚡ [Dhan WS] Connected to live market feed binary stream');
+        KiteSyncLogger.sync('DHAN_WS_OPEN', 'Connected to Dhan live market feed binary stream');
         subscribeDhanInstruments();
       };
 
@@ -2397,10 +2398,12 @@ function initKiteApp() {
 
       dhanWs.onerror = (err) => {
         console.warn('⚡ [Dhan WS] Error:', err);
+        KiteSyncLogger.error('DHAN_WS_ERR', 'WebSocket error event');
       };
 
       dhanWs.onclose = () => {
         dhanWsConnected = false;
+        KiteSyncLogger.warn('DHAN_WS_CLOSE', 'WebSocket connection closed');
         if (dhanWsReconnectTimer) clearTimeout(dhanWsReconnectTimer);
         dhanWsReconnectTimer = setTimeout(() => {
           if (appState.dhan && appState.dhan.accessToken && isWsLeader) {
@@ -2410,6 +2413,7 @@ function initKiteApp() {
       };
     } catch (e) {
       console.error('Failed to initialize Dhan WebSocket:', e);
+      KiteSyncLogger.error('DHAN_WS_INIT_ERR', e.message);
     }
   }
 
@@ -2427,6 +2431,7 @@ function initKiteApp() {
             pos.exchangeSegment = info.exchangeSegment;
             anyResolved = true;
             console.log(`⚡ [Dhan WS] Auto-resolved Security ID for ${pos.symbol}: ${pos.securityId} (${pos.exchangeSegment})`);
+            KiteSyncLogger.info('RESOLVED_SEC_ID', `${pos.symbol} -> SecID: ${pos.securityId} (${pos.exchangeSegment})`);
           }
           if (info.lastPrice > 0 && (!pos.ltp || pos.ltp === '0.00' || parseFloat(pos.ltp) === 0)) {
             pos.ltp = info.formattedLtp;
@@ -2472,8 +2477,10 @@ function initKiteApp() {
     try {
       dhanWs.send(JSON.stringify(subMsg));
       console.log('⚡ [Dhan WS] Subscribed to instruments:', instrumentList);
+      KiteSyncLogger.sync('DHAN_WS_SUB', `Subscribed to ${instrumentList.length} instruments`, instrumentList);
     } catch (e) {
       console.warn('Failed to send Dhan subscription:', e);
+      KiteSyncLogger.warn('DHAN_WS_SUB_ERR', e.message);
     }
   }
 
@@ -2504,7 +2511,10 @@ function initKiteApp() {
         if (securityId === 13) updateLiveIndexFromWs('nifty', ltp, close || open);
         else if (securityId === 25) updateLiveIndexFromWs('banknifty', ltp, close || open);
         else if (securityId === 51) updateLiveIndexFromWs('sensex', ltp, close || open);
-        else updateSecurityLtpFromWs(securityId, ltp);
+        else {
+          updateSecurityLtpFromWs(securityId, ltp);
+          KiteSyncLogger.sync('DHAN_WS_TICK', `SecID ${securityId} LTP: ₹${ltp.toFixed(2)}`);
+        }
       }
     }
     // Response Code 50: Server Disconnection / Auth Error Packet (<BHBIH)
@@ -2521,6 +2531,7 @@ function initKiteApp() {
         wsCooldownUntil = Date.now() + 15000;
       }
       console.warn(`⚡ [Dhan WS] Server Disconnected (${disconnectCode}): ${errMsgs[disconnectCode] || 'Unknown reason'}`);
+      KiteSyncLogger.warn('DHAN_WS_DISCONN', `Code ${disconnectCode}: ${errMsgs[disconnectCode] || 'Unknown'}`);
     }
   }
 
