@@ -882,11 +882,16 @@ function initKiteApp() {
       positionsContainer.innerHTML = '';
       if (positionsCountBadge) positionsCountBadge.textContent = appState.positions.length;
 
+      const isMarketClosed = isMarketClosedOrPast330();
+
       appState.positions.forEach((pos, idx) => {
         const card = document.createElement('div');
-        card.className = 'position-item-card';
+        card.className = `position-item-card ${isMarketClosed ? 'market-closed-faded' : ''}`;
         card.dataset.id = pos.id;
         card.dataset.index = idx;
+        if (isMarketClosed) {
+          card.style.opacity = '0.55';
+        }
 
         const isGreenPnl = !pos.pnl.includes('-');
         const pnlColorClass = isGreenPnl ? 'green' : 'red';
@@ -1207,10 +1212,11 @@ function initKiteApp() {
     const ovPositionsList = document.getElementById('ov-positions-list');
     if (ovPositionsList) {
       ovPositionsList.innerHTML = '';
+      const isMarketClosed = isMarketClosedOrPast330();
       if (appState.positions) {
         appState.positions.forEach((pos, idx) => {
           const item = document.createElement('div');
-          item.className = 'overlay-field pos-card-overlay-item';
+          item.className = `overlay-field pos-card-overlay-item ${isMarketClosed ? 'market-closed-faded' : ''}`;
           item.style.position = 'relative';
           item.style.width = '100%';
           item.style.margin = '0';
@@ -1227,6 +1233,9 @@ function initKiteApp() {
           item.style.justifyContent = 'center';
           item.style.cursor = 'pointer';
           item.style.boxShadow = 'none';
+          if (isMarketClosed) {
+            item.style.opacity = '0.55';
+          }
 
           const isGreenPnl = !pos.pnl.includes('-');
           const pnlColor = isGreenPnl ? 'rgb(111, 174, 101)' : '#df514c';
@@ -2749,6 +2758,13 @@ function initKiteApp() {
     const totalMinutes = hours * 60 + minutes;
     // NSE/BSE Market hours: 9:15 AM (555 min) to 3:30 PM (930 min) IST
     return totalMinutes >= 555 && totalMinutes <= 930;
+  }
+
+  function isMarketClosedOrPast330() {
+    const marketMode = appState.dhan ? (appState.dhan.marketHoursMode || 'auto') : 'auto';
+    if (marketMode === 'always') return false;
+    if (marketMode === 'closed') return true;
+    return !isIndianMarketOpen();
   }
 
   async function tickLiveMarketData() {

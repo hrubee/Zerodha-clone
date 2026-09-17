@@ -955,6 +955,13 @@ body.page-display {
   border-bottom: 1px solid var(--border-light);
   cursor: pointer;
   background: #ffffff;
+  transition: opacity 0.3s ease;
+}
+
+.position-item-card.market-closed-faded,
+.pos-card-overlay-item.market-closed-faded {
+  opacity: 0.55 !important;
+  filter: grayscale(10%);
 }
 
 .pos-row-top {
