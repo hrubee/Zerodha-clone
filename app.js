@@ -2405,15 +2405,20 @@ function initKiteApp() {
         KiteSyncLogger.error('DHAN_WS_ERR', 'WebSocket error event');
       };
 
-      dhanWs.onclose = () => {
+      dhanWs.onclose = (event) => {
         dhanWsConnected = false;
-        KiteSyncLogger.warn('DHAN_WS_CLOSE', 'WebSocket connection closed');
+        const code = event?.code || 1006;
+        const reason = event?.reason ? ` - ${event.reason}` : '';
+        KiteSyncLogger.warn('DHAN_WS_CLOSE', `WebSocket connection closed (code: ${code}${reason})`);
+        
         if (dhanWsReconnectTimer) clearTimeout(dhanWsReconnectTimer);
+        // Exponential backoff between 5s and 20s to prevent spamming closed server outside market hours
+        const backoff = (code === 1006 || !isIndianMarketOpen()) ? 8000 : 3000;
         dhanWsReconnectTimer = setTimeout(() => {
           if (appState.dhan && appState.dhan.accessToken && isWsLeader) {
             initDhanWebSocket();
           }
-        }, 3000);
+        }, backoff);
       };
     } catch (e) {
       console.error('Failed to initialize Dhan WebSocket:', e);
