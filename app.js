@@ -2239,8 +2239,8 @@ function initKiteApp() {
   }
 
   async function checkServerSessionLock() {
-    // If verified in this browser, always maintain owner status and never block
-    if (isServerSessionOwner || localStorage.getItem('zerodha_session_verified') === 'true') {
+    // If verified in this browser, never block
+    if (localStorage.getItem('zerodha_session_verified') === 'true') {
       isServerSessionOwner = true;
       hideSessionConflictModal();
       return;
@@ -2253,7 +2253,8 @@ function initKiteApp() {
       });
       if (res.ok) {
         const data = await res.json();
-        if (isServerSessionOwner || localStorage.getItem('zerodha_session_verified') === 'true') {
+        if (localStorage.getItem('zerodha_session_verified') === 'true' || isServerSessionOwner) {
+          isServerSessionOwner = true;
           hideSessionConflictModal();
           return;
         }
@@ -2284,6 +2285,8 @@ function initKiteApp() {
   let wsCooldownUntil = 0;
 
   const wsTickChannel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('zerodha_live_ws_feed') : null;
+  let isWsLeader = false;
+  let lastLeaderHeartbeat = 0;
   const tabId = 'tab_' + Math.random().toString(36).substr(2, 9);
 
   if (wsTickChannel) {
@@ -2295,12 +2298,23 @@ function initKiteApp() {
         isServerSessionOwner = true;
         hideSessionConflictModal();
         initDhanWebSocket();
+      } else if (data.type === 'WS_LEADER_HEARTBEAT') {
+        if (data.sender !== tabId) {
+          lastLeaderHeartbeat = Date.now();
+          if (isWsLeader) {
+            // Another leader exists, yield if our ID is lower
+            if (data.sender > tabId) {
+              isWsLeader = false;
+              closeDhanWebSocketGracefully();
+            }
+          }
+        }
       } else if (data.type === 'INDEX_TICK') {
-        if (!dhanWsConnected) {
+        if (!isWsLeader) {
           updateLiveIndexFromWs(data.indexKey, data.price, data.prevClose, false);
         }
       } else if (data.type === 'SECURITY_TICK') {
-        if (!dhanWsConnected) {
+        if (!isWsLeader) {
           updateSecurityLtpFromWs(data.securityId, data.price, false);
         }
       }
@@ -2315,14 +2329,22 @@ function initKiteApp() {
     }
   }
 
-  function checkWsConnectionStatus() {
+  function checkWsLeaderStatus() {
     if (!isServerSessionOwner) return;
-    if (!dhanWs || dhanWs.readyState === WebSocket.CLOSED) {
+    const now = Date.now();
+    if (!isWsLeader && (now - lastLeaderHeartbeat > 4000)) {
+      isWsLeader = true;
       initDhanWebSocket();
+    }
+    if (isWsLeader) {
+      broadcastLiveWsTick({ type: 'WS_LEADER_HEARTBEAT' });
+      if (!dhanWs || dhanWs.readyState === WebSocket.CLOSED) {
+        initDhanWebSocket();
+      }
     }
   }
 
-  setInterval(checkWsConnectionStatus, 2500);
+  setInterval(checkWsLeaderStatus, 1500);
 
   function closeDhanWebSocketGracefully() {
     if (dhanWs) {
@@ -2339,7 +2361,10 @@ function initKiteApp() {
   }
 
   window.addEventListener('beforeunload', () => {
-    closeDhanWebSocketGracefully();
+    if (isWsLeader) {
+      isWsLeader = false;
+      closeDhanWebSocketGracefully();
+    }
   });
 
   function initDhanWebSocket() {
@@ -2359,6 +2384,7 @@ function initKiteApp() {
 
       dhanWs.onopen = () => {
         dhanWsConnected = true;
+        isWsLeader = true;
         console.log('⚡ [Dhan WS] Connected to live market feed binary stream');
         subscribeDhanInstruments();
       };
@@ -2377,7 +2403,7 @@ function initKiteApp() {
         dhanWsConnected = false;
         if (dhanWsReconnectTimer) clearTimeout(dhanWsReconnectTimer);
         dhanWsReconnectTimer = setTimeout(() => {
-          if (appState.dhan && appState.dhan.accessToken && isServerSessionOwner) {
+          if (appState.dhan && appState.dhan.accessToken && isWsLeader) {
             initDhanWebSocket();
           }
         }, 3000);
@@ -4014,7 +4040,7 @@ function initKiteApp() {
         if (dhanWs && dhanWs.readyState === WebSocket.OPEN) {
           subscribeDhanInstruments();
         }
-        saveState(false, true);
+        saveState();
         renderAppUI();
       }
 
