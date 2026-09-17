@@ -20,28 +20,28 @@
   },
   "indices": {
     "nifty": {
-      "val": "23,271.75",
-      "change": "-126.35 (-0.54%)",
+      "val": "23,293.40",
+      "change": "-104.70 (-0.45%)",
       "isGreen": false,
       "prevClose": 23398.1,
-      "value": "23,271.75",
-      "price": 23271.75
+      "value": "23,293.40",
+      "price": 23293.400390625
     },
     "banknifty": {
-      "val": "56,187.50",
-      "change": "-419.05 (-0.74%)",
+      "val": "56,213.55",
+      "change": "-393.00 (-0.69%)",
       "isGreen": false,
       "prevClose": 56606.55,
-      "value": "56,187.50",
-      "price": 56187.5
+      "value": "56,213.55",
+      "price": 56213.55078125
     },
     "sensex": {
-      "val": "74,394.55",
-      "change": "-387.21 (-0.52%)",
+      "val": "74,436.98",
+      "change": "-344.78 (-0.46%)",
       "isGreen": false,
       "prevClose": 74781.76,
-      "value": "74,393.60",
-      "price": 74393.6015625
+      "value": "74,436.98",
+      "price": 74436.9765625
     },
     "vix": {
       "val": "13.82",
@@ -49,24 +49,41 @@
       "isGreen": false
     }
   },
-  "totalPnl": "+11,17,087.61",
+  "totalPnl": "+5,60,042.00",
   "holdingsCount": "1",
   "positions": [
     {
       "id": "pos_0",
-      "symbol": "SENSEX 29th OCT 71400 CE",
+      "symbol": "SENSEX 17th SEP 84500 PE",
       "exchange": "BFO",
       "exchangeSegment": "BSE_FNO",
-      "securityId": 871147,
+      "securityId": 862815,
       "side": "BUY",
-      "entryPrice": "0.00",
-      "qty": "0",
-      "avg": "0.00",
-      "ltp": "2,969.32",
+      "entryPrice": "400.00",
+      "qty": "100",
+      "avg": "400.00",
+      "ltp": "5,810.37",
       "type": "NRML",
       "autoCalc": true,
-      "pnl": "+11,17,087.61",
+      "pnl": "+5,41,037.00",
       "isGreen": true
+    },
+    {
+      "id": "pos_1",
+      "symbol": "SENSEX 17th SEP 75000 PE",
+      "exchange": "BFO",
+      "exchangeSegment": "BSE_FNO",
+      "securityId": 863990,
+      "side": "BUY",
+      "entryPrice": "400.00",
+      "qty": "100",
+      "avg": "400.00",
+      "ltp": "590.05",
+      "type": "NRML",
+      "autoCalc": true,
+      "pnl": "+19,005.00",
+      "isGreen": true,
+      "_lastDirectTickTime": 1789626180326
     }
   ],
   "watchlist": [
@@ -142,5 +159,5 @@
       }
     ]
   },
-  "updatedAt": 1789625639259
+  "updatedAt": 1789626180330
 }

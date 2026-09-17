@@ -7,6 +7,14 @@ import time
 PORT = 8080
 STATE_FILE = os.path.join(os.path.dirname(__file__), 'app_state.json')
 
+SESSION_LOCK = {
+    "activeSessionId": None,
+    "lastHeartbeat": 0,
+    "ip": None,
+    "claimedAt": 0
+}
+SESSION_PASS = "2398"
+
 class RouteHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         # Custom clean timestamped server logging
@@ -31,6 +39,21 @@ class RouteHandler(http.server.SimpleHTTPRequestHandler):
                     self.wfile.write(content.encode('utf-8'))
             else:
                 self.wfile.write(b'{}')
+            return
+
+        # Session Status Endpoint
+        if clean_path == '/api/session/status':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            now = time.time()
+            is_active = (now - SESSION_LOCK["lastHeartbeat"] < 10.0) if SESSION_LOCK["activeSessionId"] else False
+            self.wfile.write(json.dumps({
+                "hasActiveSession": is_active,
+                "activeSessionId": SESSION_LOCK["activeSessionId"] if is_active else None,
+                "lastHeartbeat": SESSION_LOCK["lastHeartbeat"]
+            }).encode('utf-8'))
             return
 
         # Diagnostics Ping Endpoint
@@ -99,6 +122,134 @@ class RouteHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         clean_path = self.path.split('?')[0].rstrip('/')
+
+        # Strict Single-Session Lock Handlers
+        if clean_path == '/api/session/heartbeat':
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length) if content_length > 0 else b'{}'
+            try:
+                data = json.loads(post_data.decode('utf-8'))
+                req_session_id = data.get('sessionId')
+                now = time.time()
+                client_ip = self.client_address[0] if self.client_address else 'unknown'
+
+                if not req_session_id:
+                    self.send_response(400)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"status": "error", "message": "Missing sessionId"}).encode('utf-8'))
+                    return
+
+                # If no active session or existing session timed out (>10s idle)
+                if not SESSION_LOCK["activeSessionId"] or (now - SESSION_LOCK["lastHeartbeat"] > 10.0):
+                    SESSION_LOCK["activeSessionId"] = req_session_id
+                    SESSION_LOCK["lastHeartbeat"] = now
+                    SESSION_LOCK["ip"] = client_ip
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        "status": "active",
+                        "isOwner": True,
+                        "sessionId": req_session_id,
+                        "message": "Session lock acquired"
+                    }).encode('utf-8'))
+                    return
+
+                # If matching active session ID
+                if SESSION_LOCK["activeSessionId"] == req_session_id:
+                    SESSION_LOCK["lastHeartbeat"] = now
+                    SESSION_LOCK["ip"] = client_ip
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        "status": "active",
+                        "isOwner": True,
+                        "sessionId": req_session_id
+                    }).encode('utf-8'))
+                    return
+
+                # Conflict: Another session is currently active
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "status": "conflict",
+                    "isOwner": False,
+                    "activeSessionId": SESSION_LOCK["activeSessionId"],
+                    "message": "session already active in other device, are you sure you want to use here"
+                }).encode('utf-8'))
+                return
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+                return
+
+        if clean_path == '/api/session/claim':
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length) if content_length > 0 else b'{}'
+            try:
+                data = json.loads(post_data.decode('utf-8'))
+                req_session_id = data.get('sessionId')
+                passcode = str(data.get('pin') or data.get('passcode') or '').strip()
+                now = time.time()
+                client_ip = self.client_address[0] if self.client_address else 'unknown'
+
+                if not req_session_id:
+                    self.send_response(400)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"status": "error", "message": "Missing sessionId"}).encode('utf-8'))
+                    return
+
+                # Verify 4-digit project pass (2398)
+                if passcode == SESSION_PASS:
+                    SESSION_LOCK["activeSessionId"] = req_session_id
+                    SESSION_LOCK["lastHeartbeat"] = now
+                    SESSION_LOCK["ip"] = client_ip
+                    SESSION_LOCK["claimedAt"] = now
+                    timestamp = time.strftime('%H:%M:%S')
+                    print(f"[{timestamp}] 🔒 [SESSION_CLAIMED] Session {req_session_id[:8]} claimed successfully via PIN {SESSION_PASS}", flush=True)
+
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        "status": "success",
+                        "isOwner": True,
+                        "sessionId": req_session_id,
+                        "message": "Session claimed successfully on this device"
+                    }).encode('utf-8'))
+                    return
+                else:
+                    self.send_response(401)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        "status": "failed",
+                        "isOwner": False,
+                        "message": "Invalid 4-digit PIN"
+                    }).encode('utf-8'))
+                    return
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+                return
+
         if clean_path == '/api/state':
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length)

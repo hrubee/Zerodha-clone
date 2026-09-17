@@ -1959,6 +1959,295 @@ function initKiteApp() {
 
 
   // ==========================================================================
+  // STRICT SINGLE-SESSION LOCK & MULTI-BROWSER PROTECTION (PIN: 2398)
+  // ==========================================================================
+  let isServerSessionOwner = true;
+  let browserSessionId = localStorage.getItem('zerodha_browser_session_id');
+  if (!browserSessionId) {
+    browserSessionId = 'sess_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+    localStorage.setItem('zerodha_browser_session_id', browserSessionId);
+  }
+
+  function injectSessionModalStyles() {
+    if (document.getElementById('zerodha-session-modal-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'zerodha-session-modal-styles';
+    style.textContent = `
+      .session-blocker-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+      }
+      .session-blocker-backdrop.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .session-blocker-modal {
+        background: #ffffff;
+        border-radius: 16px;
+        max-width: 440px;
+        width: 100%;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(226, 232, 240, 0.8);
+        overflow: hidden;
+        animation: sessionModalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        text-align: center;
+        padding: 32px 28px;
+        box-sizing: border-box;
+      }
+      @keyframes sessionModalSlideUp {
+        from { transform: translateY(20px) scale(0.96); opacity: 0; }
+        to { transform: translateY(0) scale(1); opacity: 1; }
+      }
+      .session-modal-icon {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 16px;
+        border-radius: 50%;
+        background: rgba(239, 68, 68, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ef4444;
+      }
+      .session-modal-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 10px;
+        letter-spacing: -0.3px;
+      }
+      .session-modal-desc {
+        font-size: 14px;
+        color: #64748b;
+        line-height: 1.5;
+        margin: 0 0 24px;
+      }
+      .session-modal-btn {
+        width: 100%;
+        padding: 13px 20px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        background: #387ed1;
+        color: #ffffff;
+      }
+      .session-modal-btn:hover {
+        background: #2b6cb0;
+        box-shadow: 0 4px 12px rgba(56, 126, 209, 0.35);
+      }
+      .session-pin-container {
+        display: none;
+        margin-top: 20px;
+        text-align: center;
+      }
+      .session-pin-container.active {
+        display: block;
+        animation: sessionFadeIn 0.2s ease;
+      }
+      @keyframes sessionFadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .session-pin-input {
+        width: 180px;
+        height: 50px;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: 12px;
+        text-align: center;
+        border: 2px solid #cbd5e1;
+        border-radius: 10px;
+        outline: none;
+        margin: 0 auto 16px;
+        display: block;
+        color: #0f172a;
+        background: #f8fafc;
+        box-sizing: border-box;
+        transition: border-color 0.15s ease;
+      }
+      .session-pin-input:focus {
+        border-color: #387ed1;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(56, 126, 209, 0.15);
+      }
+      .session-error-msg {
+        color: #ef4444;
+        font-size: 13px;
+        font-weight: 500;
+        margin: -8px 0 14px;
+        display: none;
+      }
+      .session-shake {
+        animation: sessionShake 0.4s ease-in-out;
+      }
+      @keyframes sessionShake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-8px); }
+        40%, 80% { transform: translateX(8px); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function renderSessionConflictModal() {
+    injectSessionModalStyles();
+    let modalEl = document.getElementById('zerodha-session-blocker-modal');
+    if (!modalEl) {
+      modalEl = document.createElement('div');
+      modalEl.id = 'zerodha-session-blocker-modal';
+      modalEl.className = 'session-blocker-backdrop';
+      modalEl.innerHTML = `
+        <div class="session-blocker-modal" id="session-modal-box">
+          <div class="session-modal-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <h2 class="session-modal-title">Session Active on Another Device</h2>
+          <p class="session-modal-desc" id="session-modal-text">Session already active in other device, are you sure you want to use here?</p>
+          
+          <div id="session-action-step1">
+            <button class="session-modal-btn" id="session-btn-use-here">Use Here</button>
+          </div>
+
+          <div class="session-pin-container" id="session-pin-step2">
+            <div style="font-size: 13px; color: #475569; margin-bottom: 12px; font-weight: 500;">Enter 4-Digit Security Passcode:</div>
+            <input type="password" maxlength="4" pattern="[0-9]*" inputmode="numeric" class="session-pin-input" id="session-pin-field" placeholder="••••" autocomplete="off" />
+            <div class="session-error-msg" id="session-pin-error">Incorrect passcode. Try again.</div>
+            <button class="session-modal-btn" id="session-btn-submit-pin">Confirm & Take Over</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modalEl);
+
+      const btnUseHere = modalEl.querySelector('#session-btn-use-here');
+      const step1 = modalEl.querySelector('#session-action-step1');
+      const step2 = modalEl.querySelector('#session-pin-step2');
+      const pinField = modalEl.querySelector('#session-pin-field');
+      const btnSubmitPin = modalEl.querySelector('#session-btn-submit-pin');
+      const errorMsg = modalEl.querySelector('#session-pin-error');
+      const modalBox = modalEl.querySelector('#session-modal-box');
+
+      btnUseHere.addEventListener('click', () => {
+        step1.style.display = 'none';
+        step2.classList.add('active');
+        pinField.value = '';
+        errorMsg.style.display = 'none';
+        pinField.focus();
+      });
+
+      async function submitPin() {
+        const pinVal = pinField.value.trim();
+        if (!pinVal || pinVal.length !== 4) {
+          errorMsg.textContent = 'Please enter a valid 4-digit PIN.';
+          errorMsg.style.display = 'block';
+          modalBox.classList.add('session-shake');
+          setTimeout(() => modalBox.classList.remove('session-shake'), 450);
+          return;
+        }
+
+        try {
+          btnSubmitPin.textContent = 'Verifying...';
+          btnSubmitPin.disabled = true;
+          const res = await fetch('/api/session/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId: browserSessionId, pin: pinVal })
+          });
+          const data = await res.json();
+          if (res.ok && data.status === 'success') {
+            isServerSessionOwner = true;
+            hideSessionConflictModal();
+            initDhanWebSocket();
+            if (typeof showNotificationToast === 'function') {
+              showNotificationToast('Session activated on this device');
+            }
+          } else {
+            errorMsg.textContent = data.message || 'Incorrect PIN. Please try again.';
+            errorMsg.style.display = 'block';
+            modalBox.classList.add('session-shake');
+            setTimeout(() => modalBox.classList.remove('session-shake'), 450);
+            pinField.value = '';
+            pinField.focus();
+          }
+        } catch (e) {
+          errorMsg.textContent = 'Failed to connect to server.';
+          errorMsg.style.display = 'block';
+        } finally {
+          btnSubmitPin.textContent = 'Confirm & Take Over';
+          btnSubmitPin.disabled = false;
+        }
+      }
+
+      btnSubmitPin.addEventListener('click', submitPin);
+      pinField.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          submitPin();
+        }
+      });
+    }
+
+    modalEl.classList.add('visible');
+  }
+
+  function hideSessionConflictModal() {
+    const modalEl = document.getElementById('zerodha-session-blocker-modal');
+    if (modalEl) {
+      modalEl.classList.remove('visible');
+      const step1 = modalEl.querySelector('#session-action-step1');
+      const step2 = modalEl.querySelector('#session-pin-step2');
+      const pinField = modalEl.querySelector('#session-pin-field');
+      const errorMsg = modalEl.querySelector('#session-pin-error');
+      if (step1) step1.style.display = 'block';
+      if (step2) step2.classList.remove('active');
+      if (pinField) pinField.value = '';
+      if (errorMsg) errorMsg.style.display = 'none';
+    }
+  }
+
+  async function checkServerSessionLock() {
+    try {
+      const res = await fetch('/api/session/heartbeat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: browserSessionId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.isOwner) {
+          isServerSessionOwner = true;
+          hideSessionConflictModal();
+        } else {
+          isServerSessionOwner = false;
+          closeDhanWebSocketGracefully();
+          renderSessionConflictModal();
+        }
+      }
+    } catch (e) {
+      // Offline fallback
+    }
+  }
+
+  setInterval(checkServerSessionLock, 2500);
+  checkServerSessionLock();
+
+  // ==========================================================================
   // DHAN REAL-TIME WEBSOCKET FEED CLIENT (Continuous Binary Stream / Zero Rate Limits)
   // ==========================================================================
   let dhanWs = null;
@@ -2008,6 +2297,7 @@ function initKiteApp() {
   }
 
   function checkWsLeaderStatus() {
+    if (!isServerSessionOwner) return;
     const now = Date.now();
     if (!isWsLeader && (now - lastLeaderHeartbeat > 4000)) {
       isWsLeader = true;
@@ -2045,6 +2335,7 @@ function initKiteApp() {
   });
 
   function initDhanWebSocket() {
+    if (!isServerSessionOwner) return;
     if (typeof WebSocket === 'undefined') return;
     if (!appState.dhan || !appState.dhan.accessToken || appState.dhan.accessToken.length < 30) return;
     if (Date.now() < wsCooldownUntil) return;
