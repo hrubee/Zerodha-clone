@@ -682,14 +682,9 @@ function initKiteApp() {
     }
   });
 
-  // REST Polling Sync Fallback (Only on initial load if localStorage is totally empty)
+  // REST Polling Sync (Cross-device and cross-tab continuous sync)
   async function checkServerStateSync() {
     if (document.body.classList.contains('page-input-standalone')) return; // Never poll on input page
-    // If localStorage already has valid user state, DO NOT fetch or overwrite from serverless cold-start!
-    const existingLocal = localStorage.getItem('kite_replica_admin_state');
-    if (existingLocal) {
-      return;
-    }
     try {
       const res = await fetch('/api/state?t=' + Date.now(), {
         headers: { 'Cache-Control': 'no-cache' }
@@ -705,12 +700,10 @@ function initKiteApp() {
     }
   }
 
-  // Initial fetch from backend state ONLY if localStorage is empty
+  // Periodic fetch on display page (every 2.5s) to guarantee real-time cross-device sync
   if (!document.body.classList.contains('page-input-standalone')) {
-    const hasLocalState = !!localStorage.getItem('kite_replica_admin_state');
-    if (!hasLocalState) {
-      checkServerStateSync();
-    }
+    checkServerStateSync();
+    setInterval(checkServerStateSync, 2500);
   }
 
   // DOM Containers
@@ -4042,7 +4035,7 @@ function initKiteApp() {
         if (dhanWs && dhanWs.readyState === WebSocket.OPEN) {
           subscribeDhanInstruments();
         }
-        saveState();
+        saveState(false, true);
         renderAppUI();
       }
 
