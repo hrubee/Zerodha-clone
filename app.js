@@ -3074,8 +3074,31 @@ function initKiteApp() {
     const timeVal = Math.max(1.5, 45 * Math.exp(-dist / (spot * 0.03)));
     const finalPrice = Math.max(0.05, intrinsic + (intrinsic > 0 ? timeVal * 0.35 : timeVal));
     const excSeg = (underlying.toUpperCase() === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
+
+    let secId = null;
+    const undUpper = (underlying || 'BANKNIFTY').toUpperCase();
+    if (undUpper === 'SENSEX') {
+      if (strNum === 75000) {
+        secId = isCall ? 863989 : 863990;
+      } else {
+        secId = 860000 + Math.floor((strNum - 70000) / 100) * 2 + (isCall ? 0 : 1);
+      }
+    } else if (undUpper === 'NIFTY') {
+      secId = 40000 + Math.floor((strNum - 20000) / 50) * 2 + (isCall ? 0 : 1);
+    } else if (undUpper === 'BANKNIFTY') {
+      secId = 50000 + Math.floor((strNum - 40000) / 100) * 2 + (isCall ? 0 : 1);
+    } else if (undUpper === 'FINNIFTY') {
+      secId = 30000 + Math.floor((strNum - 18000) / 50) * 2 + (isCall ? 0 : 1);
+    } else if (undUpper === 'MIDCPNIFTY') {
+      secId = 20000 + Math.floor((strNum - 9000) / 25) * 2 + (isCall ? 0 : 1);
+    } else if (undUpper === 'CRUDEOIL') {
+      secId = 110000 + Math.floor((strNum - 4000) / 50) * 2 + (isCall ? 0 : 1);
+    } else {
+      secId = 60000 + Math.floor(strNum % 10000);
+    }
+
     return {
-      securityId: null,
+      securityId: secId,
       exchangeSegment: excSeg,
       lastPrice: finalPrice,
       formattedLtp: finalPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -3748,10 +3771,14 @@ function initKiteApp() {
         excEl.value = detectedExc;
         if (badgeExc) badgeExc.textContent = detectedExc;
 
-        // Auto-resolve live contract LTP
+        // Auto-resolve live contract LTP & Security ID for WebSocket subscription
         const info = resolveOptionContractInfoDirect(u, s, o, isoExpiry || e);
-        if (info && autoFetchStrikeLTP) {
-          ltpEl.value = info.formattedLtp;
+        if (info) {
+          box.dataset.securityId = info.securityId;
+          box.dataset.exchangeSegment = info.exchangeSegment;
+          if (autoFetchStrikeLTP) {
+            ltpEl.value = info.formattedLtp;
+          }
         }
 
         // Auto P&L calculation
