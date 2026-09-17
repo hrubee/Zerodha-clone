@@ -2795,14 +2795,14 @@ function initKiteApp() {
 
     let totalPnlSum = 0;
     if (appState.positions.length > 0) {
-      // Periodic Option Chain refresh for live real-time strikes
+      // Periodic Option Chain refresh for live real-time strikes (every 4 seconds)
       const now = Date.now();
-      if (!window._lastDhanOcTickPoll || (now - window._lastDhanOcTickPoll > 10000)) {
+      if (!window._lastDhanOcTickPoll || (now - window._lastDhanOcTickPoll > 4000)) {
         window._lastDhanOcTickPoll = now;
         if (appState.dhan && appState.dhan.accessToken && appState.dhan.accessToken.length > 30) {
           appState.positions.forEach(pos => {
             const parsed = parseOptionSymbol(pos.symbol);
-            if (parsed && parsed.underlying && parsed.expiry) {
+            if (parsed && parsed.underlying) {
               fetchDhanOptionChain(parsed.underlying, parsed.expiry).catch(() => {});
             }
           });
@@ -2814,14 +2814,18 @@ function initKiteApp() {
         let newLtp = currentLtp;
 
         const parsed = parseOptionSymbol(pos.symbol);
-        // Only load from Option Chain if LTP is uninitialized / 0 (Fallback)
-        if ((!currentLtp || currentLtp === 0) && parsed && parsed.underlying && parsed.strike && parsed.optionType !== 'FUT') {
+        // Load latest live price from Option Chain cache
+        if (parsed && parsed.underlying && parsed.strike && parsed.optionType !== 'FUT') {
           const cachedOc = (parsed.expiry && dhanOptionChainCache[`${parsed.underlying.toUpperCase()}_${parsed.expiry}`]?.data) ||
             dhanOptionChainCache[parsed.underlying.toUpperCase()]?.data;
           const liveDhanPrice = getLtpFromDhanOC(cachedOc, parsed.strike, parsed.optionType);
           if (liveDhanPrice !== null && liveDhanPrice > 0) {
-            newLtp = liveDhanPrice;
-            pos.ltp = newLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            // Only overwrite if no direct tick received within last 1.5 seconds
+            const nowTime = Date.now();
+            if (!pos._lastDirectTickTime || (nowTime - pos._lastDirectTickTime > 1500)) {
+              newLtp = liveDhanPrice;
+              pos.ltp = newLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
           }
         }
 
