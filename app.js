@@ -217,7 +217,7 @@ function initKiteApp() {
   };
 
   const ACTIVE_DHAN_CLIENT_ID = '1104706516';
-  const ACTIVE_DHAN_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJ1c2VyUmVnaW9uIjoiUjEiLCJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzg5NTI5MTM0LCJpYXQiOjE3ODk0NDI3MzQsInRva2VuQ29uc3VtZXJUeXBlIjoiU0VMRiIsIndlYmhvb2tVcmwiOiIiLCJkaGFuQ2xpZW50SWQiOiIxMTA0NzA2NTE2In0.NETS6Mhr7IZjqDIFpvwWttOjNAo7_Pmz4KD6kVpIIdVOQL25a593j4UTfxgUgV_YJN0oSGxXu9xLkmFvwY5oJg';
+  const ACTIVE_DHAN_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJ1c2VyUmVnaW9uIjoiUjEiLCJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzg5NzAxMTE1LCJpYXQiOjE3ODk2MTQ3MTUsInRva2VuQ29uc3VtZXJUeXBlIjoiU0VMRiIsIndlYmhvb2tVcmwiOiIiLCJkaGFuQ2xpZW50SWQiOiIxMTA0NzA2NTE2In0.8Pa-4nXMn4rBu0-UhMTWQY_g2rmUhCOblnYYhnWRSmsawqxh-4TKPdFj0hWcBKWVWTj1gmD6lCxhqftJi3sgeA';
 
   // Default state: load IMG_0961 video scenario
   const defaultState = {
