@@ -2280,8 +2280,6 @@ function initKiteApp() {
   let wsCooldownUntil = 0;
 
   const wsTickChannel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('zerodha_live_ws_feed') : null;
-  let isWsLeader = false;
-  let lastLeaderHeartbeat = 0;
   const tabId = 'tab_' + Math.random().toString(36).substr(2, 9);
 
   if (wsTickChannel) {
@@ -2293,23 +2291,12 @@ function initKiteApp() {
         isServerSessionOwner = true;
         hideSessionConflictModal();
         initDhanWebSocket();
-      } else if (data.type === 'WS_LEADER_HEARTBEAT') {
-        if (data.sender !== tabId) {
-          lastLeaderHeartbeat = Date.now();
-          if (isWsLeader) {
-            // Another leader exists, yield if our ID is lower
-            if (data.sender > tabId) {
-              isWsLeader = false;
-              closeDhanWebSocketGracefully();
-            }
-          }
-        }
       } else if (data.type === 'INDEX_TICK') {
-        if (!isWsLeader) {
+        if (!dhanWsConnected) {
           updateLiveIndexFromWs(data.indexKey, data.price, data.prevClose, false);
         }
       } else if (data.type === 'SECURITY_TICK') {
-        if (!isWsLeader) {
+        if (!dhanWsConnected) {
           updateSecurityLtpFromWs(data.securityId, data.price, false);
         }
       }
@@ -2324,22 +2311,14 @@ function initKiteApp() {
     }
   }
 
-  function checkWsLeaderStatus() {
+  function checkWsConnectionStatus() {
     if (!isServerSessionOwner) return;
-    const now = Date.now();
-    if (!isWsLeader && (now - lastLeaderHeartbeat > 4000)) {
-      isWsLeader = true;
+    if (!dhanWs || dhanWs.readyState === WebSocket.CLOSED) {
       initDhanWebSocket();
-    }
-    if (isWsLeader) {
-      broadcastLiveWsTick({ type: 'WS_LEADER_HEARTBEAT' });
-      if (!dhanWs || dhanWs.readyState === WebSocket.CLOSED) {
-        initDhanWebSocket();
-      }
     }
   }
 
-  setInterval(checkWsLeaderStatus, 1500);
+  setInterval(checkWsConnectionStatus, 2500);
 
   function closeDhanWebSocketGracefully() {
     if (dhanWs) {
@@ -2356,10 +2335,7 @@ function initKiteApp() {
   }
 
   window.addEventListener('beforeunload', () => {
-    if (isWsLeader) {
-      isWsLeader = false;
-      closeDhanWebSocketGracefully();
-    }
+    closeDhanWebSocketGracefully();
   });
 
   function initDhanWebSocket() {
@@ -2379,7 +2355,6 @@ function initKiteApp() {
 
       dhanWs.onopen = () => {
         dhanWsConnected = true;
-        isWsLeader = true;
         console.log('⚡ [Dhan WS] Connected to live market feed binary stream');
         subscribeDhanInstruments();
       };
@@ -2398,7 +2373,7 @@ function initKiteApp() {
         dhanWsConnected = false;
         if (dhanWsReconnectTimer) clearTimeout(dhanWsReconnectTimer);
         dhanWsReconnectTimer = setTimeout(() => {
-          if (appState.dhan && appState.dhan.accessToken && isWsLeader) {
+          if (appState.dhan && appState.dhan.accessToken && isServerSessionOwner) {
             initDhanWebSocket();
           }
         }, 3000);
