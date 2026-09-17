@@ -395,32 +395,35 @@
     <span id="toast-message">State saved & broadcasted live!</span>
   </div>
 
-  <!-- Floating Diagnostic Logs Trigger Button -->
+  <!-- Floating Live WS Logs Stream Trigger Button -->
   <div id="debug-logger-trigger" style="position: fixed; bottom: 20px; left: 20px; z-index: 99999; display: flex; gap: 8px; align-items: center;">
-    <button type="button" id="btn-toggle-debug-logs" style="background: #0f172a; color: #38bdf8; border: 1px solid #334155; padding: 8px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-      <span>🐞</span> <span id="debug-log-title">Sync Diagnostic Logs</span> <span id="debug-log-count" style="background: #1e293b; color: #94a3b8; padding: 2px 6px; border-radius: 10px; font-size: 10.5px;">0 events</span>
+    <button type="button" id="btn-toggle-debug-logs" style="background: #0f172a; color: #38bdf8; border: 1.5px solid #0284c7; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); transition: transform 0.15s ease;">
+      <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px #22c55e;"></span>
+      <span id="debug-log-title">📡 Live WS Stream Logs</span>
+      <span id="debug-log-count" style="background: #1e293b; color: #94a3b8; padding: 2px 7px; border-radius: 10px; font-size: 11px;">0 ticks</span>
     </button>
   </div>
 
-  <!-- Slide-out Diagnostic Console Drawer -->
-  <div id="debug-log-drawer" style="position: fixed; bottom: 0; left: 0; width: 100%; max-width: 650px; height: 380px; background: #090d16; border-top: 2px solid #38bdf8; border-right: 1px solid #1e293b; border-radius: 0 12px 0 0; z-index: 100000; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); display: none; flex-direction: column;">
+  <!-- Slide-out Diagnostic & WS Stream Console Drawer -->
+  <div id="debug-log-drawer" style="position: fixed; bottom: 0; left: 0; width: 100%; max-width: 680px; height: 420px; background: #070b13; border-top: 2px solid #38bdf8; border-right: 1px solid #1e293b; border-radius: 0 12px 0 0; z-index: 100000; box-shadow: 0 -10px 35px rgba(0,0,0,0.6); display: none; flex-direction: column;">
     <div style="background: #0f172a; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b;">
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 14px;">⚡</span>
-        <strong style="color: #f8fafc; font-size: 13px;">Live Sync Inspector & Diagnostics</strong>
+        <span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px #22c55e;"></span>
+        <strong style="color: #f8fafc; font-size: 13px;">⚡ Live WebSocket Stream & Sync Inspector</strong>
+        <span style="font-size: 11px; color: #38bdf8; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace;">wss://api-feed.dhan.co</span>
       </div>
       <div style="display: flex; gap: 8px; align-items: center;">
-        <button type="button" id="btn-run-diagnostics" style="background: #0284c7; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; cursor: pointer;">⚡ Run Health Check</button>
+        <button type="button" id="btn-run-diagnostics" style="background: #0284c7; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; cursor: pointer;">⚡ Health Check</button>
         <button type="button" id="btn-copy-logs" style="background: #334155; color: #cbd5e1; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; cursor: pointer;">📋 Copy</button>
         <button type="button" id="btn-clear-logs" style="background: #334155; color: #cbd5e1; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; cursor: pointer;">🧹 Clear</button>
         <button type="button" id="btn-close-debug-logs" style="background: transparent; color: #94a3b8; border: none; font-size: 16px; cursor: pointer; padding: 0 4px;">✕</button>
       </div>
     </div>
-    <div id="debug-log-list" style="flex: 1; overflow-y: auto; background: #090d16; color: #e2e8f0; padding: 6px 0;">
+    <div id="debug-log-list" style="flex: 1; overflow-y: auto; background: #070b13; color: #e2e8f0; padding: 6px 0; font-family: ui-monospace, Menlo, monospace;">
       <!-- Log items dynamically injected -->
     </div>
   </div>
 
-  <script src="app.js?v=139"></script>
+  <script src="app.js?v=152"></script>
 </body>
 </html>

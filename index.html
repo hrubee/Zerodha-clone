@@ -214,8 +214,34 @@
     <svg class="fs-icon-exit" style="display: none;" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M4 14h6m0 0v6m0-6L3 21m17-7h-6m0 0v6m0-6l7 7M4 10h6m0 0V4m0 6L3 3m17 7h-6m0 0V4m0 6l7-7"></path>
     </svg>
-  </button>
+  <!-- Floating Live WS Logs Stream Trigger Button (Display View) -->
+  <div id="debug-logger-trigger" style="position: fixed; bottom: 15px; left: 15px; z-index: 99999; display: flex; gap: 8px; align-items: center; opacity: 0.85; transition: opacity 0.2s;">
+    <button type="button" id="btn-toggle-debug-logs" style="background: rgba(15, 23, 42, 0.9); color: #38bdf8; border: 1px solid #0284c7; padding: 6px 12px; border-radius: 16px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(8px);">
+      <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 6px #22c55e;"></span>
+      <span id="debug-log-title">📡 WS Stream</span>
+      <span id="debug-log-count" style="background: #1e293b; color: #94a3b8; padding: 1px 5px; border-radius: 8px; font-size: 10px;">0 ticks</span>
+    </button>
+  </div>
 
-  <script src="app.js?v=139"></script>
+  <!-- Slide-out Diagnostic & WS Stream Console Drawer -->
+  <div id="debug-log-drawer" style="position: fixed; bottom: 0; left: 0; width: 100%; max-width: 680px; height: 400px; background: #070b13; border-top: 2px solid #38bdf8; border-right: 1px solid #1e293b; border-radius: 0 12px 0 0; z-index: 100000; box-shadow: 0 -10px 35px rgba(0,0,0,0.6); display: none; flex-direction: column;">
+    <div style="background: #0f172a; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px #22c55e;"></span>
+        <strong style="color: #f8fafc; font-size: 12.5px;">⚡ Live WebSocket Stream & Sync Inspector</strong>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button type="button" id="btn-run-diagnostics" style="background: #0284c7; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer;">⚡ Health Check</button>
+        <button type="button" id="btn-copy-logs" style="background: #334155; color: #cbd5e1; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer;">📋 Copy</button>
+        <button type="button" id="btn-clear-logs" style="background: #334155; color: #cbd5e1; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer;">🧹 Clear</button>
+        <button type="button" id="btn-close-debug-logs" style="background: transparent; color: #94a3b8; border: none; font-size: 15px; cursor: pointer; padding: 0 4px;">✕</button>
+      </div>
+    </div>
+    <div id="debug-log-list" style="flex: 1; overflow-y: auto; background: #070b13; color: #e2e8f0; padding: 6px 0; font-family: ui-monospace, Menlo, monospace;">
+      <!-- Log items dynamically injected -->
+    </div>
+  </div>
+
+  <script src="app.js?v=152"></script>
 </body>
 </html>
