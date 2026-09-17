@@ -3579,9 +3579,7 @@ function initKiteApp() {
       const parsed = parseOptionSymbol(pos.symbol);
       const parsedExpiry = parseExpiryDate(parsed.expiry);
       const expiryOptionsHtml = getExpiryOptionsHTML(parsed.underlying, parsed.expiry);
-      const cachedOc = dhanOptionChainCache[(parsed.underlying || 'BANKNIFTY').toUpperCase()]?.data;
-      const cachedStrikes = getStrikesListFromDhanOC(cachedOc);
-      const strikeHtml = getStrikeOptionsHTML(parsed.underlying, parsed.strike, parsed.optionType, cachedStrikes);
+      const strikeHtml = getStrikeOptionsHTML(parsed.underlying, parsed.strike, parsed.optionType);
       const underlyingHtml = getUnderlyingOptionsHTML(parsed.underlying);
       const isGreen = !pos.pnl.includes('-');
       const detectedExchange = pos.exchange || getExchangeForUnderlying(parsed.underlying);
@@ -3750,19 +3748,10 @@ function initKiteApp() {
         excEl.value = detectedExc;
         if (badgeExc) badgeExc.textContent = detectedExc;
 
-        // Auto-resolve live Dhan securityId & LTP from option chain
-        const info = await resolveOptionContractInfo(u, s, o, isoExpiry || e);
-        if (info && info.securityId) {
-          box.dataset.securityId = info.securityId;
-          box.dataset.exchangeSegment = info.exchangeSegment;
-          if (info.lastPrice > 0 && autoFetchStrikeLTP) {
-            ltpEl.value = info.formattedLtp;
-          }
-        } else if (autoFetchStrikeLTP) {
-          const fetchedLtp = await fetchOptionContractLTP(u, s, o, isoExpiry || e);
-          if (fetchedLtp && fetchedLtp !== '0.00') {
-            ltpEl.value = fetchedLtp;
-          }
+        // Auto-resolve live contract LTP
+        const info = resolveOptionContractInfoDirect(u, s, o, isoExpiry || e);
+        if (info && autoFetchStrikeLTP) {
+          ltpEl.value = info.formattedLtp;
         }
 
         // Auto P&L calculation
