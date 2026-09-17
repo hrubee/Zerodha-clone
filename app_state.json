@@ -20,28 +20,28 @@
   },
   "indices": {
     "nifty": {
-      "val": "23,118.60",
-      "change": "-279.50 (-1.19%)",
+      "val": "23,271.75",
+      "change": "-126.35 (-0.54%)",
       "isGreen": false,
       "prevClose": 23398.1,
-      "value": "23,235.90",
-      "price": 23235.900390625
+      "value": "23,271.75",
+      "price": 23271.75
     },
     "banknifty": {
-      "val": "55,794.75",
-      "change": "-811.80 (-1.43%)",
+      "val": "56,187.50",
+      "change": "-419.05 (-0.74%)",
       "isGreen": false,
       "prevClose": 56606.55,
-      "value": "56,076.00",
-      "price": 56076
+      "value": "56,187.50",
+      "price": 56187.5
     },
     "sensex": {
-      "val": "74,003.82",
-      "change": "-777.94 (-1.04%)",
+      "val": "74,394.55",
+      "change": "-387.21 (-0.52%)",
       "isGreen": false,
       "prevClose": 74781.76,
-      "value": "74,316.22",
-      "price": 74316.21875
+      "value": "74,393.60",
+      "price": 74393.6015625
     },
     "vix": {
       "val": "13.82",
@@ -54,15 +54,15 @@
   "positions": [
     {
       "id": "pos_0",
-      "symbol": "SENSEX 29th OCT 70900 CE",
+      "symbol": "SENSEX 29th OCT 71400 CE",
       "exchange": "BFO",
       "exchangeSegment": "BSE_FNO",
-      "securityId": 862990,
+      "securityId": 871147,
       "side": "BUY",
       "entryPrice": "0.00",
       "qty": "0",
       "avg": "0.00",
-      "ltp": "5,352.00",
+      "ltp": "2,969.32",
       "type": "NRML",
       "autoCalc": true,
       "pnl": "+11,17,087.61",
@@ -142,5 +142,5 @@
       }
     ]
   },
-  "updatedAt": 1789624855153
+  "updatedAt": 1789625639259
 }

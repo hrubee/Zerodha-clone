@@ -134,12 +134,14 @@ class RouteHandler(http.server.SimpleHTTPRequestHandler):
                     "positionsCount": pos_count,
                     "serverTime": time.time()
                 }).encode('utf-8'))
+                return
             except Exception as e:
                 self.send_response(500)
                 self.send_header('Content-Type', 'application/json')
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 self.wfile.write(json.dumps({"status":"error","message":str(e)}).encode('utf-8'))
+                return
         if clean_path == '/api/dhan/auto-login':
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length) if content_length > 0 else b'{}'
@@ -177,6 +179,9 @@ class RouteHandler(http.server.SimpleHTTPRequestHandler):
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length) if content_length > 0 else b'{}'
             
+            client_id = self.headers.get('client-id')
+            access_token = self.headers.get('access-token')
+
             if not client_id or not access_token:
                 try:
                     if os.path.exists(STATE_FILE):
