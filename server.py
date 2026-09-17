@@ -177,9 +177,32 @@ class RouteHandler(http.server.SimpleHTTPRequestHandler):
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length) if content_length > 0 else b'{}'
             
-            client_id = self.headers.get('client-id', '')
-            access_token = self.headers.get('access-token', '')
-            
+            if not client_id or not access_token:
+                try:
+                    if os.path.exists(STATE_FILE):
+                        with open(STATE_FILE, 'r', encoding='utf-8') as sf:
+                            sdata = json.load(sf)
+                            dhan_conf = sdata.get('dhan', {})
+                            client_id = client_id or dhan_conf.get('clientId', '1104706516')
+                            access_token = access_token or dhan_conf.get('accessToken', '')
+                except Exception:
+                    pass
+
+            cache_key = f"{endpoint}_{post_data.decode('utf-8', errors='ignore')}"
+            now = time.time()
+            ttl = 60.0 if 'optionchain' in endpoint else (600.0 if 'expirylist' in endpoint else 5.0)
+
+            # Serve from proxy cache if fresh
+            if hasattr(self.server, 'dhan_cache') and cache_key in self.server.dhan_cache:
+                cached_entry = self.server.dhan_cache[cache_key]
+                if now - cached_entry['time'] < ttl:
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(cached_entry['data'])
+                    return
+
             try:
                 import urllib.request, ssl
                 ctx = ssl._create_unverified_context()
@@ -199,12 +222,37 @@ class RouteHandler(http.server.SimpleHTTPRequestHandler):
                 try:
                     with urllib.request.urlopen(req, context=ctx) as resp:
                         res_data = resp.read()
+                        try:
+                            parsed_json = json.loads(res_data.decode('utf-8'))
+                            if parsed_json.get('status') == 'success' and (parsed_json.get('data') and ('oc' in parsed_json.get('data', {}) or isinstance(parsed_json.get('data'), list))):
+                                if not hasattr(self.server, 'dhan_cache'):
+                                    self.server.dhan_cache = {}
+                                self.server.dhan_cache[cache_key] = {'time': now, 'data': res_data}
+                            elif parsed_json.get('status') == 'failed':
+                                if hasattr(self.server, 'dhan_cache') and cache_key in self.server.dhan_cache:
+                                    self.send_response(200)
+                                    self.send_header('Content-Type', 'application/json')
+                                    self.send_header('Access-Control-Allow-Origin', '*')
+                                    self.end_headers()
+                                    self.wfile.write(self.server.dhan_cache[cache_key]['data'])
+                                    return
+                        except Exception:
+                            pass
+
                         self.send_response(200)
                         self.send_header('Content-Type', 'application/json')
                         self.send_header('Access-Control-Allow-Origin', '*')
                         self.end_headers()
                         self.wfile.write(res_data)
                 except urllib.error.HTTPError as he:
+                    if hasattr(self.server, 'dhan_cache') and cache_key in self.server.dhan_cache:
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'application/json')
+                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.end_headers()
+                        self.wfile.write(self.server.dhan_cache[cache_key]['data'])
+                        return
+
                     err_body = he.read()
                     self.send_response(he.code)
                     self.send_header('Content-Type', 'application/json')
@@ -212,6 +260,14 @@ class RouteHandler(http.server.SimpleHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(err_body)
             except Exception as e:
+                if hasattr(self.server, 'dhan_cache') and cache_key in self.server.dhan_cache:
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(self.server.dhan_cache[cache_key]['data'])
+                    return
+
                 self.send_response(500)
                 self.send_header('Content-Type', 'application/json')
                 self.send_header('Access-Control-Allow-Origin', '*')

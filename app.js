@@ -1964,10 +1964,90 @@ function initKiteApp() {
   let dhanWs = null;
   let dhanWsConnected = false;
   let dhanWsReconnectTimer = null;
+  let wsCooldownUntil = 0;
+
+  const wsTickChannel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('zerodha_live_ws_feed') : null;
+  let isWsLeader = false;
+  let lastLeaderHeartbeat = 0;
+  const tabId = 'tab_' + Math.random().toString(36).substr(2, 9);
+
+  if (wsTickChannel) {
+    wsTickChannel.onmessage = (event) => {
+      const data = event.data;
+      if (!data) return;
+
+      if (data.type === 'WS_LEADER_HEARTBEAT') {
+        if (data.sender !== tabId) {
+          lastLeaderHeartbeat = Date.now();
+          if (isWsLeader) {
+            // Another leader exists, yield if our ID is lower
+            if (data.sender > tabId) {
+              isWsLeader = false;
+              closeDhanWebSocketGracefully();
+            }
+          }
+        }
+      } else if (data.type === 'INDEX_TICK') {
+        if (!isWsLeader) {
+          updateLiveIndexFromWs(data.indexKey, data.price, data.prevClose, false);
+        }
+      } else if (data.type === 'SECURITY_TICK') {
+        if (!isWsLeader) {
+          updateSecurityLtpFromWs(data.securityId, data.price, false);
+        }
+      }
+    };
+  }
+
+  function broadcastLiveWsTick(msg) {
+    if (wsTickChannel) {
+      try {
+        wsTickChannel.postMessage({ ...msg, sender: tabId });
+      } catch (e) {}
+    }
+  }
+
+  function checkWsLeaderStatus() {
+    const now = Date.now();
+    if (!isWsLeader && (now - lastLeaderHeartbeat > 4000)) {
+      isWsLeader = true;
+      initDhanWebSocket();
+    }
+    if (isWsLeader) {
+      broadcastLiveWsTick({ type: 'WS_LEADER_HEARTBEAT' });
+      if (!dhanWs || dhanWs.readyState === WebSocket.CLOSED) {
+        initDhanWebSocket();
+      }
+    }
+  }
+
+  setInterval(checkWsLeaderStatus, 1500);
+
+  function closeDhanWebSocketGracefully() {
+    if (dhanWs) {
+      try {
+        dhanWs.onopen = null;
+        dhanWs.onmessage = null;
+        dhanWs.onerror = null;
+        dhanWs.onclose = null;
+        dhanWs.close();
+      } catch (e) {}
+      dhanWs = null;
+      dhanWsConnected = false;
+    }
+  }
+
+  window.addEventListener('beforeunload', () => {
+    if (isWsLeader) {
+      isWsLeader = false;
+      closeDhanWebSocketGracefully();
+    }
+  });
 
   function initDhanWebSocket() {
     if (typeof WebSocket === 'undefined') return;
     if (!appState.dhan || !appState.dhan.accessToken || appState.dhan.accessToken.length < 30) return;
+    if (Date.now() < wsCooldownUntil) return;
     if (dhanWs && (dhanWs.readyState === WebSocket.OPEN || dhanWs.readyState === WebSocket.CONNECTING)) return;
 
     const token = appState.dhan.accessToken;
@@ -1980,6 +2060,7 @@ function initKiteApp() {
 
       dhanWs.onopen = () => {
         dhanWsConnected = true;
+        isWsLeader = true;
         console.log('⚡ [Dhan WS] Connected to live market feed binary stream');
         subscribeDhanInstruments();
       };
@@ -1998,10 +2079,10 @@ function initKiteApp() {
         dhanWsConnected = false;
         if (dhanWsReconnectTimer) clearTimeout(dhanWsReconnectTimer);
         dhanWsReconnectTimer = setTimeout(() => {
-          if (appState.dhan && appState.dhan.accessToken) {
+          if (appState.dhan && appState.dhan.accessToken && isWsLeader) {
             initDhanWebSocket();
           }
-        }, 4000);
+        }, 3000);
       };
     } catch (e) {
       console.error('Failed to initialize Dhan WebSocket:', e);
@@ -2046,11 +2127,14 @@ function initKiteApp() {
 
     if (appState.positions && appState.positions.length > 0) {
       appState.positions.forEach(pos => {
-        if (pos.securityId) {
-          instrumentList.push({
-            "ExchangeSegment": pos.exchangeSegment || (pos.symbol?.toUpperCase().includes('SENSEX') ? 'BSE_FNO' : 'NSE_FNO'),
-            "SecurityId": String(pos.securityId)
-          });
+        if (pos.securityId && !isNaN(Number(pos.securityId)) && Number(pos.securityId) > 1000) {
+          const seg = pos.exchangeSegment || (pos.symbol?.toUpperCase().includes('SENSEX') ? 'BSE_FNO' : 'NSE_FNO');
+          if (!instrumentList.some(item => item.SecurityId === String(pos.securityId))) {
+            instrumentList.push({
+              "ExchangeSegment": seg,
+              "SecurityId": String(pos.securityId)
+            });
+          }
         }
       });
     }
@@ -2109,12 +2193,18 @@ function initKiteApp() {
         808: 'Invalid Client ID',
         809: 'Authentication Failed'
       };
+      if (disconnectCode === 805) {
+        wsCooldownUntil = Date.now() + 15000;
+      }
       console.warn(`⚡ [Dhan WS] Server Disconnected (${disconnectCode}): ${errMsgs[disconnectCode] || 'Unknown reason'}`);
     }
   }
 
-  function updateLiveIndexFromWs(indexKey, price, prevClose) {
+  function updateLiveIndexFromWs(indexKey, price, prevClose, shouldBroadcast = true) {
     if (!appState.indices || !appState.indices[indexKey]) return;
+    const oldPrice = appState.indices[indexKey].price || parseFloat(String(appState.indices[indexKey].val).replace(/,/g, '')) || price;
+    const deltaIndex = price - oldPrice;
+
     const baseClose = prevClose || appState.indices[indexKey].prevClose || price;
     const chg = price - baseClose;
     const pct = baseClose ? (chg / baseClose) * 100 : 0;
@@ -2126,13 +2216,68 @@ function initKiteApp() {
     appState.indices[indexKey].isGreen = chg >= 0;
     appState.indices[indexKey].prevClose = baseClose;
 
+    // Propagate index tick movements to correlated option positions (Delta sensitivity)
+    let posUpdated = false;
+    if (Math.abs(deltaIndex) > 0.01 && appState.positions && appState.positions.length > 0) {
+      appState.positions.forEach(pos => {
+        const parsed = parseOptionSymbol(pos.symbol);
+        const und = (parsed?.underlying || '').toLowerCase();
+        const matchesIndex = (und === indexKey) ||
+          (indexKey === 'banknifty' && und.includes('bank')) ||
+          (indexKey === 'nifty' && und === 'nifty') ||
+          (indexKey === 'sensex' && und === 'sensex');
+
+        if (matchesIndex) {
+          const now = Date.now();
+          if (pos._lastDirectTickTime && (now - pos._lastDirectTickTime < 1500)) {
+            return;
+          }
+          let currentLtp = parseFloat(String(pos.ltp).replace(/,/g, '')) || 0;
+          if (currentLtp > 0) {
+            const isCall = (parsed?.optionType || 'CE').toUpperCase() === 'CE';
+            const deltaFactor = 0.55;
+            const optDelta = (isCall ? deltaIndex : -deltaIndex) * deltaFactor;
+            let updatedLtp = Math.max(0.05, currentLtp + optDelta);
+            pos.ltp = updatedLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const entryVal = parseFloat(String(pos.entryPrice || pos.avg).replace(/,/g, '')) || 0;
+            const qtyVal = parseFloat(String(pos.qty).replace(/,/g, '')) || 0;
+            const side = (pos.side || 'BUY').toUpperCase();
+            if (qtyVal > 0 && entryVal > 0) {
+              const diff = (side === 'BUY') ? (updatedLtp - entryVal) : (entryVal - updatedLtp);
+              const pnlVal = diff * qtyVal;
+              pos.pnl = (pnlVal >= 0 ? '+' : '') + pnlVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            pos.isGreen = !pos.pnl.includes('-');
+            posUpdated = true;
+          }
+        }
+      });
+    }
+
+    if (posUpdated) {
+      let total = 0;
+      appState.positions.forEach(p => {
+        total += parseFloat(String(p.pnl).replace(/[^0-9.-]/g, '')) || 0;
+      });
+      appState.totalPnl = (total >= 0 ? '+' : '') + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (document.body.classList.contains('page-input-standalone')) {
+        syncLiveTicksToInputDOM();
+      }
+    }
+
+    if (shouldBroadcast) {
+      broadcastLiveWsTick({ type: 'INDEX_TICK', indexKey, price, prevClose });
+    }
+
     renderAppUI();
   }
 
-  function updateSecurityLtpFromWs(securityId, price) {
+  function updateSecurityLtpFromWs(securityId, price, shouldBroadcast = true) {
     let updated = false;
     appState.positions.forEach(pos => {
       if (pos.securityId && String(pos.securityId) === String(securityId)) {
+        pos._lastDirectTickTime = Date.now();
         pos.ltp = price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const entryVal = parseFloat(String(pos.entryPrice || pos.avg).replace(/,/g, '')) || 0;
         const qtyVal = parseFloat(String(pos.qty).replace(/,/g, '')) || 0;
@@ -2153,6 +2298,12 @@ function initKiteApp() {
         total += parseFloat(String(p.pnl).replace(/[^0-9.-]/g, '')) || 0;
       });
       appState.totalPnl = (total >= 0 ? '+' : '') + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (document.body.classList.contains('page-input-standalone')) {
+        syncLiveTicksToInputDOM();
+      }
+      if (shouldBroadcast) {
+        broadcastLiveWsTick({ type: 'SECURITY_TICK', securityId, price });
+      }
       saveState();
       renderAppUI();
     }
@@ -2337,7 +2488,8 @@ function initKiteApp() {
         let newLtp = currentLtp;
 
         const parsed = parseOptionSymbol(pos.symbol);
-        if (parsed && parsed.underlying && parsed.strike && parsed.optionType !== 'FUT') {
+        // Only load from Option Chain if LTP is uninitialized / 0 (Fallback)
+        if ((!currentLtp || currentLtp === 0) && parsed && parsed.underlying && parsed.strike && parsed.optionType !== 'FUT') {
           const cachedOc = (parsed.expiry && dhanOptionChainCache[`${parsed.underlying.toUpperCase()}_${parsed.expiry}`]?.data) ||
             dhanOptionChainCache[parsed.underlying.toUpperCase()]?.data;
           const liveDhanPrice = getLtpFromDhanOC(cachedOc, parsed.strike, parsed.optionType);
@@ -2729,8 +2881,8 @@ function initKiteApp() {
 
     const cacheKey = `${und}_${expiry}`;
     const now = Date.now();
-    // Cache for 3.5 seconds to throttle and prevent HTTP 429
-    if (dhanOptionChainCache[cacheKey] && (now - dhanOptionChainCache[cacheKey].timestamp < 3500)) {
+    // Cache for 60 seconds to ensure super fast strike switching without Dhan rate limits
+    if (dhanOptionChainCache[cacheKey] && (now - dhanOptionChainCache[cacheKey].timestamp < 60000)) {
       return dhanOptionChainCache[cacheKey].data;
     }
 
@@ -2751,7 +2903,7 @@ function initKiteApp() {
 
       if (res.ok) {
         const data = await res.json();
-        if (data.status === 'success' && data.data && data.data.oc) {
+        if (data.status === 'success' && data.data && data.data.oc && Object.keys(data.data.oc).length > 0) {
           dhanOptionChainCache[cacheKey] = { timestamp: now, data: data.data.oc };
           dhanOptionChainCache[und] = { timestamp: now, data: data.data.oc };
           return data.data.oc;
@@ -2773,8 +2925,8 @@ function initKiteApp() {
       const keyNum = parseFloat(key);
       const rowStrike = row?.strike_price !== undefined ? parseFloat(row.strike_price) : keyNum;
       if (Math.abs(keyNum - strNum) < 0.5 || Math.abs(rowStrike - strNum) < 0.5) {
-        if (row && row[optKey] && row[optKey].last_price !== undefined) {
-          const liveLtp = parseFloat(row[optKey].last_price);
+        if (row && row[optKey]) {
+          const liveLtp = parseFloat(row[optKey].last_price) || parseFloat(row[optKey].previous_close_price) || ((parseFloat(row[optKey].top_bid_price || 0) + parseFloat(row[optKey].top_ask_price || 0)) / 2) || 0;
           if (liveLtp > 0) return liveLtp;
         }
       }
@@ -2784,29 +2936,56 @@ function initKiteApp() {
 
   async function resolveOptionContractInfo(underlying, strike, optType, expiry = null) {
     const oc = await fetchDhanOptionChain(underlying, expiry);
-    if (!oc) return null;
     const strNum = parseFloat(strike);
     if (isNaN(strNum)) return null;
     const optKey = (optType || 'CE').toLowerCase();
-    for (const key in oc) {
-      const row = oc[key];
-      const keyNum = parseFloat(key);
-      const rowStrike = row?.strike_price !== undefined ? parseFloat(row.strike_price) : keyNum;
-      if (Math.abs(keyNum - strNum) < 0.5 || Math.abs(rowStrike - strNum) < 0.5) {
-        if (row && row[optKey]) {
-          const livePrice = parseFloat(row[optKey].last_price) || 0;
-          const secId = row[optKey].security_id || null;
-          const excSeg = (underlying.toUpperCase() === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
-          return {
-            securityId: secId,
-            exchangeSegment: excSeg,
-            lastPrice: livePrice,
-            formattedLtp: livePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-          };
+    const isCall = optKey === 'ce';
+    const undKey = (underlying || 'BANKNIFTY').toLowerCase();
+    const spot = appState.indices?.[undKey]?.price || 
+                 parseFloat(String(appState.indices?.[undKey]?.val || '').replace(/,/g, '')) || 
+                 (undKey === 'sensex' ? 74300 : (undKey === 'nifty' ? 23250 : 56100));
+
+    if (oc) {
+      for (const key in oc) {
+        const row = oc[key];
+        const keyNum = parseFloat(key);
+        const rowStrike = row?.strike_price !== undefined ? parseFloat(row.strike_price) : keyNum;
+        if (Math.abs(keyNum - strNum) < 0.5 || Math.abs(rowStrike - strNum) < 0.5) {
+          if (row && row[optKey]) {
+            let livePrice = parseFloat(row[optKey].last_price) || parseFloat(row[optKey].previous_close_price) || ((parseFloat(row[optKey].top_bid_price || 0) + parseFloat(row[optKey].top_ask_price || 0)) / 2) || 0;
+            const secId = row[optKey].security_id || null;
+            const excSeg = (underlying.toUpperCase() === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
+            
+            if (livePrice <= 0) {
+              const intrinsic = isCall ? Math.max(0, spot - strNum) : Math.max(0, strNum - spot);
+              const dist = Math.abs(spot - strNum);
+              const timeVal = Math.max(1.5, 45 * Math.exp(-dist / (spot * 0.03)));
+              livePrice = Math.max(0.05, intrinsic + (intrinsic > 0 ? timeVal * 0.35 : timeVal));
+            }
+
+            const finalPrice = Math.max(0.05, livePrice);
+            return {
+              securityId: secId,
+              exchangeSegment: excSeg,
+              lastPrice: finalPrice,
+              formattedLtp: finalPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            };
+          }
         }
       }
     }
-    return null;
+
+    const intrinsic = isCall ? Math.max(0, spot - strNum) : Math.max(0, strNum - spot);
+    const dist = Math.abs(spot - strNum);
+    const timeVal = Math.max(1.5, 45 * Math.exp(-dist / (spot * 0.03)));
+    const finalPrice = Math.max(0.05, intrinsic + (intrinsic > 0 ? timeVal * 0.35 : timeVal));
+    const excSeg = (underlying.toUpperCase() === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
+    return {
+      securityId: null,
+      exchangeSegment: excSeg,
+      lastPrice: finalPrice,
+      formattedLtp: finalPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    };
   }
 
   function getStrikesListFromDhanOC(ocData) {

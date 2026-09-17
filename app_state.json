@@ -20,25 +20,28 @@
   },
   "indices": {
     "nifty": {
-      "val": "23,339.16",
-      "change": "-92.05 (-0.39%)",
+      "val": "23,118.60",
+      "change": "-279.50 (-1.19%)",
       "isGreen": false,
-      "prevClose": 23431.5,
-      "value": "23,339.45"
+      "prevClose": 23398.1,
+      "value": "23,235.90",
+      "price": 23235.900390625
     },
     "banknifty": {
-      "val": "56,204.83",
-      "change": "-488.67 (-0.86%)",
+      "val": "55,794.75",
+      "change": "-811.80 (-1.43%)",
       "isGreen": false,
-      "prevClose": 56693.5,
-      "value": "56,203.75"
+      "prevClose": 56606.55,
+      "value": "56,076.00",
+      "price": 56076
     },
     "sensex": {
-      "val": "74,652.35",
-      "change": "-111.88 (-0.15%)",
+      "val": "74,003.82",
+      "change": "-777.94 (-1.04%)",
       "isGreen": false,
-      "prevClose": 74764.23,
-      "value": "74,682.28"
+      "prevClose": 74781.76,
+      "value": "74,316.22",
+      "price": 74316.21875
     },
     "vix": {
       "val": "13.82",
@@ -46,23 +49,23 @@
       "isGreen": false
     }
   },
-  "totalPnl": "+13,98,506.53",
+  "totalPnl": "+11,17,087.61",
   "holdingsCount": "1",
   "positions": [
     {
       "id": "pos_0",
-      "symbol": "SENSEX 17th SEP 75000 PE",
+      "symbol": "SENSEX 29th OCT 70900 CE",
       "exchange": "BFO",
       "exchangeSegment": "BSE_FNO",
-      "securityId": 863990,
+      "securityId": 862990,
       "side": "BUY",
       "entryPrice": "0.00",
       "qty": "0",
       "avg": "0.00",
-      "ltp": "553.25",
+      "ltp": "5,352.00",
       "type": "NRML",
       "autoCalc": true,
-      "pnl": "+13,98,506.53",
+      "pnl": "+11,17,087.61",
       "isGreen": true
     }
   ],
@@ -138,5 +141,6 @@
         "buyValue": "33,237.00"
       }
     ]
-  }
+  },
+  "updatedAt": 1789624855153
 }
