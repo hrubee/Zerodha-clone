@@ -2239,8 +2239,8 @@ function initKiteApp() {
   }
 
   async function checkServerSessionLock() {
-    // If verified in this browser, never block
-    if (localStorage.getItem('zerodha_session_verified') === 'true') {
+    // If verified in this browser, always maintain owner status and never block
+    if (isServerSessionOwner || localStorage.getItem('zerodha_session_verified') === 'true') {
       isServerSessionOwner = true;
       hideSessionConflictModal();
       return;
@@ -2253,6 +2253,10 @@ function initKiteApp() {
       });
       if (res.ok) {
         const data = await res.json();
+        if (isServerSessionOwner || localStorage.getItem('zerodha_session_verified') === 'true') {
+          hideSessionConflictModal();
+          return;
+        }
         if (data.isOwner) {
           isServerSessionOwner = true;
           hideSessionConflictModal();
