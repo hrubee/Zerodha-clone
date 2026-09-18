@@ -816,17 +816,23 @@ function initKiteApp() {
       const nVal = document.getElementById('admin-nifty-val');
       const nChg = document.getElementById('admin-nifty-change');
       if (nVal && document.activeElement !== nVal && appState.indices.nifty?.val) nVal.value = appState.indices.nifty.val;
-      if (nChg && document.activeElement !== nChg && appState.indices.nifty?.change) nChg.value = appState.indices.nifty.change;
+      if (nChg && document.activeElement !== nChg && appState.indices.nifty?.change) {
+        nChg.value = formatCleanIndexChange(appState.indices.nifty.change, appState.indices.nifty.price, appState.indices.nifty.prevClose);
+      }
 
       const sVal = document.getElementById('admin-sensex-val');
       const sChg = document.getElementById('admin-sensex-change');
       if (sVal && document.activeElement !== sVal && appState.indices.sensex?.val) sVal.value = appState.indices.sensex.val;
-      if (sChg && document.activeElement !== sChg && appState.indices.sensex?.change) sChg.value = appState.indices.sensex.change;
+      if (sChg && document.activeElement !== sChg && appState.indices.sensex?.change) {
+        sChg.value = formatCleanIndexChange(appState.indices.sensex.change, appState.indices.sensex.price, appState.indices.sensex.prevClose);
+      }
 
       const bVal = document.getElementById('admin-banknifty-val');
       const bChg = document.getElementById('admin-banknifty-change');
       if (bVal && document.activeElement !== bVal && appState.indices.banknifty?.val) bVal.value = appState.indices.banknifty.val;
-      if (bChg && document.activeElement !== bChg && appState.indices.banknifty?.change) bChg.value = appState.indices.banknifty.change;
+      if (bChg && document.activeElement !== bChg && appState.indices.banknifty?.change) {
+        bChg.value = formatCleanIndexChange(appState.indices.banknifty.change, appState.indices.banknifty.price, appState.indices.banknifty.prevClose);
+      }
     }
   }
 
@@ -835,12 +841,18 @@ function initKiteApp() {
     syncLiveTicksToInputDOM();
 
     // 1. Render Header Indices
-    if (valNifty) valNifty.textContent = appState.indices.nifty.val;
-    if (changeNifty) changeNifty.textContent = appState.indices.nifty.change;
-    if (valBankNifty) valBankNifty.textContent = appState.indices.banknifty.val;
-    if (changeBankNifty) changeBankNifty.textContent = appState.indices.banknifty.change;
-    if (valSensex) valSensex.textContent = appState.indices.sensex.val;
-    if (changeSensex) changeSensex.textContent = appState.indices.sensex.change;
+    if (valNifty && appState.indices?.nifty) valNifty.textContent = appState.indices.nifty.val;
+    if (changeNifty && appState.indices?.nifty) {
+      changeNifty.textContent = formatCleanIndexChange(appState.indices.nifty.change, appState.indices.nifty.price, appState.indices.nifty.prevClose);
+    }
+    if (valBankNifty && appState.indices?.banknifty) valBankNifty.textContent = appState.indices.banknifty.val;
+    if (changeBankNifty && appState.indices?.banknifty) {
+      changeBankNifty.textContent = formatCleanIndexChange(appState.indices.banknifty.change, appState.indices.banknifty.price, appState.indices.banknifty.prevClose);
+    }
+    if (valSensex && appState.indices?.sensex) valSensex.textContent = appState.indices.sensex.val;
+    if (changeSensex && appState.indices?.sensex) {
+      changeSensex.textContent = formatCleanIndexChange(appState.indices.sensex.change, appState.indices.sensex.price, appState.indices.sensex.prevClose);
+    }
 
     // Helper to calculate realistic initials
     function calculateInitials(fullName, userId) {
@@ -1304,7 +1316,7 @@ function initKiteApp() {
         ovNiftyVal.className = 'ov-index-val ' + (appState.indices.nifty.isGreen !== false ? 'green' : 'red');
       }
       if (ovNiftyChg) {
-        ovNiftyChg.textContent = appState.indices.nifty.change || '+28.05 (+0.11%)';
+        ovNiftyChg.textContent = formatCleanIndexChange(appState.indices.nifty.change, appState.indices.nifty.price, appState.indices.nifty.prevClose);
       }
     }
 
@@ -1316,7 +1328,7 @@ function initKiteApp() {
         ovSensexVal.className = 'ov-index-val ' + (appState.indices.sensex.isGreen !== false ? 'green' : 'red');
       }
       if (ovSensexChg) {
-        ovSensexChg.textContent = appState.indices.sensex.change || '+91.58 (+0.12%)';
+        ovSensexChg.textContent = formatCleanIndexChange(appState.indices.sensex.change, appState.indices.sensex.price, appState.indices.sensex.prevClose);
       }
     }
 
@@ -2672,6 +2684,33 @@ function initKiteApp() {
       }
     }
     return fallbackPrevClose;
+  }
+
+  function formatCleanIndexChange(changeInput, currentPrice = 0, prevClose = 0) {
+    if (typeof changeInput === 'number') {
+      const chg = changeInput;
+      const pct = prevClose ? (chg / prevClose) * 100 : (currentPrice ? (chg / currentPrice) * 100 : 0);
+      return `${chg >= 0 ? '+' : ''}${chg.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+    }
+
+    const str = String(changeInput || '').trim();
+    if (!str) return '+0.00 (+0.00%)';
+
+    const fullMatch = str.match(/([+-]?\s*[\d,]+(?:\.\d+)?)\s*\(\s*([+-]?\s*[\d,]+(?:\.\d+)?)\s*%\s*\)/);
+    if (fullMatch) {
+      const pt = parseFloat(fullMatch[1].replace(/[\s,]/g, '')) || 0;
+      const pct = parseFloat(fullMatch[2].replace(/[\s,]/g, '')) || 0;
+      return `${pt >= 0 ? '+' : ''}${pt.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+    }
+
+    const singleMatch = str.match(/([+-]?\s*[\d,]+(?:\.\d+)?)/);
+    if (singleMatch) {
+      const pt = parseFloat(singleMatch[1].replace(/[\s,]/g, '')) || 0;
+      const pct = prevClose ? (pt / prevClose) * 100 : (currentPrice ? (pt / currentPrice) * 100 : 0);
+      return `${pt >= 0 ? '+' : ''}${pt.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+    }
+
+    return '+0.00 (+0.00%)';
   }
 
   // Real-world Indian Market Indices (Pure WebSocket / Real-time Live Engine)
