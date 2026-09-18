@@ -3226,6 +3226,98 @@ function initKiteApp() {
   }
 
 
+  // ==========================================================================
+  // REAL-TIME DHAN OPTION CHAIN & EXPIRY LIST API ENGINE
+  // ==========================================================================
+  let dhanOptionChainCache = {};
+  let dhanExpiryCache = {};
+
+  async function fetchDhanExpiryList(underlying) {
+    const und = (underlying || 'BANKNIFTY').toUpperCase();
+    if (dhanExpiryCache[und] && Array.isArray(dhanExpiryCache[und]) && dhanExpiryCache[und].length > 0) {
+      return dhanExpiryCache[und];
+    }
+
+    const scripMap = { 'NIFTY': 13, 'BANKNIFTY': 25, 'SENSEX': 51, 'FINNIFTY': 27, 'MIDCPNIFTY': 30 };
+    const scripId = scripMap[und];
+    if (!scripId) return getUnderlyingExpiries(und);
+
+    const token = appState.dhan?.accessToken || '';
+    const clientId = appState.dhan?.clientId || '1104706516';
+
+    try {
+      const res = await fetch('/api/dhan/optionchain/expirylist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'client-id': clientId,
+          'access-token': token
+        },
+        body: JSON.stringify({ UnderlyingScrip: scripId, UnderlyingSeg: 'IDX_I' })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data?.data || data?.expirylist);
+        if (list && Array.isArray(list) && list.length > 0) {
+          dhanExpiryCache[und] = list;
+          KiteSyncLogger.sync('DHAN_EXPIRY_FETCH', `Real exchange expiries fetched for ${und}: ${list.slice(0, 3).join(', ')}`);
+          return list;
+        }
+      }
+    } catch (e) {
+      // Fallback
+    }
+    return getUnderlyingExpiries(und);
+  }
+
+  async function fetchDhanOptionChain(underlying, expiryIso) {
+    const und = (underlying || 'BANKNIFTY').toUpperCase();
+    const scripMap = { 'NIFTY': 13, 'BANKNIFTY': 25, 'SENSEX': 51, 'FINNIFTY': 27, 'MIDCPNIFTY': 30 };
+    const scripId = scripMap[und];
+    if (!scripId) return null;
+
+    const token = appState.dhan?.accessToken || '';
+    const clientId = appState.dhan?.clientId || '1104706516';
+    const exp = expiryIso || getUnderlyingExpiries(und)[0];
+    const cacheKey = `${und}_${exp}`;
+
+    const now = Date.now();
+    if (dhanOptionChainCache[cacheKey] && (now - dhanOptionChainCache[cacheKey].timestamp < 30000)) {
+      return dhanOptionChainCache[cacheKey].data;
+    }
+
+    try {
+      const res = await fetch('/api/dhan/optionchain', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'client-id': clientId,
+          'access-token': token
+        },
+        body: JSON.stringify({
+          UnderlyingScrip: scripId,
+          UnderlyingSeg: 'IDX_I',
+          Expiry: exp
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const oc = data?.data?.oc || data?.oc;
+        if (oc && typeof oc === 'object') {
+          dhanOptionChainCache[cacheKey] = { timestamp: now, data: oc };
+          const strikeCount = Object.keys(oc).length;
+          KiteSyncLogger.sync('DHAN_OC_FETCH', `✅ Real live option chain fetched for ${und} (${strikeCount} strikes)`);
+          return oc;
+        }
+      }
+    } catch (e) {
+      console.warn('Dhan Option Chain fetch error:', e);
+    }
+    return null;
+  }
+
   // Expiry Generator (Local / Zero REST API calls)
   function getUnderlyingExpiries(underlying) {
     const now = new Date();
@@ -3260,6 +3352,33 @@ function initKiteApp() {
     const optKey = (optType || 'CE').toLowerCase();
     const isCall = optKey === 'ce';
     const undKey = (underlying || 'BANKNIFTY').toLowerCase();
+    const undUpper = (underlying || 'BANKNIFTY').toUpperCase();
+
+    // 1. Check live real Dhan Option Chain data
+    const exp = expiry || getUnderlyingExpiries(undUpper)[0];
+    const cacheKey = `${undUpper}_${exp}`;
+    const cachedEntry = dhanOptionChainCache[cacheKey] || Object.values(dhanOptionChainCache).find(c => c && c.data);
+    const ocData = cachedEntry ? cachedEntry.data : null;
+
+    if (ocData) {
+      const strikeKey = Object.keys(ocData).find(k => Math.abs(parseFloat(k) - strNum) < 0.01);
+      if (strikeKey && ocData[strikeKey]) {
+        const contract = isCall ? ocData[strikeKey].ce : ocData[strikeKey].pe;
+        if (contract && (contract.last_price > 0 || contract.security_id)) {
+          const excSeg = (undUpper === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
+          const realPrice = contract.last_price > 0 ? contract.last_price : 0.05;
+          return {
+            securityId: contract.security_id || (860000 + Math.floor(strNum)),
+            exchangeSegment: excSeg,
+            lastPrice: realPrice,
+            formattedLtp: realPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            isRealLive: true
+          };
+        }
+      }
+    }
+
+    // 2. High-precision Spot & Delta Model
     const spot = appState.indices?.[undKey]?.price || 
                  parseFloat(String(appState.indices?.[undKey]?.val || '').replace(/,/g, '')) || 
                  getUnderlyingSpot(underlying);
@@ -3271,7 +3390,6 @@ function initKiteApp() {
     const excSeg = (underlying.toUpperCase() === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
 
     let secId = null;
-    const undUpper = (underlying || 'BANKNIFTY').toUpperCase();
     if (undUpper === 'SENSEX') {
       if (strNum === 75000) {
         secId = isCall ? 863989 : 863990;
@@ -3296,7 +3414,8 @@ function initKiteApp() {
       securityId: secId,
       exchangeSegment: excSeg,
       lastPrice: finalPrice,
-      formattedLtp: finalPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      formattedLtp: finalPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      isRealLive: false
     };
   }
 
@@ -3964,6 +4083,17 @@ function initKiteApp() {
         const isoExpiry = selectedExpiryOpt ? selectedExpiryOpt.dataset.iso : null;
         if (expEl) expEl.value = e;
 
+        // Fetch live Option Chain for real exchange strikes & live prices
+        if (autoFetchStrikeLTP && u !== 'CRUDEOIL') {
+          const oc = await fetchDhanOptionChain(u, isoExpiry);
+          if (oc && strEl) {
+            const realStrikes = Object.keys(oc).map(k => parseFloat(k)).sort((a, b) => a - b);
+            if (realStrikes.length > 0) {
+              strEl.innerHTML = getStrikeOptionsHTML(u, strEl.value, optEl ? optEl.value : 'CE', realStrikes);
+            }
+          }
+        }
+
         const s = strEl.value;
         const o = optEl.value;
 
@@ -4017,8 +4147,8 @@ function initKiteApp() {
       }
 
       if (undEl) {
-        undEl.addEventListener('change', () => {
-          const expiries = getUnderlyingExpiries(undEl.value);
+        undEl.addEventListener('change', async () => {
+          const expiries = await fetchDhanExpiryList(undEl.value);
           if (expSelect) {
             expSelect.innerHTML = getExpiryOptionsHTML(undEl.value, '', expiries);
           }
@@ -4028,8 +4158,16 @@ function initKiteApp() {
       }
 
       if (expSelect) {
-        expSelect.addEventListener('change', () => {
-          if (strEl) strEl.innerHTML = getStrikeOptionsHTML(undEl ? undEl.value : 'BANKNIFTY', strEl.value, optEl ? optEl.value : 'CE');
+        expSelect.addEventListener('change', async () => {
+          const selectedExpiryOpt = expSelect.options[expSelect.selectedIndex];
+          const isoExpiry = selectedExpiryOpt ? selectedExpiryOpt.dataset.iso : null;
+          const oc = await fetchDhanOptionChain(undEl ? undEl.value : 'BANKNIFTY', isoExpiry);
+          if (oc && strEl) {
+            const realStrikes = Object.keys(oc).map(k => parseFloat(k)).sort((a, b) => a - b);
+            if (realStrikes.length > 0) {
+              strEl.innerHTML = getStrikeOptionsHTML(undEl ? undEl.value : 'BANKNIFTY', strEl.value, optEl ? optEl.value : 'CE', realStrikes);
+            }
+          }
           updateCardDetails(true);
         });
       }
@@ -4042,7 +4180,6 @@ function initKiteApp() {
 
       if (optEl) {
         optEl.addEventListener('change', () => {
-          if (strEl) strEl.innerHTML = getStrikeOptionsHTML(undEl ? undEl.value : 'BANKNIFTY', strEl.value, optEl.value);
           updateCardDetails(true);
         });
       }
@@ -4078,7 +4215,7 @@ function initKiteApp() {
   }
 
   let isSyncingCards = false;
-  function syncAllPositionCardsWithDhan() {
+  async function syncAllPositionCardsWithDhan() {
     if (isSyncingCards || !adminPositionsForms) return;
     isSyncingCards = true;
     try {
@@ -4101,13 +4238,25 @@ function initKiteApp() {
         if (!undEl || !expSelect || !strEl || !optEl) continue;
 
         const u = undEl.value;
-        const expiries = getUnderlyingExpiries(u);
+        const expiries = await fetchDhanExpiryList(u);
         if (expiries && expiries.length > 0) {
           const curExp = expSelect.value;
           expSelect.innerHTML = getExpiryOptionsHTML(u, curExp, expiries);
         }
 
-        strEl.innerHTML = getStrikeOptionsHTML(u, strEl.value, optEl.value);
+        const selectedExpiryOpt = expSelect.options[expSelect.selectedIndex];
+        const isoExpiry = selectedExpiryOpt ? selectedExpiryOpt.dataset.iso : null;
+        const oc = await fetchDhanOptionChain(u, isoExpiry);
+        if (oc && strEl) {
+          const realStrikes = Object.keys(oc).map(k => parseFloat(k)).sort((a, b) => a - b);
+          if (realStrikes.length > 0) {
+            strEl.innerHTML = getStrikeOptionsHTML(u, strEl.value, optEl.value, realStrikes);
+          } else {
+            strEl.innerHTML = getStrikeOptionsHTML(u, strEl.value, optEl.value);
+          }
+        } else {
+          strEl.innerHTML = getStrikeOptionsHTML(u, strEl.value, optEl.value);
+        }
 
         const info = resolveOptionContractInfoDirect(u, strEl.value, optEl.value, expSelect.value);
         if (info && ltpEl && (!ltpEl.value || ltpEl.value === '0.00' || ltpEl.value === '0')) {
