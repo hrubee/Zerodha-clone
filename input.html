@@ -91,17 +91,32 @@
             <span style="font-size: 11px; font-weight: 700; color: #166534; background: #dcfce7; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 6px;">🔒 Read-Only Feed (Trading Disabled)</span>
           </div>
           <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 12px; color: #1e40af; line-height: 1.5;">
-            <strong>🛡️ Safety Guarantee:</strong> This integration strictly reads live market prices & quotes (`/v2/marketfeed/ltp`). <u>No order placement or trading execution endpoints exist or are called.</u>
+            <strong>🛡️ Safety Guarantee:</strong> This integration strictly reads live market prices & quotes (<code>/v2/marketfeed/ltp</code>, <code>/v2/optionchain</code>, and <code>wss://api-feed.dhan.co</code>). <u>No order placement or trading execution endpoints exist or are called.</u>
           </div>
+          
+          <!-- Live Token Status Banner -->
+          <div id="dhan-token-status-banner" style="margin-bottom: 14px; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;">
+            <span id="dhan-token-status-text">⚠️ Dhan Token Status: Checking token...</span>
+            <span id="dhan-ws-live-indicator" style="font-size: 11.5px; padding: 2px 8px; border-radius: 4px; background: rgba(0,0,0,0.06);">WS: Disconnected</span>
+          </div>
+
           <div class="admin-grid-2">
             <div>
               <label class="admin-label">Client ID</label>
               <input type="text" id="admin-dhan-clientid" value="1104706516" class="admin-input">
             </div>
             <div>
-              <label class="admin-label">Access Token (JWT)</label>
-              <input type="password" id="admin-dhan-accesstoken" value="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJ1c2VyUmVnaW9uIjoiUjEiLCJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzg5NzAxMTE1LCJpYXQiOjE3ODk2MTQ3MTUsInRva2VuQ29uc3VtZXJUeXBlIjoiU0VMRiIsIndlYmhvb2tVcmwiOiIiLCJkaGFuQ2xpZW50SWQiOiIxMTA0NzA2NTE2In0.8Pa-4nXMn4rBu0-UhMTWQY_g2rmUhCOblnYYhnWRSmsawqxh-4TKPdFj0hWcBKWVWTj1gmD6lCxhqftJi3sgeA" class="admin-input">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label class="admin-label">Access Token (24hr JWT)</label>
+                <button type="button" id="admin-dhan-toggle-token-vis" style="background: none; border: none; font-size: 11px; color: #2563eb; cursor: pointer; padding: 0; margin-bottom: 4px; font-weight: 600;">👁️ Show/Hide</button>
+              </div>
+              <input type="password" id="admin-dhan-accesstoken" placeholder="Paste your fresh 24h Dhan JWT token here (eyJ...)" class="admin-input" style="font-family: monospace; font-size: 11.5px;">
             </div>
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; align-items: center;">
+            <button type="button" class="admin-btn-primary" id="admin-dhan-save-token-btn" style="padding: 8px 18px; font-size: 13px; font-weight: 700;">💾 Save & Connect Token</button>
+            <button type="button" class="admin-btn-small" id="admin-dhan-test-api">⚡ Test Live Feed</button>
           </div>
         </div>
 
@@ -157,7 +172,7 @@
             <div>
               <span id="dhan-api-status-text" style="font-size: 13px; color: #4b5563; font-weight: 500;">Ready to connect to Dhan HQ API v2</span>
             </div>
-            <button type="button" class="admin-btn-small" id="admin-dhan-test-api">⚡ Test Connection</button>
+            <span style="font-size: 11px; color: #64748b; font-family: monospace;">wss://api-feed.dhan.co</span>
           </div>
         </div>
       </div>
