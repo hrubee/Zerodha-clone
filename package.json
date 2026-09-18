@@ -1,6 +1,6 @@
 {
   "name": "zerodha-clone",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "private": true,
   "description": "Zerodha Kite Mobile Clone with Real-Time Dhan HQ Live Market Feed and Verified P&L",
