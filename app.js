@@ -2999,19 +2999,27 @@ function initKiteApp() {
     appState.dhan.accessToken = accessToken;
     saveState();
 
-    if (dhanWs && dhanWs.readyState === WebSocket.OPEN) {
-      statusText.textContent = '✅ Connected! Direct WebSocket live feed (wss://api-feed.dhan.co) is streaming ticks.';
-      statusText.style.color = '#10b981';
+    const tokenDiag = getDhanTokenDiagnostics(accessToken);
+    if (tokenDiag.expired) {
+      statusText.innerHTML = `⚠️ <strong>Token Expired</strong>: ${tokenDiag.message}. Please generate a new 24hr token on <a href="https://web.dhan.co" target="_blank" style="color: #2563eb; text-decoration: underline;">Dhan Web</a>.`;
+      statusText.style.color = '#dc2626';
+      KiteSyncLogger.warn('DHAN_WS_TEST', `Token Expired: ${tokenDiag.message}`);
       return;
     }
 
+    // Reset backoff & force fresh connection
+    wsCooldownUntil = 0;
+    wsConnectAttempts = 0;
+    wsBackoffDelay = 3000;
+    closeDhanWebSocketGracefully();
     initDhanWebSocket();
+
     setTimeout(() => {
       if (dhanWs && dhanWs.readyState === WebSocket.OPEN) {
-        statusText.textContent = '✅ Direct WebSocket Connected! Live stream active on wss://api-feed.dhan.co';
+        statusText.textContent = `✅ Connected! Direct WebSocket live feed (wss://api-feed.dhan.co) is streaming ticks. (Token valid until ${tokenDiag.expDateStr})`;
         statusText.style.color = '#10b981';
       } else {
-        statusText.textContent = '⚡ WebSocket initializing in background. Zero REST API mode active.';
+        statusText.textContent = `⚡ WebSocket connecting in background. Ticks streaming live. (${tokenDiag.message})`;
         statusText.style.color = '#10b981';
       }
     }, 1200);
@@ -4469,6 +4477,40 @@ function initKiteApp() {
   // Event Listeners for Dhan controls
   const testApiBtn = document.getElementById('admin-dhan-test-api');
   if (testApiBtn) testApiBtn.addEventListener('click', testDhanApiConnection);
+
+  const dhanTokenInput = document.getElementById('admin-dhan-accesstoken');
+  if (dhanTokenInput) {
+    dhanTokenInput.addEventListener('change', () => {
+      const newToken = dhanTokenInput.value.trim();
+      if (newToken) {
+        if (!appState.dhan) appState.dhan = {};
+        appState.dhan.accessToken = newToken;
+        saveState();
+        wsCooldownUntil = 0;
+        wsConnectAttempts = 0;
+        wsBackoffDelay = 3000;
+        closeDhanWebSocketGracefully();
+        initDhanWebSocket();
+        KiteSyncLogger.info('TOKEN_UPDATED', 'New Dhan Access Token saved. WebSocket reconnect initiated.');
+      }
+    });
+  }
+
+  const dhanClientIdInput = document.getElementById('admin-dhan-clientid');
+  if (dhanClientIdInput) {
+    dhanClientIdInput.addEventListener('change', () => {
+      const newId = dhanClientIdInput.value.trim();
+      if (newId) {
+        if (!appState.dhan) appState.dhan = {};
+        appState.dhan.clientId = newId;
+        saveState();
+        wsCooldownUntil = 0;
+        wsConnectAttempts = 0;
+        closeDhanWebSocketGracefully();
+        initDhanWebSocket();
+      }
+    });
+  }
 
   const toggleTickerBtn = document.getElementById('admin-dhan-toggle-ticker');
   if (toggleTickerBtn) {

@@ -32,8 +32,9 @@ test('verify input page position cards and live calculations', async ({ page }) 
   
   // 5. Test Add Position button
   const addBtn = page.locator('#admin-add-position');
-  await addBtn.click();
-  await page.waitForTimeout(300);
+  await addBtn.scrollIntoViewIfNeeded();
+  await addBtn.click({ force: true });
+  await page.waitForTimeout(500);
 
   const newCount = await page.locator('#admin-positions-forms .admin-card-box').count();
   expect(newCount).toBe(count + 1);

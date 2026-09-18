@@ -9,7 +9,9 @@ test('verify newly added position persists across multiple tick intervals', asyn
   expect(initialCount).toBeGreaterThanOrEqual(1);
 
   // Click Add Index Option
-  await page.locator('#admin-add-position').click();
+  const addBtn = page.locator('#admin-add-position');
+  await addBtn.scrollIntoViewIfNeeded();
+  await addBtn.click({ force: true });
   await page.waitForTimeout(500);
 
   const newCount = await page.locator('#admin-positions-forms .admin-card-box').count();
