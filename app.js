@@ -3123,18 +3123,21 @@ function initKiteApp() {
   }
 
   function parseExpiryDate(expiryStr) {
-    const str = (expiryStr || '14th FEB').trim();
+    const str = (expiryStr || 'SEP').trim();
     const parts = str.split(/\s+/);
-    let day = '14th';
-    let month = 'FEB';
+    let day = '';
+    let month = 'SEP';
 
     if (parts.length >= 2) {
       day = parts[0];
       month = parts[1].toUpperCase();
+      const dNum = parseInt(day, 10);
+      if (!isNaN(dNum)) day = getOrdinal(dNum);
     } else if (parts.length === 1) {
-      if (MONTHS_LIST.includes(parts[0].toUpperCase())) {
-        month = parts[0].toUpperCase();
-        day = '14th';
+      const pUpper = parts[0].toUpperCase();
+      if (MONTHS_LIST.includes(pUpper)) {
+        month = pUpper;
+        day = ''; // Clean monthly contract without date
       } else {
         const numMatch = parts[0].match(/\d+/);
         if (numMatch) {
@@ -3143,15 +3146,12 @@ function initKiteApp() {
       }
     }
 
-    const dNum = parseInt(day, 10);
-    if (!isNaN(dNum)) {
-      day = getOrdinal(dNum);
-    }
     if (!MONTHS_LIST.includes(month)) {
-      month = 'FEB';
+      month = 'SEP';
     }
 
-    return { day, month, formatted: `${day} ${month}` };
+    const formatted = day ? `${day} ${month}` : month;
+    return { day, month, formatted };
   }
 
   function formatDhanExpiry(isoStr) {
@@ -3197,12 +3197,29 @@ function initKiteApp() {
     const normCur = (currentExpiryStr || '').toUpperCase().trim();
     let matched = false;
 
+    // 1. Clean Monthly Contracts (e.g. SENSEX SEP, SENSEX OCT)
+    const monthsSeen = new Set();
+    expiries.forEach(iso => {
+      const parts = String(iso).split('-');
+      if (parts.length >= 2) {
+        const mNum = parseInt(parts[1], 10) - 1;
+        const mName = MONTHS_LIST[mNum] || 'SEP';
+        if (!monthsSeen.has(mName)) {
+          monthsSeen.add(mName);
+          const isSel = !matched && (normCur === mName || normCur === `${mName} (MONTHLY)`);
+          if (isSel) matched = true;
+          html += `<option value="${mName}" data-iso="${iso}" ${isSel ? 'selected' : ''}>${mName} (Monthly - No Date)</option>`;
+        }
+      }
+    });
+
+    // 2. Weekly Contracts with specific dates (e.g. 17th SEP, 24th SEP)
     expiries.forEach((iso, idx) => {
       const formatted = formatDhanExpiry(iso);
       const isSelected = !matched && (normCur.includes(formatted.formatted.toUpperCase()) || normCur === iso);
       if (isSelected) matched = true;
-      const tag = idx === 0 ? ' (Weekly/Current)' : (idx === 1 ? ' (Next)' : '');
-      html += `<option value="${formatted.formatted}" data-iso="${iso}" ${isSelected ? 'selected' : ''}>${formatted.label}${tag}</option>`;
+      const tag = idx === 0 ? ' (Current Weekly)' : (idx === 1 ? ' (Next Weekly)' : ' (Weekly)');
+      html += `<option value="${formatted.formatted}" data-iso="${iso}" ${isSelected ? 'selected' : ''}>${formatted.formatted}${tag}</option>`;
     });
 
     if (!matched && normCur) {
@@ -3397,6 +3414,30 @@ function initKiteApp() {
     return oc;
   }
 
+  function resolveIsoDateFromExpiry(expiryStr, underlying) {
+    if (!expiryStr) return getUnderlyingExpiries(underlying)[0];
+    const s = String(expiryStr).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const expList = dhanExpiryListCache[underlying.toUpperCase()]?.data || getUnderlyingExpiries(underlying);
+    for (const iso of expList) {
+      const f = formatDhanExpiry(iso);
+      if (f.formatted.toUpperCase() === s.toUpperCase() || f.day.toUpperCase() === s.toUpperCase()) {
+        return iso;
+      }
+    }
+    for (const iso of expList) {
+      const parts = iso.split('-');
+      if (parts.length === 3) {
+        const mNum = parseInt(parts[1], 10) - 1;
+        const mName = MONTHS_LIST[mNum] || '';
+        if (mName.toUpperCase() === s.toUpperCase()) {
+          return iso;
+        }
+      }
+    }
+    return expList[0] || s;
+  }
+
   async function fetchDhanOptionChain(underlying, expiryIso) {
     const und = (underlying || 'BANKNIFTY').toUpperCase();
     const scripMap = { 'NIFTY': 13, 'BANKNIFTY': 25, 'SENSEX': 51, 'FINNIFTY': 27, 'MIDCPNIFTY': 442 };
@@ -3405,7 +3446,7 @@ function initKiteApp() {
 
     const token = appState.dhan?.accessToken || '';
     const clientId = appState.dhan?.clientId || '1104706516';
-    const exp = expiryIso || getUnderlyingExpiries(und)[0];
+    const exp = resolveIsoDateFromExpiry(expiryIso, und);
     const cacheKey = `${und}_${exp}`;
 
     const now = Date.now();
