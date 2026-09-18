@@ -622,8 +622,12 @@ function initKiteApp() {
       }
     }
 
-    // If on input page and we received a broadcast from display page containing updated live ticks:
+    // If on input page, protect input state and prevent dropping newly added positions
     if (document.body.classList.contains('page-input-standalone')) {
+      if (appState.positions && newState.positions && (appState.positions.length > newState.positions.length)) {
+        KiteSyncLogger.warn('POS_DROP_IGNORED', `Ignored state with fewer positions (${newState.positions.length}) than active input (${appState.positions.length})`);
+        return;
+      }
       const isPosCountSame = appState.positions && newState.positions && (appState.positions.length === newState.positions.length);
       if (isPosCountSame) {
         // Only update market data (LTP, PnL, isGreen, indices, totalPnl) without destroying user input form focus
@@ -639,7 +643,7 @@ function initKiteApp() {
         syncLiveTicksToInputDOM();
         return;
       } else {
-        // Positions were added or deleted, full state update and re-populate forms
+        // Positions were added, full state update and re-populate forms
         appState = newState;
         populateAdminForms();
         renderAppUI();
@@ -2883,7 +2887,9 @@ function initKiteApp() {
       appState.totalPnl = '+0.00';
     }
 
-    saveState();
+    if (document.body.classList.contains('page-input-standalone')) {
+      saveState(true, false);
+    }
     renderAppUI();
   }
 
