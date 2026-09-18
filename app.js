@@ -2806,25 +2806,35 @@ function initKiteApp() {
   function formatCleanIndexChange(changeInput, currentPrice = 0, prevClose = 0) {
     if (typeof changeInput === 'number') {
       const chg = changeInput;
-      const pct = prevClose ? (chg / prevClose) * 100 : (currentPrice ? (chg / currentPrice) * 100 : 0);
-      return `${chg >= 0 ? '+' : ''}${chg.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+      const base = (prevClose && prevClose > 1000) ? prevClose : ((currentPrice && currentPrice > 1000) ? currentPrice : 0);
+      const pct = base > 0 ? (chg / base) * 100 : 0;
+      const safePct = isFinite(pct) ? Math.min(999, Math.max(-999, pct)) : 0;
+      return `${chg >= 0 ? '+' : ''}${chg.toFixed(2)} (${safePct >= 0 ? '+' : ''}${safePct.toFixed(2)}%)`;
     }
 
     const str = String(changeInput || '').trim();
     if (!str) return '+0.00 (+0.00%)';
 
-    const fullMatch = str.match(/([+-]?\s*[\d,]+(?:\.\d+)?)\s*\(\s*([+-]?\s*[\d,]+(?:\.\d+)?)\s*%\s*\)/);
+    // Matches formatted strings like "+91.58 (+0.12%)", "+91.58 (0.123456%)", "-75.80 (-0.32%)", etc.
+    const fullMatch = str.match(/([+-]?\s*[\d,]+(?:\.\d+)?)\s*\(\s*([+-]?\s*[\d,]+(?:\.\d+)?)\s*%?\s*\)/);
     if (fullMatch) {
       const pt = parseFloat(fullMatch[1].replace(/[\s,]/g, '')) || 0;
-      const pct = parseFloat(fullMatch[2].replace(/[\s,]/g, '')) || 0;
-      return `${pt >= 0 ? '+' : ''}${pt.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+      let pct = parseFloat(fullMatch[2].replace(/[\s,]/g, ''));
+      if (isNaN(pct) || !isFinite(pct) || Math.abs(pct) > 1000) {
+        const base = (prevClose && prevClose > 1000) ? prevClose : ((currentPrice && currentPrice > 1000) ? currentPrice : 0);
+        pct = base > 0 ? (pt / base) * 100 : 0;
+      }
+      const safePct = isFinite(pct) ? Math.min(999, Math.max(-999, pct)) : 0;
+      return `${pt >= 0 ? '+' : ''}${pt.toFixed(2)} (${safePct >= 0 ? '+' : ''}${safePct.toFixed(2)}%)`;
     }
 
     const singleMatch = str.match(/([+-]?\s*[\d,]+(?:\.\d+)?)/);
     if (singleMatch) {
       const pt = parseFloat(singleMatch[1].replace(/[\s,]/g, '')) || 0;
-      const pct = prevClose ? (pt / prevClose) * 100 : (currentPrice ? (pt / currentPrice) * 100 : 0);
-      return `${pt >= 0 ? '+' : ''}${pt.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+      const base = (prevClose && prevClose > 1000) ? prevClose : ((currentPrice && currentPrice > 1000) ? currentPrice : 0);
+      const pct = base > 0 ? (pt / base) * 100 : 0;
+      const safePct = isFinite(pct) ? Math.min(999, Math.max(-999, pct)) : 0;
+      return `${pt >= 0 ? '+' : ''}${pt.toFixed(2)} (${safePct >= 0 ? '+' : ''}${safePct.toFixed(2)}%)`;
     }
 
     return '+0.00 (+0.00%)';
