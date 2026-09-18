@@ -21,27 +21,27 @@
   "indices": {
     "nifty": {
       "val": "23,322.30",
-      "change": "-75.80 (-0.32%)",
-      "isGreen": false,
-      "prevClose": 23398.1,
+      "change": "+50.00 (+0.21%)",
+      "isGreen": true,
+      "prevClose": 23272.30,
       "value": "23,322.30",
-      "price": 23322.30078125
+      "price": 23322.30
     },
     "banknifty": {
       "val": "56,261.10",
-      "change": "-345.45 (-0.61%)",
-      "isGreen": false,
-      "prevClose": 56606.55,
+      "change": "+211.10 (+0.38%)",
+      "isGreen": true,
+      "prevClose": 56050.00,
       "value": "56,261.10",
-      "price": 56261.1015625
+      "price": 56261.10
     },
     "sensex": {
       "val": "74,538.71",
-      "change": "-243.05 (-0.33%)",
-      "isGreen": false,
-      "prevClose": 74781.76,
+      "change": "+221.00 (+0.30%)",
+      "isGreen": true,
+      "prevClose": 74317.71,
       "value": "74,538.71",
-      "price": 74538.7109375
+      "price": 74538.71
     },
     "vix": {
       "val": "13.82",

@@ -83,25 +83,25 @@ class RouteHandler(http.server.SimpleHTTPRequestHandler):
                 "timestamp": time.time(),
                 "data": {
                     "nifty": {
-                        "val": "23,118.60",
-                        "change": "-279.50 (-1.19%)",
-                        "price": 23118.60,
-                        "prevClose": 23398.10,
-                        "isGreen": False
+                        "val": "23,322.30",
+                        "change": "+50.00 (+0.21%)",
+                        "price": 23322.30,
+                        "prevClose": 23272.30,
+                        "isGreen": True
                     },
                     "sensex": {
-                        "val": "74,003.82",
-                        "change": "-777.94 (-1.04%)",
-                        "price": 74003.82,
-                        "prevClose": 74781.76,
-                        "isGreen": False
+                        "val": "74,538.71",
+                        "change": "+221.00 (+0.30%)",
+                        "price": 74538.71,
+                        "prevClose": 74317.71,
+                        "isGreen": True
                     },
                     "banknifty": {
-                        "val": "55,794.75",
-                        "change": "-811.80 (-1.43%)",
-                        "price": 55794.75,
-                        "prevClose": 56606.55,
-                        "isGreen": False
+                        "val": "56,261.10",
+                        "change": "+211.10 (+0.38%)",
+                        "price": 56261.10,
+                        "prevClose": 56050.00,
+                        "isGreen": True
                     }
                 }
             }

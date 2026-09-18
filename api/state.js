@@ -49,9 +49,9 @@ function loadInitialState() {
       is24Hour: false
     },
     indices: {
-      nifty: { val: '23,459.55', change: '+28.05 (+0.11%)', isGreen: true, prevClose: 23431.50 },
-      banknifty: { val: '57,127.90', change: '+434.40 (+0.76%)', isGreen: true, prevClose: 56693.50 },
-      sensex: { val: '74,855.81', change: '+91.58 (+0.12%)', isGreen: true, prevClose: 74764.23 },
+      nifty: { val: '23,322.30', change: '+50.00 (+0.21%)', isGreen: true, prevClose: 23272.30 },
+      banknifty: { val: '56,261.10', change: '+211.10 (+0.38%)', isGreen: true, prevClose: 56050.00 },
+      sensex: { val: '74,538.71', change: '+221.00 (+0.30%)', isGreen: true, prevClose: 74317.71 },
       vix: { val: '13.82', change: '-0.45 (-3.15%)', isGreen: false }
     },
     totalPnl: '+3,34,563.34',
