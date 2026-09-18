@@ -2614,26 +2614,45 @@ function initKiteApp() {
     const segment = view.getUint8(3);
     const securityId = view.getInt32(4, true);
 
-    // Response Code 1: Index Packet (<BHBIfIffff)
+    // Response Code 1: Index Packet (<BHBIfIffff -> Header:8, LTP:8-11, LTT:12-15, Open:16-19, High:20-23, Low:24-27, PrevClose:28-31)
     if (responseCode === 1 && buffer.byteLength >= 12) {
       const ltp = view.getFloat32(8, true);
-      const open = buffer.byteLength >= 16 ? view.getFloat32(12, true) : null;
-      const close = buffer.byteLength >= 20 ? view.getFloat32(16, true) : null;
+      const close = buffer.byteLength >= 32 ? view.getFloat32(28, true) : null;
+      const prevClose = (close && close > 1000) ? close : null;
       if (ltp > 0) {
-        if (securityId === 13) updateLiveIndexFromWs('nifty', ltp, close || open);
-        else if (securityId === 25) updateLiveIndexFromWs('banknifty', ltp, close || open);
-        else if (securityId === 51) updateLiveIndexFromWs('sensex', ltp, close || open);
+        if (securityId === 13) updateLiveIndexFromWs('nifty', ltp, prevClose);
+        else if (securityId === 25) updateLiveIndexFromWs('banknifty', ltp, prevClose);
+        else if (securityId === 51) updateLiveIndexFromWs('sensex', ltp, prevClose);
       }
-    } 
-    // Response Code 2, 4, 6, 7, 8: Ticker / Quote / Full Packets (<BHBIf...)
-    else if ((responseCode === 2 || responseCode === 4 || responseCode === 6 || responseCode === 7 || responseCode === 8) && buffer.byteLength >= 12) {
+    }
+    // Response Code 6: Previous Close Packet (Header:8, PrevClose:8-11, PrevOI:12-15)
+    else if (responseCode === 6 && buffer.byteLength >= 12) {
+      const prevClose = view.getFloat32(8, true);
+      if (prevClose > 1000) {
+        if (securityId === 13 && appState.indices?.nifty) {
+          appState.indices.nifty.prevClose = prevClose;
+          const cur = appState.indices.nifty.price || parseFloat(String(appState.indices.nifty.val).replace(/,/g, ''));
+          if (cur > 0) updateLiveIndexFromWs('nifty', cur, prevClose);
+        } else if (securityId === 25 && appState.indices?.banknifty) {
+          appState.indices.banknifty.prevClose = prevClose;
+          const cur = appState.indices.banknifty.price || parseFloat(String(appState.indices.banknifty.val).replace(/,/g, ''));
+          if (cur > 0) updateLiveIndexFromWs('banknifty', cur, prevClose);
+        } else if (securityId === 51 && appState.indices?.sensex) {
+          appState.indices.sensex.prevClose = prevClose;
+          const cur = appState.indices.sensex.price || parseFloat(String(appState.indices.sensex.val).replace(/,/g, ''));
+          if (cur > 0) updateLiveIndexFromWs('sensex', cur, prevClose);
+        }
+      }
+    }
+    // Response Code 2, 4, 7, 8: Ticker / Quote / Full Packets (<BHBIf...)
+    else if ((responseCode === 2 || responseCode === 4 || responseCode === 7 || responseCode === 8) && buffer.byteLength >= 12) {
       const ltp = view.getFloat32(8, true);
-      const open = buffer.byteLength >= 38 ? view.getFloat32(34, true) : null;
       const close = buffer.byteLength >= 42 ? view.getFloat32(38, true) : null;
+      const prevClose = (close && close > 1000) ? close : null;
       if (ltp > 0) {
-        if (securityId === 13) updateLiveIndexFromWs('nifty', ltp, close || open);
-        else if (securityId === 25) updateLiveIndexFromWs('banknifty', ltp, close || open);
-        else if (securityId === 51) updateLiveIndexFromWs('sensex', ltp, close || open);
+        if (securityId === 13) updateLiveIndexFromWs('nifty', ltp, prevClose);
+        else if (securityId === 25) updateLiveIndexFromWs('banknifty', ltp, prevClose);
+        else if (securityId === 51) updateLiveIndexFromWs('sensex', ltp, prevClose);
         else {
           updateSecurityLtpFromWs(securityId, ltp);
           KiteSyncLogger.sync('DHAN_WS_TICK', `SecID ${securityId} LTP: ₹${ltp.toFixed(2)}`);
@@ -2663,8 +2682,8 @@ function initKiteApp() {
     const oldPrice = appState.indices[indexKey].price || parseFloat(String(appState.indices[indexKey].val).replace(/,/g, '')) || price;
     const deltaIndex = price - oldPrice;
 
-    const baseClose = prevClose || appState.indices[indexKey].prevClose || price;
-    const chg = price - baseClose;
+    const baseClose = (prevClose && prevClose > 1000) ? prevClose : (appState.indices[indexKey].prevClose || price);
+    const chg = Math.round((price - baseClose) * 100) / 100;
     const pct = baseClose ? (chg / baseClose) * 100 : 0;
     const formattedPrice = price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     appState.indices[indexKey].val = formattedPrice;
