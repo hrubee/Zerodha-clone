@@ -2286,9 +2286,9 @@ function initKiteApp() {
           isServerSessionOwner = true;
           hideSessionConflictModal();
         } else {
-          isServerSessionOwner = false;
-          closeDhanWebSocketGracefully();
-          renderSessionConflictModal();
+          if (document.body.classList.contains('page-input-standalone')) {
+            renderSessionConflictModal();
+          }
         }
       }
     } catch (e) {
@@ -2354,7 +2354,6 @@ function initKiteApp() {
   }
 
   function checkWsLeaderStatus() {
-    if (!isServerSessionOwner) return;
     const now = Date.now();
     if (!isWsLeader && (now - lastLeaderHeartbeat > 4000)) {
       isWsLeader = true;
@@ -2392,7 +2391,6 @@ function initKiteApp() {
   });
 
   function initDhanWebSocket() {
-    if (!isServerSessionOwner) return;
     if (typeof WebSocket === 'undefined') return;
     if (!appState.dhan || !appState.dhan.accessToken || appState.dhan.accessToken.length < 30) return;
     if (Date.now() < wsCooldownUntil) return;
@@ -2435,7 +2433,7 @@ function initKiteApp() {
         // Exponential backoff between 5s and 20s to prevent spamming closed server outside market hours
         const backoff = (code === 1006 || !isIndianMarketOpen()) ? 8000 : 3000;
         dhanWsReconnectTimer = setTimeout(() => {
-          if (appState.dhan && appState.dhan.accessToken && isWsLeader) {
+          if (appState.dhan && appState.dhan.accessToken) {
             initDhanWebSocket();
           }
         }, backoff);
