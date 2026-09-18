@@ -886,6 +886,8 @@ function initKiteApp() {
         card.dataset.index = idx;
         if (isMarketClosed) {
           card.style.opacity = '0.55';
+        } else {
+          card.style.opacity = '1';
         }
 
         const isGreenPnl = !pos.pnl.includes('-');
@@ -1230,6 +1232,8 @@ function initKiteApp() {
           item.style.boxShadow = 'none';
           if (isMarketClosed) {
             item.style.opacity = '0.55';
+          } else {
+            item.style.opacity = '1';
           }
 
           const isGreenPnl = !pos.pnl.includes('-');
@@ -2703,7 +2707,18 @@ function initKiteApp() {
     const marketMode = appState.dhan ? (appState.dhan.marketHoursMode || 'auto') : 'auto';
     if (marketMode === 'always') return false;
     if (marketMode === 'closed') return true;
-    return !isIndianMarketOpen();
+
+    // Time-based Fading Rule:
+    // - From 8:00 AM to 3:30 PM IST (480 mins to 930 mins): NORMAL OPACITY (1.0)
+    // - From 3:30 PM onwards until 8:00 AM next morning: FADED (opacity 0.55)
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const ist = new Date(utc + (3600000 * 5.5));
+    const hours = ist.getHours();
+    const minutes = ist.getMinutes();
+    const totalMinutes = hours * 60 + minutes;
+
+    return totalMinutes >= 930 || totalMinutes < 480;
   }
 
   async function tickLiveMarketData() {
