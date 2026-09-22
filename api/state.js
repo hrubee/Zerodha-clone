@@ -82,6 +82,14 @@ function loadInitialState() {
       isTickerActive: true,
       marketHoursMode: 'auto'
     },
+    kite: {
+      apiKey: 'kite_demo_key',
+      apiSecret: '',
+      accessToken: '',
+      requestToken: '',
+      feedProvider: 'auto',
+      isTickerActive: true
+    },
     verifiedPnl: {
       dateRange: "2026-07-01  —  2026-09-12",
       realisedPnl: "-1.18L",

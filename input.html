@@ -83,8 +83,79 @@
         </div>
       </div>
 
-      <!-- SECTION 2: DHAN API & LIVE FEED CONFIG -->
+      <!-- SECTION 2: LIVE MARKET FEEDS (ZERODHA KITE & DHAN HQ) -->
       <div class="admin-section" id="asec-dhan">
+        
+        <!-- Feed Provider Selection Card -->
+        <div class="admin-card-box" style="border: 2px solid #387ed1; background: #f8fafc;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #1e3a8a;">📡 Live Market Data Provider</h4>
+            <span style="font-size: 11px; font-weight: 700; color: #1e40af; background: #dbeafe; border: 1px solid #bfdbfe; padding: 4px 10px; border-radius: 6px;">⚡ Multi-Exchange Live Stream</span>
+          </div>
+          <div class="admin-grid-2">
+            <div>
+              <label class="admin-label">Active Feed Engine</label>
+              <select id="admin-feed-provider" class="admin-input" style="background: #fff; font-weight: 700; color: #0f172a;">
+                <option value="auto" selected>🔄 Auto-Hybrid (KiteTicker + Dhan Fallback)</option>
+                <option value="kite">🪁 Zerodha KiteTicker (wss://ws.kite.trade)</option>
+                <option value="dhan">⚡ Dhan HQ Binary (wss://api-feed.dhan.co)</option>
+              </select>
+            </div>
+            <div>
+              <label class="admin-label">Active Connection Stream</label>
+              <div id="live-active-stream-badge" style="margin-top: 4px; padding: 8px 12px; border-radius: 6px; background: #f1f5f9; color: #334155; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                <span id="live-active-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #94a3b8;"></span>
+                <span id="live-active-stream-label">Standby</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1. Zerodha Kite Connect WebSocket Credentials Card -->
+        <div class="admin-card-box" id="card-kite-credentials" style="border-top: 3px solid #ff5722;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h4 style="margin: 0; color: #c2410c;">🪁 Zerodha KiteTicker WebSocket (Official)</h4>
+            <span style="font-size: 11px; font-weight: 700; color: #c2410c; background: #ffedd5; border: 1px solid #fed7aa; padding: 4px 10px; border-radius: 6px;">wss://ws.kite.trade</span>
+          </div>
+          
+          <!-- Live Kite Status Banner -->
+          <div id="kite-token-status-banner" style="margin-bottom: 14px; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;">
+            <span id="kite-token-status-text">⚠️ Kite Connect: Enter API Key & Access Token to connect</span>
+            <span id="kite-ws-live-indicator" style="font-size: 11.5px; padding: 2px 8px; border-radius: 4px; background: rgba(0,0,0,0.06);">WS: Disconnected</span>
+          </div>
+
+          <div class="admin-grid-2">
+            <div>
+              <label class="admin-label">Kite API Key</label>
+              <input type="text" id="admin-kite-apikey" placeholder="e.g. your_api_key" value="kite_demo_key" class="admin-input" style="font-family: monospace;">
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label class="admin-label">Kite Access Token (Daily Session)</label>
+                <button type="button" id="admin-kite-toggle-token-vis" style="background: none; border: none; font-size: 11px; color: #2563eb; cursor: pointer; padding: 0; margin-bottom: 4px; font-weight: 600;">👁️ Show/Hide</button>
+              </div>
+              <input type="password" id="admin-kite-accesstoken" placeholder="Paste your Kite access_token here..." class="admin-input" style="font-family: monospace; font-size: 11.5px;">
+            </div>
+          </div>
+
+          <div class="admin-grid-2" style="margin-top: 10px;">
+            <div>
+              <label class="admin-label">Request Token (Optional for Session Gen)</label>
+              <input type="text" id="admin-kite-requesttoken" placeholder="Paste request_token from Kite redirect URL" class="admin-input" style="font-family: monospace;">
+            </div>
+            <div>
+              <label class="admin-label">API Secret (Optional)</label>
+              <input type="password" id="admin-kite-apisecret" placeholder="Your Kite API Secret" class="admin-input" style="font-family: monospace;">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; align-items: center;">
+            <button type="button" class="admin-btn-primary" id="admin-kite-save-token-btn" style="padding: 8px 18px; font-size: 13px; font-weight: 700; background: #ea580c; border-color: #ea580c;">💾 Save & Connect Kite</button>
+            <button type="button" class="admin-btn-small" id="admin-kite-test-btn">⚡ Test Kite Ticker</button>
+          </div>
+        </div>
+
+        <!-- 2. Dhan HQ API v2 Credentials Card -->
         <div class="admin-card-box">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <h4 style="margin: 0;">⚡ Dhan HQ API v2 Credentials</h4>
@@ -439,6 +510,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=173"></script>
+  <script src="app.js?v=175"></script>
 </body>
 </html>
