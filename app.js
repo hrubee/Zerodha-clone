@@ -5512,29 +5512,46 @@ function initKiteApp() {
     });
   }
 
+  const triggerKiteOneClickLogin = (e) => {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    const apiKey = (kiteApiKeyInput ? kiteApiKeyInput.value.trim() : '') || (appState.kite?.apiKey || '');
+    const apiSecret = (kiteApiSecretInput ? kiteApiSecretInput.value.trim() : '') || (appState.kite?.apiSecret || '');
+
+    if (!apiKey || apiKey === 'kite_demo_key' || apiKey.length < 4) {
+      showInputToast('⚠️ Please enter your Kite API Key first in settings', false);
+      const tabBtn = document.querySelector('[data-atab="dhan"]');
+      if (tabBtn) tabBtn.click();
+      if (kiteApiKeyInput) kiteApiKeyInput.focus();
+      return;
+    }
+
+    if (!appState.kite) appState.kite = {};
+    appState.kite.apiKey = apiKey;
+    if (apiSecret) appState.kite.apiSecret = apiSecret;
+    saveState(true, true);
+
+    showInputToast('🚀 Opening Zerodha Kite Login...', true);
+    const kiteLoginUrl = `https://kite.zerodha.com/connect/login?v=3&api_key=${encodeURIComponent(apiKey)}`;
+    window.location.href = kiteLoginUrl;
+  };
+
   const kiteOneClickLoginBtn = document.getElementById('admin-kite-oneclick-login-btn');
   if (kiteOneClickLoginBtn) {
-    kiteOneClickLoginBtn.addEventListener('click', (e) => {
-      if (e && typeof e.preventDefault === 'function') e.preventDefault();
-      const apiKey = kiteApiKeyInput ? kiteApiKeyInput.value.trim() : (appState.kite?.apiKey || '');
-      const apiSecret = kiteApiSecretInput ? kiteApiSecretInput.value.trim() : (appState.kite?.apiSecret || '');
-
-      if (!apiKey || apiKey === 'kite_demo_key' || apiKey.length < 4) {
-        showInputToast('⚠️ Please enter your Kite API Key first', false);
-        if (kiteApiKeyInput) kiteApiKeyInput.focus();
-        return;
-      }
-
-      if (!appState.kite) appState.kite = {};
-      appState.kite.apiKey = apiKey;
-      if (apiSecret) appState.kite.apiSecret = apiSecret;
-      saveState(true, true);
-
-      showInputToast('🚀 Opening Zerodha Kite Login...', true);
-      const kiteLoginUrl = `https://kite.zerodha.com/connect/login?v=3&api_key=${encodeURIComponent(apiKey)}`;
-      window.location.href = kiteLoginUrl;
-    });
+    kiteOneClickLoginBtn.addEventListener('click', triggerKiteOneClickLogin);
   }
+
+  document.querySelectorAll('.admin-quick-kite-login-btn').forEach(btn => {
+    btn.addEventListener('click', triggerKiteOneClickLogin);
+  });
+
+  document.querySelectorAll('.admin-quick-switch-tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      const target = btn.getAttribute('data-target') || 'dhan';
+      const tabBtn = document.querySelector(`[data-atab="${target}"]`);
+      if (tabBtn) tabBtn.click();
+    });
+  });
 
   const kiteCopyRedirectBtn = document.getElementById('admin-kite-copy-redirect-btn');
   if (kiteCopyRedirectBtn) {
