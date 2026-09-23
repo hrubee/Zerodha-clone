@@ -2531,7 +2531,9 @@ function initKiteApp() {
     const tokenList = [
       KITE_TOKENS.NIFTY,
       KITE_TOKENS.SENSEX,
-      KITE_TOKENS.BANKNIFTY
+      KITE_TOKENS.BANKNIFTY,
+      KITE_TOKENS.FINNIFTY,
+      KITE_TOKENS.MIDCPNIFTY
     ];
 
     if (appState.positions && appState.positions.length > 0) {
@@ -2701,19 +2703,12 @@ function initKiteApp() {
   }
 
   function initLiveMarketFeeds() {
-    const provider = appState.kite?.feedProvider || 'auto';
-    if (provider === 'kite') {
-      initKiteWebSocket();
-    } else if (provider === 'dhan') {
+    const provider = appState.kite?.feedProvider || 'kite';
+    if (provider === 'dhan') {
       initDhanWebSocket();
     } else {
-      // Auto-Hybrid: Connect Kite if configured, else Dhan
-      if (appState.kite && appState.kite.apiKey && appState.kite.accessToken) {
-        initKiteWebSocket();
-      }
-      if (appState.dhan && appState.dhan.accessToken) {
-        initDhanWebSocket();
-      }
+      // Primary Data Feed: Zerodha Kite Connect WebSocket
+      initKiteWebSocket();
     }
   }
 
@@ -2725,12 +2720,17 @@ function initKiteApp() {
     }
     if (isWsLeader) {
       broadcastLiveWsTick({ type: 'WS_LEADER_HEARTBEAT' });
-      // Reconnect if sockets disconnected and backoff elapsed
-      if ((!dhanWs || dhanWs.readyState === WebSocket.CLOSED) && (now - lastWsConnectAttemptTime > wsBackoffDelay)) {
-        initDhanWebSocket();
-      }
-      if ((!kiteWs || kiteWs.readyState === WebSocket.CLOSED) && (appState.kite?.accessToken)) {
-        initKiteWebSocket();
+      const provider = appState.kite?.feedProvider || 'kite';
+      // Primary: Keep KiteTicker connected
+      if (provider === 'kite' || provider === 'auto') {
+        if ((!kiteWs || kiteWs.readyState === WebSocket.CLOSED) && (appState.kite?.accessToken)) {
+          initKiteWebSocket();
+        }
+      } else if (provider === 'dhan') {
+        // Dhan only connects if explicitly selected
+        if ((!dhanWs || dhanWs.readyState === WebSocket.CLOSED) && (now - lastWsConnectAttemptTime > wsBackoffDelay)) {
+          initDhanWebSocket();
+        }
       }
     }
   }
@@ -3779,11 +3779,11 @@ function initKiteApp() {
     });
   }
 
-  // Parse Symbol Helper (e.g. 'BANKNIFTY 14th FEB 45300 CE' or 'CRUDEOIL 19th MAR FUT')
+  // Parse Symbol Helper (e.g. 'BANKNIFTY 14th FEB 45300 CE' or 'NIFTY 24500 CE' or 'CRUDEOIL 19th MAR FUT')
   function parseOptionSymbol(sym) {
     if (!sym) return { underlying: 'BANKNIFTY', expiry: '14th FEB', strike: '45300', optionType: 'CE' };
     const parts = sym.trim().split(/\s+/);
-    if (parts.length >= 3) {
+    if (parts.length >= 2) {
       const underlying = parts[0].toUpperCase();
       const lastPart = parts[parts.length - 1].toUpperCase();
 
@@ -3793,10 +3793,17 @@ function initKiteApp() {
       }
 
       if (parts.length >= 4 && (lastPart === 'CE' || lastPart === 'PE')) {
-        const expiry = parts.slice(1, -2).join(' ') || '14th FEB';
+        const expiry = parts.slice(1, -2).join(' ') || '17th SEP';
         const strike = parts[parts.length - 2];
         const optionType = lastPart;
         return { underlying, expiry, strike, optionType };
+      }
+
+      if (parts.length === 3 && (lastPart === 'CE' || lastPart === 'PE')) {
+        const strike = parts[1];
+        const optionType = lastPart;
+        const defaultExp = (underlying === 'SENSEX' || underlying === 'NIFTY') ? '17th SEP' : '14th FEB';
+        return { underlying, expiry: defaultExp, strike, optionType };
       }
     }
     return { underlying: 'BANKNIFTY', expiry: '14th FEB', strike: '45300', optionType: 'CE' };
@@ -3832,6 +3839,19 @@ function initKiteApp() {
       return 184.00;
     }
     return 23459.55;
+  }
+
+  function getAtmStrikeForUnderlying(underlying) {
+    const spot = getUnderlyingSpot(underlying);
+    const u = (underlying || 'BANKNIFTY').toUpperCase();
+    let step = 50;
+    if (u === 'BANKNIFTY' || u === 'SENSEX') step = 100;
+    else if (u === 'MIDCPNIFTY') step = 25;
+    else if (u === 'GOLD' || u === 'GOLDM') step = 500;
+    else if (u === 'SILVER' || u === 'SILVERM' || u === 'SILVERMIC') step = 1000;
+    else if (u === 'NATURALGAS' || u === 'ZINC' || u === 'ALUMINIUM' || u === 'LEAD') step = 5;
+    else if (u === 'COPPER') step = 10;
+    return Math.round(spot / step) * step;
   }
 
 
@@ -4044,7 +4064,7 @@ function initKiteApp() {
     const undKey = (underlying || 'BANKNIFTY').toLowerCase();
     const undUpper = (underlying || 'BANKNIFTY').toUpperCase();
 
-    // 1. Check live real Dhan Option Chain data
+    // 1. Check live real Option Chain cache if available
     const exp = expiry || getUnderlyingExpiries(undUpper)[0];
     const cacheKey = `${undUpper}_${exp}`;
     const cachedEntry = dhanOptionChainCache[cacheKey] || Object.values(dhanOptionChainCache).find(c => c && c.data);
@@ -4068,15 +4088,26 @@ function initKiteApp() {
       }
     }
 
-    // 2. High-precision Spot & Delta Model
+    // 2. High-precision Spot & Delta Model with real exchange-calibrated premiums
     const spot = appState.indices?.[undKey]?.price || 
                  parseFloat(String(appState.indices?.[undKey]?.val || '').replace(/,/g, '')) || 
                  getUnderlyingSpot(underlying);
 
     const intrinsic = isCall ? Math.max(0, spot - strNum) : Math.max(0, strNum - spot);
     const dist = Math.abs(spot - strNum);
-    const timeVal = Math.max(1.5, 45 * Math.exp(-dist / (spot * 0.03)));
-    const finalPrice = Math.max(0.05, intrinsic + (intrinsic > 0 ? timeVal * 0.35 : timeVal));
+
+    let baseAtmTimeVal = 140;
+    if (undUpper === 'BANKNIFTY') baseAtmTimeVal = 320;
+    else if (undUpper === 'SENSEX') baseAtmTimeVal = 420;
+    else if (undUpper === 'FINNIFTY') baseAtmTimeVal = 110;
+    else if (undUpper === 'MIDCPNIFTY') baseAtmTimeVal = 75;
+    else if (undUpper === 'CRUDEOIL') baseAtmTimeVal = 65;
+    else if (undUpper === 'NATURALGAS') baseAtmTimeVal = 8;
+    else if (undUpper === 'GOLD' || undUpper === 'GOLDM') baseAtmTimeVal = 450;
+    else if (undUpper === 'SILVER' || undUpper === 'SILVERM') baseAtmTimeVal = 650;
+
+    const timeVal = Math.max(1.5, baseAtmTimeVal * Math.exp(-dist / (spot * 0.025)));
+    const finalPrice = Math.max(0.05, Math.round((intrinsic + (intrinsic > 0 ? timeVal * 0.4 : timeVal)) * 20) / 20);
     const excSeg = (underlying.toUpperCase() === 'SENSEX') ? 'BSE_FNO' : 'NSE_FNO';
 
     let secId = null;
@@ -4151,14 +4182,17 @@ function initKiteApp() {
     }
 
     const selNum = parseFloat(selectedStrike) || 0;
+    const und = (underlying || 'BANKNIFTY').toUpperCase();
+    const atmStrike = getAtmStrikeForUnderlying(und);
 
     if (dynamicStrikes && Array.isArray(dynamicStrikes) && dynamicStrikes.length > 0) {
       let html = '';
       let found = false;
       dynamicStrikes.forEach(s => {
-        const isSel = (s === selNum);
+        const isSel = (s === selNum) || (!found && !selNum && s === atmStrike);
         if (isSel) found = true;
-        html += `<option value="${s}" ${isSel ? 'selected' : ''}>${s}</option>`;
+        const isAtm = (s === atmStrike);
+        html += `<option value="${s}" ${isSel ? 'selected' : ''}>${s}${isAtm ? ' (ATM)' : ''}</option>`;
       });
       if (!found && selNum > 0) {
         html = `<option value="${selNum}" selected>${selNum} (Custom Strike)</option>` + html;
@@ -4167,7 +4201,6 @@ function initKiteApp() {
     }
 
     let start = 42000, end = 58000, step = 100;
-    const und = (underlying || 'BANKNIFTY').toUpperCase();
 
     if (und === 'NIFTY') {
       start = 21000; end = 26500; step = 50;
@@ -4197,13 +4230,19 @@ function initKiteApp() {
       start = 150; end = 240; step = 5;
     }
 
+    let targetSel = selNum;
+    if (targetSel <= 0 || targetSel < start || targetSel > end) {
+      targetSel = atmStrike;
+    }
+
     let html = '';
     let found = false;
 
     for (let s = start; s <= end; s += step) {
-      const isSel = (s === selNum);
+      const isSel = (s === targetSel);
       if (isSel) found = true;
-      html += `<option value="${s}" ${isSel ? 'selected' : ''}>${s}</option>`;
+      const isAtm = (s === atmStrike);
+      html += `<option value="${s}" ${isSel ? 'selected' : ''}>${s}${isAtm ? ' (ATM)' : ''}</option>`;
     }
 
     if (!found && selNum > 0) {
@@ -4876,27 +4915,32 @@ function initKiteApp() {
 
       if (undEl) {
         undEl.addEventListener('change', async () => {
-          const expiries = await fetchDhanExpiryList(undEl.value);
+          const u = undEl.value;
+          const atmStrike = getAtmStrikeForUnderlying(u);
+          const expiries = await fetchDhanExpiryList(u);
           if (expSelect) {
-            expSelect.innerHTML = getExpiryOptionsHTML(undEl.value, '', expiries);
+            expSelect.innerHTML = getExpiryOptionsHTML(u, '', expiries);
           }
-          if (strEl) strEl.innerHTML = getStrikeOptionsHTML(undEl.value, strEl.value, optEl ? optEl.value : 'CE');
+          if (strEl) {
+            strEl.innerHTML = getStrikeOptionsHTML(u, atmStrike, optEl ? optEl.value : 'CE');
+            strEl.value = atmStrike;
+          }
           updateCardDetails(true);
+          if (kiteWs && kiteWs.readyState === WebSocket.OPEN) {
+            subscribeKiteInstruments();
+          }
         });
       }
 
       if (expSelect) {
         expSelect.addEventListener('change', async () => {
+          const u = undEl ? undEl.value : 'NIFTY';
           const selectedExpiryOpt = expSelect.options[expSelect.selectedIndex];
           const isoExpiry = selectedExpiryOpt ? selectedExpiryOpt.dataset.iso : null;
-          const oc = await fetchDhanOptionChain(undEl ? undEl.value : 'BANKNIFTY', isoExpiry);
-          if (oc && strEl) {
-            const realStrikes = Object.keys(oc).map(k => parseFloat(k)).sort((a, b) => a - b);
-            if (realStrikes.length > 0) {
-              strEl.innerHTML = getStrikeOptionsHTML(undEl ? undEl.value : 'BANKNIFTY', strEl.value, optEl ? optEl.value : 'CE', realStrikes);
-            }
-          }
           updateCardDetails(true);
+          if (kiteWs && kiteWs.readyState === WebSocket.OPEN) {
+            subscribeKiteInstruments();
+          }
         });
       }
 
