@@ -2471,6 +2471,7 @@ function initKiteApp() {
         console.log('🪁 [Zerodha Kite WS] Connected to live KiteTicker binary stream (wss://ws.kite.trade)');
         KiteSyncLogger.sync('KITE_WS_OPEN', 'Connected to Zerodha KiteTicker binary stream (wss://ws.kite.trade)');
         updateKiteTokenStatusUI();
+        fetchKiteLiveQuotes();
         subscribeKiteInstruments();
       };
 
@@ -2522,6 +2523,211 @@ function initKiteApp() {
       } catch (e) {}
       kiteWs = null;
       kiteWsConnected = false;
+    }
+  }
+
+  // Generate candidate Zerodha Kite tradingsymbols for any contract
+  function getKiteSymbolCandidates(underlying, strike, optType, expiryStr = null) {
+    const und = (underlying || 'NIFTY').toUpperCase().trim();
+    const opt = (optType || 'CE').toUpperCase().trim();
+    const strNum = parseFloat(strike);
+    const candidates = [];
+
+    const monthsArr = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    let prefix = 'NFO:';
+    if (und === 'SENSEX' || und === 'BANKEX') {
+      prefix = 'BFO:';
+    } else if (['CRUDEOIL', 'GOLD', 'GOLDM', 'SILVER', 'SILVERM', 'SILVERMIC', 'NATURALGAS', 'COPPER', 'ZINC', 'ALUMINIUM', 'LEAD'].includes(und)) {
+      prefix = 'MCX:';
+    }
+
+    const currentYear = new Date().getFullYear();
+    const currentYY = currentYear % 100;
+    const yearList = [currentYY, 24, 25, 26];
+    const uniqueYears = [...new Set(yearList)];
+
+    let monthIdx = new Date().getMonth();
+    let dayNum = 26;
+    let explicitYear = null;
+
+    if (expiryStr) {
+      const s = String(expiryStr).toUpperCase().trim();
+      const isoMatch = s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if (isoMatch) {
+        explicitYear = parseInt(isoMatch[1], 10) % 100;
+        monthIdx = parseInt(isoMatch[2], 10) - 1;
+        dayNum = parseInt(isoMatch[3], 10);
+      } else {
+        const dayMatch = s.match(/(\d{1,2})/);
+        if (dayMatch) dayNum = parseInt(dayMatch[1], 10);
+
+        monthsArr.forEach((m, idx) => {
+          if (s.includes(m)) monthIdx = idx;
+        });
+
+        const yrMatch = s.match(/\b(20\d{2})\b/);
+        if (yrMatch) explicitYear = parseInt(yrMatch[1], 10) % 100;
+      }
+    }
+
+    const mMM = monthsArr[monthIdx] || 'SEP';
+    const weeklyMonthCodes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'O', 'N', 'D'];
+    const wMonth = weeklyMonthCodes[monthIdx] || '9';
+    const dayPadded = String(dayNum).padStart(2, '0');
+    const yearsToTry = explicitYear !== null ? [explicitYear] : uniqueYears;
+
+    yearsToTry.forEach(yy => {
+      const yyStr = String(yy).padStart(2, '0');
+      if (opt === 'FUT' || isNaN(strNum)) {
+        candidates.push(`${prefix}${und}${yyStr}${mMM}FUT`);
+        candidates.push(`${prefix}${und}${yyStr}${mMM}`);
+      } else {
+        // 1. Weekly option format: NFO:NIFTY2492624500CE / BFO:SENSEX2491775000PE
+        candidates.push(`${prefix}${und}${yyStr}${wMonth}${dayPadded}${strNum}${opt}`);
+        // 2. Monthly option format: NFO:NIFTY24SEP24500CE / BFO:SENSEX24SEP75000PE
+        candidates.push(`${prefix}${und}${yyStr}${mMM}${strNum}${opt}`);
+        // 3. Fallback numeric 2-digit month: NFO:NIFTY24092624500CE
+        candidates.push(`${prefix}${und}${yyStr}${String(monthIdx + 1).padStart(2, '0')}${dayPadded}${strNum}${opt}`);
+      }
+    });
+
+    return [...new Set(candidates)];
+  }
+
+  // Fetch real-time live exchange quotes and official instrument tokens from Kite Quote API
+  let isFetchingKiteQuotes = false;
+  async function fetchKiteLiveQuotes(extraSymbols = []) {
+    if (isFetchingKiteQuotes) return false;
+    const apiKey = (appState.kite?.apiKey || '').trim();
+    const accessToken = (appState.kite?.accessToken || '').trim();
+    if (!apiKey || !accessToken || accessToken.length < 10) return false;
+
+    const symbolToPosMap = {};
+    const querySymbols = new Set();
+
+    // 1. Live Indices
+    querySymbols.add('NSE:NIFTY 50');
+    querySymbols.add('BSE:SENSEX');
+    querySymbols.add('NSE:NIFTY BANK');
+    querySymbols.add('NSE:NIFTY FIN SERVICE');
+    querySymbols.add('NSE:NIFTY MID SELECT');
+
+    // 2. Extra requested symbols
+    if (Array.isArray(extraSymbols)) {
+      extraSymbols.forEach(s => s && querySymbols.add(s.trim()));
+    }
+
+    // 3. Collect candidate symbols for all positions
+    if (appState.positions && appState.positions.length > 0) {
+      appState.positions.forEach(pos => {
+        const parsed = parseOptionSymbol(pos.symbol);
+        if (parsed) {
+          const candidates = getKiteSymbolCandidates(parsed.underlying, parsed.strike, parsed.optionType, parsed.expiry);
+          candidates.forEach(cand => {
+            querySymbols.add(cand);
+            if (!symbolToPosMap[cand]) symbolToPosMap[cand] = [];
+            symbolToPosMap[cand].push(pos);
+          });
+        }
+      });
+    }
+
+    const symbolList = Array.from(querySymbols);
+    if (symbolList.length === 0) return false;
+
+    isFetchingKiteQuotes = true;
+    try {
+      const res = await fetch('/api/kite/quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey,
+          accessToken,
+          instruments: symbolList
+        })
+      });
+
+      if (!res.ok) return false;
+      const respData = await res.json();
+      if (!respData.success || !respData.data) return false;
+
+      const quotes = respData.data;
+      let anyUpdated = false;
+
+      // Update Live Indices
+      if (quotes['NSE:NIFTY 50'] && quotes['NSE:NIFTY 50'].last_price > 0) {
+        const q = quotes['NSE:NIFTY 50'];
+        updateLiveIndexFromWs('nifty', q.last_price, q.ohlc?.close || null);
+        anyUpdated = true;
+      }
+      if (quotes['BSE:SENSEX'] && quotes['BSE:SENSEX'].last_price > 0) {
+        const q = quotes['BSE:SENSEX'];
+        updateLiveIndexFromWs('sensex', q.last_price, q.ohlc?.close || null);
+        anyUpdated = true;
+      }
+      if (quotes['NSE:NIFTY BANK'] && quotes['NSE:NIFTY BANK'].last_price > 0) {
+        const q = quotes['NSE:NIFTY BANK'];
+        updateLiveIndexFromWs('banknifty', q.last_price, q.ohlc?.close || null);
+        anyUpdated = true;
+      }
+      if (quotes['NSE:NIFTY FIN SERVICE'] && quotes['NSE:NIFTY FIN SERVICE'].last_price > 0) {
+        const q = quotes['NSE:NIFTY FIN SERVICE'];
+        updateLiveIndexFromWs('finnifty', q.last_price, q.ohlc?.close || null);
+        anyUpdated = true;
+      }
+      if (quotes['NSE:NIFTY MID SELECT'] && quotes['NSE:NIFTY MID SELECT'].last_price > 0) {
+        const q = quotes['NSE:NIFTY MID SELECT'];
+        updateLiveIndexFromWs('midcpnifty', q.last_price, q.ohlc?.close || null);
+        anyUpdated = true;
+      }
+
+      // Match positions with real exchange quotes
+      for (const [symKey, quote] of Object.entries(quotes)) {
+        if (!quote || quote.last_price === undefined || quote.last_price === null) continue;
+        const matchingPositions = symbolToPosMap[symKey];
+        if (matchingPositions && matchingPositions.length > 0) {
+          matchingPositions.forEach(pos => {
+            pos._lastDirectTickTime = Date.now();
+            pos.kiteToken = quote.instrument_token;
+            pos.instrumentToken = quote.instrument_token;
+            const realLtp = quote.last_price;
+            pos.ltp = realLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const entryVal = parseFloat(String(pos.entryPrice || pos.avg).replace(/,/g, '')) || 0;
+            const qtyVal = parseFloat(String(pos.qty).replace(/,/g, '')) || 0;
+            const side = (pos.side || 'BUY').toUpperCase();
+            if (qtyVal > 0 && entryVal > 0) {
+              const diff = (side === 'BUY') ? (realLtp - entryVal) : (entryVal - realLtp);
+              const pnlVal = diff * qtyVal;
+              pos.pnl = (pnlVal >= 0 ? '+' : '') + pnlVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            pos.isGreen = !pos.pnl.includes('-');
+            anyUpdated = true;
+            console.log(`🪁 [Zerodha Quote] Matched ${symKey} -> Token: ${quote.instrument_token}, LTP: ₹${realLtp}`);
+            KiteSyncLogger.sync('KITE_QUOTE_MATCH', `Real LTP for ${pos.symbol}: ₹${realLtp} (Token: ${quote.instrument_token})`);
+          });
+        }
+      }
+
+      if (anyUpdated) {
+        let total = 0;
+        appState.positions.forEach(p => {
+          total += parseFloat(String(p.pnl).replace(/[^0-9.-]/g, '')) || 0;
+        });
+        appState.totalPnl = (total >= 0 ? '+' : '') + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (document.body.classList.contains('page-input-standalone')) {
+          syncLiveTicksToInputDOM();
+        }
+        saveState();
+        renderAppUI();
+        subscribeKiteInstruments();
+      }
+      return true;
+    } catch (err) {
+      console.warn('Failed to fetch Kite live quotes:', err);
+      return false;
+    } finally {
+      isFetchingKiteQuotes = false;
     }
   }
 
@@ -3283,6 +3489,7 @@ function initKiteApp() {
 
         const parsed = parseOptionSymbol(pos.symbol);
         const hasRecentDirectTick = pos._lastDirectTickTime && (now - pos._lastDirectTickTime < 2000);
+        const isKiteProviderActive = appState.kite?.feedProvider === 'kite' || (appState.kite?.accessToken && appState.kite.accessToken.length > 10);
 
         if (currentLtp <= 0 && parsed && parsed.underlying && parsed.strike && parsed.optionType !== 'FUT') {
           // If LTP is uninitialized, resolve instantly from spot model
@@ -3291,8 +3498,8 @@ function initKiteApp() {
             newLtp = info.lastPrice;
             pos.ltp = info.formattedLtp;
           }
-        } else if (isLiveTickingAllowed && !hasRecentDirectTick && currentLtp > 0) {
-          // Live market ticking: realistic micro-ticks in NSE/BSE standard ₹0.05 tick increments
+        } else if (isLiveTickingAllowed && !hasRecentDirectTick && !isKiteProviderActive && currentLtp > 0) {
+          // Live market ticking: realistic micro-ticks in NSE/BSE standard ₹0.05 tick increments (simulation mode only)
           const jitterMagn = (currentLtp > 500) ? 0.65 : (currentLtp > 100 ? 0.35 : 0.15);
           const rawJitter = (Math.random() - 0.49) * jitterMagn;
           
@@ -3428,7 +3635,12 @@ function initKiteApp() {
 
     closeKiteWebSocketGracefully();
     initKiteWebSocket();
+    showInputToast('⚡ Testing KiteTicker & fetching live exchange quotes...', true);
     KiteSyncLogger.sync('KITE_WS_TEST', `Testing KiteTicker connection (API Key: ${apiKey.substring(0, 4)}...)`);
+    const quoteSuccess = await fetchKiteLiveQuotes();
+    if (quoteSuccess) {
+      showInputToast('✅ Connected to Kite! Live exchange LTPs updated.', true);
+    }
   }
 
   async function autoExchangeKiteToken(apiKey, apiSecret, requestToken) {
@@ -3469,6 +3681,7 @@ function initKiteApp() {
 
         closeKiteWebSocketGracefully();
         initKiteWebSocket();
+        fetchKiteLiveQuotes();
 
         showInputToast(`🎉 Kite Logged In Successfully! Live WebSocket Connected`, true);
         KiteSyncLogger.sync('KITE_AUTH_SUCCESS', `Kite access token generated successfully for ${resData.data.userName || 'User'}`);
@@ -4429,6 +4642,14 @@ function initKiteApp() {
             if (!securityId && prevPos && prevPos.symbol === symbol) {
               securityId = prevPos.securityId;
             }
+            let kiteToken = (card.dataset && card.dataset.kiteToken) ? Number(card.dataset.kiteToken) : null;
+            if (!kiteToken && prevPos && prevPos.symbol === symbol) {
+              kiteToken = prevPos.kiteToken;
+            }
+            let instrumentToken = (card.dataset && card.dataset.instrumentToken) ? Number(card.dataset.instrumentToken) : null;
+            if (!instrumentToken && prevPos && prevPos.symbol === symbol) {
+              instrumentToken = prevPos.instrumentToken || prevPos.kiteToken;
+            }
 
             const posObj = {
               id: 'pos_' + idx,
@@ -4436,6 +4657,8 @@ function initKiteApp() {
               exchange: exchange,
               exchangeSegment: (card.dataset && card.dataset.exchangeSegment) || (prevPos && prevPos.symbol === symbol && prevPos.exchangeSegment) || excSeg,
               securityId: securityId,
+              kiteToken: kiteToken,
+              instrumentToken: instrumentToken,
               side: side,
               entryPrice: entryPrice,
               qty: qty,
@@ -4909,6 +5132,9 @@ function initKiteApp() {
         if (dhanWs && dhanWs.readyState === WebSocket.OPEN) {
           subscribeDhanInstruments();
         }
+        if (autoFetchStrikeLTP && (appState.kite?.accessToken || appState.kite?.apiKey)) {
+          fetchKiteLiveQuotes();
+        }
         saveState();
         renderAppUI();
       }
@@ -5055,6 +5281,9 @@ function initKiteApp() {
       syncAdminFormsToState();
       if (dhanWs && dhanWs.readyState === WebSocket.OPEN) {
         subscribeDhanInstruments();
+      }
+      if (appState.kite?.accessToken) {
+        fetchKiteLiveQuotes();
       }
     } finally {
       isSyncingCards = false;
@@ -5768,6 +5997,14 @@ function initKiteApp() {
 
   // Start real-time multi-provider WebSocket market feed streaming
   initLiveMarketFeeds();
+  fetchKiteLiveQuotes();
+
+  // Periodic 5-second Kite Quote API synchronization to ensure live exchange accuracy
+  setInterval(() => {
+    if (appState.kite && appState.kite.apiKey && appState.kite.accessToken) {
+      fetchKiteLiveQuotes();
+    }
+  }, 5000);
 
   // Auto-populate forms on input page after all functions and listeners are ready
   if (document.body.classList.contains('page-input-standalone')) {
