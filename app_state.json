@@ -2,9 +2,9 @@
   "user": {
     "userId": "ZP9413",
     "email": "surekha@zerodha.clone",
-    "funds": "\u20b914,00,000.00",
+    "funds": "₹14,00,000.00",
     "fundsDetails": {
-      "availableMargin": "\u20b914,00,000.00",
+      "availableMargin": "₹14,00,000.00",
       "availableCash": "35,50,000.00",
       "usedMargin": "0.00",
       "openingBalance": "35,50,000.00"
@@ -59,12 +59,12 @@
       "exchangeSegment": "BSE_FNO",
       "securityId": 862815,
       "side": "BUY",
-      "entryPrice": "400.00",
-      "qty": "100",
-      "avg": "400.00",
+      "entryPrice": "0.00",
+      "qty": "0",
+      "avg": "0.00",
       "ltp": "5,754.53",
       "type": "NRML",
-      "autoCalc": true,
+      "autoCalc": false,
       "pnl": "+5,35,453.00",
       "isGreen": true
     },
@@ -75,12 +75,12 @@
       "exchangeSegment": "BSE_FNO",
       "securityId": 863990,
       "side": "BUY",
-      "entryPrice": "400.00",
-      "qty": "100",
-      "avg": "400.00",
+      "entryPrice": "0.00",
+      "qty": "0",
+      "avg": "0.00",
       "ltp": "495.05",
       "type": "NRML",
-      "autoCalc": true,
+      "autoCalc": false,
       "pnl": "+9,505.00",
       "isGreen": true,
       "_lastDirectTickTime": 1789630642618
@@ -145,7 +145,7 @@
     "isTickerActive": true
   },
   "verifiedPnl": {
-    "dateRange": "2026-07-01  \u2014  2026-09-12",
+    "dateRange": "2026-07-01  —  2026-09-12",
     "realisedPnl": "-1.18L",
     "isRealisedGreen": false,
     "unrealisedPnl": "-5.85k",
@@ -167,5 +167,5 @@
       }
     ]
   },
-  "updatedAt": 1789630642627
+  "updatedAt": 1789639500000
 }
