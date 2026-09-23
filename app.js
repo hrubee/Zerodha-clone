@@ -3431,6 +3431,91 @@ function initKiteApp() {
     KiteSyncLogger.sync('KITE_WS_TEST', `Testing KiteTicker connection (API Key: ${apiKey.substring(0, 4)}...)`);
   }
 
+  async function autoExchangeKiteToken(apiKey, apiSecret, requestToken) {
+    if (!apiKey || !apiSecret || !requestToken) {
+      showInputToast('⚠️ Missing API Key, API Secret, or Request Token', false);
+      return false;
+    }
+
+    showInputToast('🔄 Exchanging Kite Request Token for Access Token...', true);
+    KiteSyncLogger.info('KITE_OAUTH_EXCHANGE', 'Exchanging request_token for access_token via /api/kite/session');
+
+    try {
+      const resp = await fetch('/api/kite/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey, apiSecret, requestToken })
+      });
+
+      const resData = await resp.json();
+
+      if (resp.ok && resData.success && resData.data?.accessToken) {
+        const token = resData.data.accessToken;
+        if (!appState.kite) appState.kite = {};
+        appState.kite.apiKey = apiKey;
+        appState.kite.apiSecret = apiSecret;
+        appState.kite.requestToken = requestToken;
+        appState.kite.accessToken = token;
+        appState.kite.feedProvider = 'kite';
+        appState.kite.isTickerActive = true;
+
+        if (resData.data.userName && appState.user) {
+          appState.user.fullName = resData.data.userName;
+        }
+
+        saveState(true, true);
+        populateAdminForms();
+        updateKiteTokenStatusUI();
+
+        closeKiteWebSocketGracefully();
+        initKiteWebSocket();
+
+        showInputToast(`🎉 Kite Logged In Successfully! Live WebSocket Connected`, true);
+        KiteSyncLogger.sync('KITE_AUTH_SUCCESS', `Kite access token generated successfully for ${resData.data.userName || 'User'}`);
+        return true;
+      } else {
+        const errMsg = resData.error || 'Failed to exchange Kite token';
+        showInputToast(`❌ Kite Auth Error: ${errMsg}`, false);
+        KiteSyncLogger.error('KITE_AUTH_FAIL', errMsg, resData);
+        return false;
+      }
+    } catch (e) {
+      console.error('Error exchanging Kite token:', e);
+      showInputToast(`❌ Connection Error: ${e.message}`, false);
+      KiteSyncLogger.error('KITE_AUTH_EXC', e.message);
+      return false;
+    }
+  }
+
+  async function checkKiteOAuthCallback() {
+    if (typeof window === 'undefined' || !window.location || !window.location.search) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestToken = urlParams.get('request_token');
+
+    if (requestToken) {
+      console.log('🪁 Detected Kite OAuth redirect callback in URL:', requestToken);
+      KiteSyncLogger.info('KITE_REDIRECT_DETECTED', `Detected request_token in URL parameters: ${requestToken.substring(0, 6)}...`);
+
+      const apiKey = appState.kite?.apiKey || document.getElementById('admin-kite-apikey')?.value.trim() || '';
+      const apiSecret = appState.kite?.apiSecret || document.getElementById('admin-kite-apisecret')?.value.trim() || '';
+
+      if (document.getElementById('admin-kite-requesttoken')) {
+        document.getElementById('admin-kite-requesttoken').value = requestToken;
+      }
+
+      if (apiKey && apiSecret) {
+        const success = await autoExchangeKiteToken(apiKey, apiSecret, requestToken);
+        if (success) {
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+      } else {
+        showInputToast('⚠️ Request Token detected! Please enter API Secret and click "Auto-Exchange Token"', false);
+      }
+    }
+  }
+
   function updateDhanTokenStatusUI() {
     const banner = document.getElementById('dhan-token-status-banner');
     const statusText = document.getElementById('dhan-token-status-text');
@@ -5427,6 +5512,72 @@ function initKiteApp() {
     });
   }
 
+  const kiteOneClickLoginBtn = document.getElementById('admin-kite-oneclick-login-btn');
+  if (kiteOneClickLoginBtn) {
+    kiteOneClickLoginBtn.addEventListener('click', (e) => {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      const apiKey = kiteApiKeyInput ? kiteApiKeyInput.value.trim() : (appState.kite?.apiKey || '');
+      const apiSecret = kiteApiSecretInput ? kiteApiSecretInput.value.trim() : (appState.kite?.apiSecret || '');
+
+      if (!apiKey || apiKey === 'kite_demo_key' || apiKey.length < 4) {
+        showInputToast('⚠️ Please enter your Kite API Key first', false);
+        if (kiteApiKeyInput) kiteApiKeyInput.focus();
+        return;
+      }
+
+      if (!appState.kite) appState.kite = {};
+      appState.kite.apiKey = apiKey;
+      if (apiSecret) appState.kite.apiSecret = apiSecret;
+      saveState(true, true);
+
+      showInputToast('🚀 Opening Zerodha Kite Login...', true);
+      const kiteLoginUrl = `https://kite.zerodha.com/connect/login?v=3&api_key=${encodeURIComponent(apiKey)}`;
+      window.location.href = kiteLoginUrl;
+    });
+  }
+
+  const kiteCopyRedirectBtn = document.getElementById('admin-kite-copy-redirect-btn');
+  if (kiteCopyRedirectBtn) {
+    kiteCopyRedirectBtn.addEventListener('click', (e) => {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      const redirectUrl = 'https://zerodha-clone-woad.vercel.app/input';
+      if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(redirectUrl).then(() => {
+          showInputToast('📋 Redirect URL copied to clipboard!', true);
+        }).catch(() => {
+          showInputToast(`URL: ${redirectUrl}`, true);
+        });
+      } else {
+        showInputToast(`URL: ${redirectUrl}`, true);
+      }
+    });
+  }
+
+  const kiteAutoGenTokenBtn = document.getElementById('admin-kite-autogen-token-btn');
+  if (kiteAutoGenTokenBtn) {
+    kiteAutoGenTokenBtn.addEventListener('click', async (e) => {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      const apiKey = kiteApiKeyInput ? kiteApiKeyInput.value.trim() : (appState.kite?.apiKey || '');
+      const apiSecret = kiteApiSecretInput ? kiteApiSecretInput.value.trim() : (appState.kite?.apiSecret || '');
+      const reqToken = kiteReqTokenInput ? kiteReqTokenInput.value.trim() : (appState.kite?.requestToken || '');
+
+      if (!apiKey || apiKey.length < 4) {
+        showInputToast('⚠️ Please enter your Kite API Key', false);
+        return;
+      }
+      if (!apiSecret || apiSecret.length < 4) {
+        showInputToast('⚠️ Please enter your Kite API Secret', false);
+        return;
+      }
+      if (!reqToken || reqToken.length < 4) {
+        showInputToast('⚠️ Please paste or enter the Request Token', false);
+        return;
+      }
+
+      await autoExchangeKiteToken(apiKey, apiSecret, reqToken);
+    });
+  }
+
   if (feedProviderSelect) {
     feedProviderSelect.addEventListener('change', () => {
       const prov = feedProviderSelect.value;
@@ -5560,6 +5711,7 @@ function initKiteApp() {
   // Auto-populate forms on input page after all functions and listeners are ready
   if (document.body.classList.contains('page-input-standalone')) {
     populateAdminForms();
+    checkKiteOAuthCallback();
   }
 
 }
