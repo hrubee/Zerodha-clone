@@ -3578,6 +3578,9 @@ function initKiteApp() {
     const wsIndicator = document.getElementById('kite-ws-live-indicator');
     const apiKeyInput = document.getElementById('admin-kite-apikey');
     const tokenInput = document.getElementById('admin-kite-accesstoken');
+    const statusCardText = document.getElementById('kite-api-status-text');
+    const resultBadge = document.getElementById('kite-test-result-badge');
+    const latencyText = document.getElementById('kite-ws-latency-text');
     if (!banner || !statusText) return;
 
     const apiKey = apiKeyInput ? apiKeyInput.value.trim() : (appState.kite?.apiKey || '');
@@ -3600,12 +3603,15 @@ function initKiteApp() {
       statusText.innerHTML = `🟢 <strong>Kite Credentials Configured:</strong> API Key [${apiKey.substring(0, 4)}...] + Access Token Active`;
     }
 
+    const isConnected = kiteWsConnected || (kiteWs && kiteWs.readyState === WebSocket.OPEN);
+    const isConnecting = kiteWs && kiteWs.readyState === WebSocket.CONNECTING;
+
     if (wsIndicator) {
-      if (kiteWs && kiteWs.readyState === WebSocket.OPEN) {
+      if (isConnected) {
         wsIndicator.textContent = '🟢 Kite: Connected (Live Stream)';
         wsIndicator.style.background = '#ffedd5';
         wsIndicator.style.color = '#c2410c';
-      } else if (kiteWs && kiteWs.readyState === WebSocket.CONNECTING) {
+      } else if (isConnecting) {
         wsIndicator.textContent = '🟡 Kite: Connecting...';
         wsIndicator.style.background = '#fef3c7';
         wsIndicator.style.color = '#92400e';
@@ -3616,6 +3622,44 @@ function initKiteApp() {
       }
     }
 
+    if (resultBadge) {
+      if (isConnected) {
+        resultBadge.textContent = '🟢 LIVE (STREAMING)';
+        resultBadge.style.background = '#dcfce7';
+        resultBadge.style.color = '#166534';
+      } else if (isConnecting) {
+        resultBadge.textContent = '🟡 CONNECTING...';
+        resultBadge.style.background = '#fef3c7';
+        resultBadge.style.color = '#92400e';
+      } else if (!token || token.length < 10) {
+        resultBadge.textContent = '⚪ NOT CONNECTED';
+        resultBadge.style.background = 'rgba(0,0,0,0.06)';
+        resultBadge.style.color = '#64748b';
+      } else {
+        resultBadge.textContent = '🔴 DISCONNECTED';
+        resultBadge.style.background = '#fee2e2';
+        resultBadge.style.color = '#991b1b';
+      }
+    }
+
+    if (statusCardText && !statusCardText.dataset.testing) {
+      if (isConnected) {
+        const lastTickStr = lastKiteTickTime ? ` | Last Tick: ${new Date(lastKiteTickTime).toLocaleTimeString('en-IN')}` : '';
+        statusCardText.innerHTML = `🟢 <strong>Connected Successfully!</strong> Zerodha Kite WebSocket is LIVE & streaming real exchange binary ticks (wss://ws.kite.trade).${lastTickStr}`;
+        statusCardText.style.color = '#166534';
+      } else if (isConnecting) {
+        statusCardText.innerHTML = `🟡 <strong>Connecting...</strong> Attempting handshake with wss://ws.kite.trade...`;
+        statusCardText.style.color = '#92400e';
+      } else if (apiKey && token) {
+        statusCardText.innerHTML = `⚪ Ready to connect. Click <strong>"⚡ Test Kite WebSocket"</strong> or <strong>"Save & Connect Kite"</strong>.`;
+        statusCardText.style.color = '#475569';
+      }
+    }
+
+    if (latencyText && lastKiteTickTime) {
+      latencyText.textContent = `⚡ Live tick active (${new Date(lastKiteTickTime).toLocaleTimeString('en-IN')})`;
+    }
+
     updateActiveFeedBadge();
   }
 
@@ -3624,6 +3668,9 @@ function initKiteApp() {
     const accessToken = document.getElementById('admin-kite-accesstoken')?.value.trim() || appState.kite?.accessToken || '';
     const reqToken = document.getElementById('admin-kite-requesttoken')?.value.trim() || appState.kite?.requestToken || '';
     const apiSecret = document.getElementById('admin-kite-apisecret')?.value.trim() || appState.kite?.apiSecret || '';
+    const statusCardText = document.getElementById('kite-api-status-text');
+    const resultBadge = document.getElementById('kite-test-result-badge');
+    const latencyText = document.getElementById('kite-ws-latency-text');
 
     if (!appState.kite) appState.kite = {};
     appState.kite.apiKey = apiKey;
@@ -3633,14 +3680,86 @@ function initKiteApp() {
     saveState(true, true);
     updateKiteTokenStatusUI();
 
+    if (!apiKey || apiKey.length < 4 || !accessToken || accessToken.length < 10) {
+      if (statusCardText) {
+        statusCardText.innerHTML = `❌ <strong>Missing Credentials:</strong> Please enter your Kite API Key and Access Token above, then click Test.`;
+        statusCardText.style.color = '#dc2626';
+      }
+      if (resultBadge) {
+        resultBadge.textContent = '❌ MISSING TOKEN';
+        resultBadge.style.background = '#fee2e2';
+        resultBadge.style.color = '#991b1b';
+      }
+      showInputToast('⚠️ Please enter Kite API Key and Access Token first', false);
+      return;
+    }
+
+    if (statusCardText) {
+      statusCardText.dataset.testing = "true";
+      statusCardText.innerHTML = `⏳ <strong>Testing Kite WebSocket & REST Quote API...</strong> Connecting to wss://ws.kite.trade...`;
+      statusCardText.style.color = '#ea580c';
+    }
+    if (resultBadge) {
+      resultBadge.textContent = '⏳ TESTING...';
+      resultBadge.style.background = '#ffedd5';
+      resultBadge.style.color = '#c2410c';
+    }
+
+    showInputToast('⚡ Testing Kite WebSocket (wss://ws.kite.trade)...', true);
+    KiteSyncLogger.sync('KITE_WS_TEST', `Testing KiteTicker connection (API Key: ${apiKey.substring(0, 4)}...)`);
+
     closeKiteWebSocketGracefully();
     initKiteWebSocket();
-    showInputToast('⚡ Testing KiteTicker & fetching live exchange quotes...', true);
-    KiteSyncLogger.sync('KITE_WS_TEST', `Testing KiteTicker connection (API Key: ${apiKey.substring(0, 4)}...)`);
-    const quoteSuccess = await fetchKiteLiveQuotes();
-    if (quoteSuccess) {
-      showInputToast('✅ Connected to Kite! Live exchange LTPs updated.', true);
-    }
+
+    // Query REST Quote API simultaneously
+    const quotePromise = fetchKiteLiveQuotes();
+
+    // Wait up to 3 seconds for WebSocket to report OPEN or ERROR
+    let checkCount = 0;
+    const interval = setInterval(async () => {
+      checkCount++;
+      const isConnected = kiteWsConnected || (kiteWs && kiteWs.readyState === WebSocket.OPEN);
+
+      if (isConnected || checkCount >= 15) {
+        clearInterval(interval);
+        if (statusCardText) delete statusCardText.dataset.testing;
+
+        const quoteSuccess = await quotePromise;
+
+        if (isConnected) {
+          const tickInfo = lastKiteTickTime ? ` | Last Tick: ${new Date(lastKiteTickTime).toLocaleTimeString('en-IN')}` : '';
+          const quoteInfo = quoteSuccess ? ' & Live Quotes synced' : '';
+          if (statusCardText) {
+            statusCardText.innerHTML = `🟢 <strong>Connected Successfully!</strong> Zerodha Kite WebSocket is LIVE (wss://ws.kite.trade)${quoteInfo}.${tickInfo}`;
+            statusCardText.style.color = '#166534';
+          }
+          if (resultBadge) {
+            resultBadge.textContent = '🟢 WS LIVE (CONNECTED)';
+            resultBadge.style.background = '#dcfce7';
+            resultBadge.style.color = '#166534';
+          }
+          if (latencyText) {
+            latencyText.textContent = `⚡ Live tick active (${new Date().toLocaleTimeString('en-IN')})`;
+          }
+          showInputToast('✅ Zerodha Kite WebSocket Connected & Streaming!', true);
+          KiteSyncLogger.sync('KITE_TEST_PASS', 'Kite WebSocket and Quote API verified successfully');
+        } else {
+          if (statusCardText) {
+            statusCardText.innerHTML = `❌ <strong>Connection Failed:</strong> Could not connect to wss://ws.kite.trade. Access token may be expired or API key is invalid. Please use <strong>"🔑 1-Click Zerodha Login"</strong>.`;
+            statusCardText.style.color = '#dc2626';
+          }
+          if (resultBadge) {
+            resultBadge.textContent = '🔴 DISCONNECTED / ERROR';
+            resultBadge.style.background = '#fee2e2';
+            resultBadge.style.color = '#991b1b';
+          }
+          showInputToast('❌ Kite WebSocket connection failed. Please check credentials.', false);
+          KiteSyncLogger.error('KITE_TEST_FAIL', 'Kite WebSocket connection test timed out or failed');
+        }
+
+        updateKiteTokenStatusUI();
+      }
+    }, 200);
   }
 
   async function autoExchangeKiteToken(apiKey, apiSecret, requestToken) {
